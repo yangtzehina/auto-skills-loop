@@ -1,0 +1,246 @@
+{
+  "schema_version": "1.0.0",
+  "pattern_set_id": "esp_skill_creator_20260325_001",
+  "scope": {
+    "domain": "skill-create",
+    "target_kind": "AgentSkill",
+    "target_name": "create-and-refine-openclaw-agentskills",
+    "request_modes": ["create", "refine", "audit"],
+    "repo_paths": ["<skills-root>/openclaw-adk"],
+    "existing_skill_path": "<skills-root>/openclaw-adk"
+  },
+  "extraction": {
+    "run_id": "run-skill-create-v6-demo-001",
+    "created_at": "2026-03-25T12:48:00+08:00",
+    "extractor_version": "v6-pattern-draft1",
+    "source_case_ids": ["case-skill-audit-001", "case-skill-refine-002"],
+    "source_case_count": 2,
+    "source_pattern_set_ids": ["esp_baseline_skill_quality_v1"],
+    "repo_snapshot_refs": ["workspace:skills/openclaw-adk"],
+    "llm_model": "gpt-5.4",
+    "notes": ["draft sample for schema validation"]
+  },
+  "summary": {
+    "goals": [
+      "生成结构合理的 OpenClaw AgentSkill",
+      "把超长 SKILL.md 拆到 references",
+      "提升 description 触发质量"
+    ],
+    "common_constraints": [
+      "Prefer progressive disclosure over giant monolithic instructions",
+      "Do not auto-persist anything to OpenViking"
+    ],
+    "dominant_skill_types": ["workflow", "audit"],
+    "recommended_defaults": {
+      "skill_md_max_lines": "300",
+      "script_policy": "prefer_script_for_fragile_repetition"
+    },
+    "open_questions": [
+      "是否需要在 v1 就支持 pattern-aware repair recipes?"
+    ]
+  },
+  "patterns": [
+    {
+      "pattern_id": "pat_trigger_description_v1",
+      "pattern_type": "trigger-description",
+      "status": "accepted",
+      "title": "description 同时写明能力与触发条件",
+      "summary": "把 skill 能做什么、什么时候该触发，统一写进 frontmatter description。",
+      "applicability": {
+        "use_when": [
+          "正在创建新 skill",
+          "审计 existing SKILL.md 的触发质量"
+        ],
+        "avoid_when": [
+          "任务只要求修脚本内容，不涉及 skill 入口定义"
+        ],
+        "required_repo_signals": ["SKILL.md present or planned"],
+        "negative_repo_signals": [],
+        "request_modes": ["create", "refine", "audit"],
+        "priority": 90
+      },
+      "evidence": {
+        "source_case_ids": ["case-skill-audit-001", "case-skill-refine-002"],
+        "occurrence_count": 2,
+        "success_rate": 1.0,
+        "example_snippets": [
+          {
+            "case_id": "case-skill-audit-001",
+            "prompt_excerpt": "Audit this SKILL.md for bloat and bad trigger descriptions",
+            "outcome_excerpt": "Refined description to include both capability and when-to-use",
+            "note": "worked well in dry-run"
+          }
+        ],
+        "failure_modes": [
+          "只描述能力，不描述触发场景",
+          "把 when-to-use 写进 body 而不是 frontmatter"
+        ]
+      },
+      "file_shape": {
+        "required_files": ["SKILL.md"],
+        "optional_files": [],
+        "extraction_targets": [],
+        "script_strategy": "no-script-needed",
+        "content_budget_hint": 300
+      },
+      "content_hints": {
+        "must_include": [
+          "what the skill does",
+          "specific triggers or contexts for use"
+        ],
+        "should_include": [
+          "multiple concrete trigger phrases"
+        ],
+        "must_avoid": [
+          "vague description like 'Use when you need help'"
+        ],
+        "references_to_read": [],
+        "example_phrasings": [
+          "Use when Codex needs to create, refine, audit, or restructure AgentSkills"
+        ]
+      },
+      "downstream_hints": {
+        "planner_actions": [
+          "reserve SKILL.md frontmatter refinement in generation order"
+        ],
+        "generator_actions": [
+          "emit description with ability + trigger phrasing"
+        ],
+        "validator_checks": [
+          "description_mentions_capability_and_trigger"
+        ],
+        "repair_recipes": [
+          "rewrite_frontmatter_description_from_pattern"
+        ]
+      },
+      "confidence": 0.92,
+      "support": 2,
+      "tags": ["frontmatter", "description", "triggering"]
+    },
+    {
+      "pattern_id": "pat_reference_split_v1",
+      "pattern_type": "reference-split",
+      "status": "accepted",
+      "title": "把细节说明拆到 references",
+      "summary": "当 SKILL.md 过长或存在多变体说明时，把重内容拆到 references，并在入口文件保留导航。",
+      "applicability": {
+        "use_when": [
+          "SKILL.md 接近或超过预算",
+          "出现多个变体、领域或高级细节"
+        ],
+        "avoid_when": [
+          "技能本身非常小，额外 reference 只会增加复杂度"
+        ],
+        "required_repo_signals": ["docs or long markdown sections present"],
+        "negative_repo_signals": [],
+        "request_modes": ["create", "refine", "audit"],
+        "priority": 80
+      },
+      "evidence": {
+        "source_case_ids": ["case-skill-refine-002"],
+        "occurrence_count": 1,
+        "success_rate": 1.0,
+        "example_snippets": [
+          {
+            "case_id": "case-skill-refine-002",
+            "prompt_excerpt": "Refine a bloated skill",
+            "outcome_excerpt": "Moved gotchas into references/gotchas.md",
+            "note": "matches v5 diff-aware extraction behavior"
+          }
+        ],
+        "failure_modes": [
+          "reference file created but not linked from SKILL.md",
+          "reference file remains placeholder-heavy"
+        ]
+      },
+      "file_shape": {
+        "required_files": ["SKILL.md"],
+        "optional_files": ["references/overview.md", "references/gotchas.md"],
+        "extraction_targets": ["references/*.md"],
+        "script_strategy": "no-script-needed",
+        "content_budget_hint": 300
+      },
+      "content_hints": {
+        "must_include": [
+          "pointer from SKILL.md to extracted reference file"
+        ],
+        "should_include": [
+          "clear section title in extracted reference",
+          "brief table of contents for long reference"
+        ],
+        "must_avoid": [
+          "orphan reference file without navigation"
+        ],
+        "references_to_read": ["references/overview.md"],
+        "example_phrasings": [
+          "For advanced details, see references/gotchas.md"
+        ]
+      },
+      "downstream_hints": {
+        "planner_actions": [
+          "add references/*.md candidates when markdown sections are large"
+        ],
+        "generator_actions": [
+          "emit lightweight pointer in SKILL.md and detailed body in references"
+        ],
+        "validator_checks": [
+          "reference_files_are_linked_from_skill_md",
+          "reference_file_is_not_placeholder_heavy"
+        ],
+        "repair_recipes": [
+          "inject_reference_navigation",
+          "rebuild_reference_structure"
+        ]
+      },
+      "confidence": 0.86,
+      "support": 1,
+      "tags": ["progressive-disclosure", "references", "budget"]
+    }
+  ],
+  "aggregated_hints": {
+    "planner_defaults": [
+      "Prefer SKILL.md + references/ over a monolithic SKILL.md when detail grows",
+      "Keep generation_order starting from SKILL.md"
+    ],
+    "generator_defaults": [
+      "Use imperative instructions",
+      "Keep SKILL.md lean and route to references when needed"
+    ],
+    "validator_defaults": [
+      "Check frontmatter quality beyond mere presence",
+      "Check that extracted references are linked"
+    ],
+    "repair_defaults": [
+      "Prefer deterministic fixes for frontmatter and navigation issues"
+    ]
+  },
+  "quality": {
+    "confidence": "medium",
+    "coverage_score": 0.78,
+    "consistency_score": 0.91,
+    "review_status": "draft",
+    "reviewer_notes": [
+      "Good enough for deterministic planner/validator integration"
+    ]
+  },
+  "writeback": {
+    "should_persist_patterns": true,
+    "should_store_case_deltas": true,
+    "memory_candidates": [
+      {
+        "title": "Skill-create pattern set draft",
+        "content": "Trigger-description and reference-split patterns were extracted from recent skill-create cases.",
+        "category": "pattern",
+        "importance": "medium"
+      }
+    ]
+  },
+  "examples": [
+    {
+      "case_id": "case-skill-audit-001",
+      "prompt_excerpt": "Create a skill that helps audit existing SKILL.md files for bloat and bad trigger descriptions",
+      "outcome_excerpt": "Produced a skill scaffold with trigger-aware description guidance",
+      "note": "aligned with skill-creator guidance"
+    }
+  ]
+}

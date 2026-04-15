@@ -1,0 +1,14 @@
+{
+  "runtime_followup_action": "patch_current",
+  "change_pack_action": "keep_baseline",
+  "approval_decision": "reject_refresh",
+  "skills_analyzed": [
+    {
+      "skill_id": "hf-trainer__v1_badflag",
+      "recommended_action": "patch_current",
+      "most_valuable_step": "load dataset card",
+      "misleading_step": "resume trainer workflow"
+    }
+  ],
+  "create_candidate_count": 0
+}

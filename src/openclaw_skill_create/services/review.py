@@ -1,0 +1,294 @@
+from __future__ import annotations
+
+from typing import Any, Optional
+
+from ..models.artifacts import ArtifactFile, Artifacts
+from ..models.requirements import SkillRequirement
+from ..models.review import RepairSuggestion, RequirementResult, SkillQualityReview
+from .operation_coverage import load_operation_coverage_report
+
+
+SCRIPT_PLACEHOLDER_MARKERS = (
+    'placeholder helper script generated from planned candidate resource.',
+    'todo: implement',
+    'notimplementederror',
+)
+
+REFERENCE_PLACEHOLDER_MARKERS = (
+    'reference placeholder derived from planned candidate resource.',
+    'review `',
+)
+
+
+def _artifact_map(artifacts: Artifacts) -> dict[str, ArtifactFile]:
+    return {file.path: file for file in artifacts.files}
+
+
+def _collect_requirements(*, repo_findings: Any, skill_plan: Any) -> list[SkillRequirement]:
+    plan_requirements = list(getattr(skill_plan, 'requirements', []) or [])
+    if plan_requirements:
+        return plan_requirements
+    return list(getattr(repo_findings, 'requirements', []) or [])
+
+
+def _file_has_substance(path: str, content: str) -> bool:
+    stripped = (content or '').strip()
+    if not stripped:
+        return False
+    lowered = stripped.lower()
+    if path.startswith('references/'):
+        if '## overview' not in lowered and len(stripped.splitlines()) < 4:
+            return False
+        return not any(marker in lowered for marker in REFERENCE_PLACEHOLDER_MARKERS)
+    if path.startswith('scripts/'):
+        return not any(marker in lowered for marker in SCRIPT_PLACEHOLDER_MARKERS)
+    if path == 'agents/openai.yaml':
+        return 'interface:' in lowered
+    if path == '_meta.json':
+        return stripped.startswith('{') and 'requirements' in lowered
+    if path == 'SKILL.md':
+        return stripped.startswith('---\n') and len(stripped.splitlines()) >= 5
+    return True
+
+
+def _requirement_result(requirement: SkillRequirement, *, artifacts: Artifacts) -> RequirementResult:
+    files = _artifact_map(artifacts)
+    missing_artifacts: list[str] = []
+    satisfied_targets: list[str] = []
+
+    for path in list(requirement.satisfied_by or []):
+        file = files.get(path)
+        if file is None:
+            missing_artifacts.append(path)
+            continue
+        if _file_has_substance(path, file.content or ''):
+            satisfied_targets.append(path)
+        else:
+            missing_artifacts.append(path)
+
+    primary_targets = [path for path in list(requirement.satisfied_by or []) if path != 'SKILL.md']
+    if primary_targets:
+        satisfied = any(path in satisfied_targets for path in primary_targets)
+    else:
+        satisfied = bool(satisfied_targets)
+    if satisfied:
+        rationale = f"Covered by {', '.join(satisfied_targets[:2])}."
+    elif missing_artifacts:
+        rationale = f"Missing substantive coverage in {', '.join(missing_artifacts[:2])}."
+    else:
+        rationale = 'No planned artifacts were mapped to this requirement.'
+
+    return RequirementResult(
+        requirement_id=requirement.requirement_id,
+        statement=requirement.statement,
+        satisfied=satisfied,
+        evidence_paths=list(requirement.evidence_paths or []),
+        satisfied_by=satisfied_targets,
+        rationale=rationale,
+        missing_artifacts=missing_artifacts,
+    )
+
+
+def _requirement_suggestion(requirement: SkillRequirement, result: RequirementResult) -> Optional[RepairSuggestion]:
+    if result.satisfied:
+        return None
+    if result.missing_artifacts:
+        return RepairSuggestion(
+            issue_type='missing_planned_file',
+            instruction=f"Add or restore artifacts covering requirement: {requirement.statement}",
+            target_paths=result.missing_artifacts,
+            priority=requirement.priority,
+            repair_scope='body_patch',
+        )
+    target_paths = list(requirement.satisfied_by or [])
+    if requirement.source_kind in {'doc', 'config'}:
+        target_paths = [path for path in target_paths if path.startswith('references/')] or target_paths
+        return RepairSuggestion(
+            issue_type='reference_structure_incomplete',
+            instruction=f"Strengthen repo-grounded reference coverage for requirement: {requirement.statement}",
+            target_paths=target_paths,
+            priority=requirement.priority,
+            repair_scope='body_patch',
+        )
+    if requirement.source_kind in {'script', 'workflow', 'entrypoint'}:
+        target_paths = [path for path in target_paths if path.startswith('scripts/')] or target_paths
+        return RepairSuggestion(
+            issue_type='script_placeholder_heavy',
+            instruction=f"Strengthen deterministic helper coverage for requirement: {requirement.statement}",
+            target_paths=target_paths,
+            priority=requirement.priority,
+            repair_scope='body_patch',
+        )
+    return None
+
+
+def _repair_scope_for_issue(issue_type: str, instruction: str) -> str:
+    normalized = f'{issue_type} {instruction}'.lower()
+    if any(token in normalized for token in ('derive', 'specialization', 'specialisation', 'domain split', 'stable gap')):
+        return 'derive_child'
+    if any(token in normalized for token in ('trigger', 'alignment', 'selection', 'description')):
+        return 'description_only'
+    return 'body_patch'
+
+
+def _diagnostic_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
+    if diagnostics is None:
+        return []
+    validation = getattr(diagnostics, 'validation', None)
+    if validation is None:
+        return []
+    issue_types = list(getattr(validation, 'repairable_issue_types', []) or [])
+    reasons = list(getattr(validation, 'failure_reasons', []) or [])
+    suggestions: list[RepairSuggestion] = []
+    for index, issue_type in enumerate(issue_types):
+        instruction = reasons[index] if index < len(reasons) else f'Address validation issue: {issue_type}'
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=issue_type,
+                instruction=instruction,
+                target_paths=[],
+                priority=80,
+                repair_scope=_repair_scope_for_issue(issue_type, instruction),
+            )
+        )
+    return suggestions
+
+
+def _security_summary(diagnostics: Any) -> tuple[str | None, int, list[str]]:
+    security_audit = getattr(diagnostics, 'security_audit', None) if diagnostics is not None else None
+    if security_audit is None:
+        return None, 0, []
+    rating = str(getattr(security_audit, 'rating', '') or '').upper() or None
+    blocking = int(getattr(security_audit, 'blocking_findings_count', 0) or 0)
+    categories = list(getattr(security_audit, 'top_security_categories', []) or [])
+    return rating, blocking, categories
+
+
+def _dedupe_suggestions(suggestions: list[RepairSuggestion]) -> list[RepairSuggestion]:
+    seen: set[tuple[str, tuple[str, ...]]] = set()
+    ordered: list[RepairSuggestion] = []
+    for suggestion in sorted(suggestions, key=lambda item: (-item.priority, item.issue_type)):
+        key = (suggestion.issue_type, tuple(suggestion.target_paths))
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(suggestion)
+    return ordered
+
+
+def review_to_artifact(review: SkillQualityReview) -> ArtifactFile:
+    import json
+
+    return ArtifactFile(
+        path='evals/review.json',
+        content=json.dumps(review.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['quality_review'],
+        status='new',
+    )
+
+
+def run_skill_quality_review(
+    *,
+    repo_findings: Any,
+    skill_plan: Any,
+    artifacts: Artifacts,
+    diagnostics: Any = None,
+    evaluation_report: Any = None,
+) -> SkillQualityReview:
+    requirements = _collect_requirements(repo_findings=repo_findings, skill_plan=skill_plan)
+    requirement_results = [_requirement_result(requirement, artifacts=artifacts) for requirement in requirements]
+
+    requirement_suggestions = [
+        suggestion
+        for requirement, result in zip(requirements, requirement_results)
+        for suggestion in [_requirement_suggestion(requirement, result)]
+        if suggestion is not None
+    ]
+    suggestions = _dedupe_suggestions(requirement_suggestions + _diagnostic_suggestions(diagnostics))
+
+    missing_evidence = sorted(
+        {
+            path
+            for requirement in requirements
+            if not requirement.evidence_paths
+            for path in [requirement.requirement_id]
+        }
+    )
+    requirement_score = (
+        sum(1.0 for item in requirement_results if item.satisfied) / len(requirement_results)
+        if requirement_results
+        else 1.0
+    )
+    evaluation_score = float(getattr(evaluation_report, 'overall_score', 0.0) or 0.0)
+    confidence = round((0.55 * requirement_score) + (0.45 * evaluation_score), 4)
+    security_rating, security_blocking, security_categories = _security_summary(diagnostics)
+    skill_archetype = str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower()
+    operation_contract = getattr(skill_plan, 'operation_contract', None)
+    operation_groups = [getattr(group, 'name', '') for group in list(getattr(operation_contract, 'operations', []) or []) if getattr(group, 'name', '')]
+    operation_count = sum(len(list(getattr(group, 'operations', []) or [])) for group in list(getattr(operation_contract, 'operations', []) or []))
+    operation_validation_status = 'not_applicable'
+    coverage_gap_summary: list[str] = []
+    recommended_followup = 'no_change'
+    if skill_archetype == 'operation_backed':
+        operation_coverage = load_operation_coverage_report(artifacts)
+        if operation_coverage is not None:
+            operation_validation_status = operation_coverage.validation_status
+            coverage_gap_summary = [item.gap_type for item in list(operation_coverage.gap_summary or [])]
+            recommended_followup = operation_coverage.recommended_followup
+        else:
+            issue_types = list(getattr(getattr(diagnostics, 'validation', None), 'repairable_issue_types', []) or []) if diagnostics is not None else []
+            contract_issue_types = [item for item in issue_types if item.startswith('operation_')]
+            if contract_issue_types:
+                operation_validation_status = 'needs_attention'
+                coverage_gap_summary = contract_issue_types
+                recommended_followup = 'patch_current'
+            else:
+                operation_validation_status = 'validated'
+    fully_correct = (
+        not missing_evidence
+        and not suggestions
+        and (security_rating in {None, 'LOW'})
+        and requirement_score >= 0.99
+        and (evaluation_score >= 0.75 if evaluation_report is not None else True)
+    )
+
+    summary = [
+        f"requirements_satisfied={sum(1 for item in requirement_results if item.satisfied)}/{len(requirement_results)}"
+        if requirement_results
+        else 'requirements_skipped',
+        f"repair_suggestions={len(suggestions)}",
+        f"confidence={confidence:.2f}",
+    ]
+    if evaluation_report is not None:
+        summary.append(f"overall_score={evaluation_score:.2f}")
+    if security_rating is not None:
+        summary.append(f"security_rating={security_rating}")
+        summary.append(f"security_blocking_findings={security_blocking}")
+        if security_categories:
+            summary.append(f"security_categories={','.join(security_categories)}")
+    if skill_archetype == 'operation_backed':
+        summary.append(f"skill_archetype={skill_archetype}")
+        summary.append(f"operation_count={operation_count}")
+        if operation_groups:
+            summary.append(f"operation_groups={','.join(operation_groups)}")
+        summary.append(f"operation_validation_status={operation_validation_status}")
+        summary.append(f"recommended_followup={recommended_followup}")
+        if coverage_gap_summary:
+            summary.append(f"coverage_gap_summary={','.join(coverage_gap_summary[:4])}")
+
+    return SkillQualityReview(
+        skill_name=getattr(skill_plan, 'skill_name', '') or getattr(evaluation_report, 'skill_name', 'generated-skill'),
+        skill_archetype=skill_archetype,
+        fully_correct=fully_correct,
+        requirement_results=requirement_results,
+        repair_suggestions=suggestions,
+        missing_evidence=missing_evidence,
+        confidence=confidence,
+        operation_count=operation_count,
+        operation_groups=operation_groups,
+        operation_validation_status=operation_validation_status,
+        coverage_gap_summary=coverage_gap_summary,
+        recommended_followup=recommended_followup,
+        summary=summary,
+    )

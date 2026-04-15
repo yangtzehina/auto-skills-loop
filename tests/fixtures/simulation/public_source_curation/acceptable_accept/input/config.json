@@ -1,0 +1,10 @@
+[
+  {
+    "repo_full_name": "example/acceptable",
+    "ecosystem": "claude",
+    "root_paths": ["skills"],
+    "priority": 10,
+    "verification_task": "Find reusable astronomy skills.",
+    "notes": "Accept rehearsal fixture."
+  }
+]

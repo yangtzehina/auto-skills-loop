@@ -1,0 +1,14 @@
+{
+  "runtime_followup_action": "no_change",
+  "change_pack_action": "keep_baseline",
+  "approval_decision": "reject_refresh",
+  "skills_analyzed": [
+    {
+      "skill_id": "docs-skill__v1_idle",
+      "recommended_action": "no_change",
+      "most_valuable_step": "",
+      "misleading_step": ""
+    }
+  ],
+  "create_candidate_count": 0
+}

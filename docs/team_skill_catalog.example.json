@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "candidates": [
+    {
+      "name": "governance-notion-sync",
+      "description": "Capture architecture decisions into structured Notion pages with governance templates and sync helpers. Use when Codex needs a reusable decision-log workflow.",
+      "trigger_phrases": [
+        "architecture decision",
+        "decision log",
+        "notion sync",
+        "governance review"
+      ],
+      "tags": [
+        "notion",
+        "governance",
+        "decision-log",
+        "templates"
+      ],
+      "dependencies": [
+        {
+          "kind": "mcp",
+          "value": "notion",
+          "description": "Notion MCP server"
+        }
+      ],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/team-skills",
+        "ref": "main",
+        "skill_path": "skills/governance-notion-sync",
+        "skill_url": "https://github.com/example/team-skills/blob/main/skills/governance-notion-sync/SKILL.md",
+        "source_license": "MIT",
+        "source_attribution": "example/team-skills"
+      }
+    },
+    {
+      "candidate_id": "research-plan-compose",
+      "name": "research-plan-compose",
+      "description": "Research a problem space and turn it into a structured implementation plan with reusable templates. Use when Codex needs both exploration and planning structure.",
+      "trigger_phrases": [
+        "deep research",
+        "implementation plan",
+        "problem space"
+      ],
+      "tags": [
+        "research",
+        "planning",
+        "templates"
+      ],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/team-skills",
+        "ref": "main",
+        "skill_path": "skills/research-plan-compose",
+        "skill_url": "https://github.com/example/team-skills/blob/main/skills/research-plan-compose/SKILL.md"
+      }
+    }
+  ]
+}

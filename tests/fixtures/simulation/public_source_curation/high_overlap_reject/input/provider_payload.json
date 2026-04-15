@@ -1,0 +1,66 @@
+{
+  "repos": {
+    "example/high-overlap": [
+      {
+        "candidate_id": "deep-research",
+        "name": "deep-research",
+        "description": "Deep research helper.",
+        "trigger_phrases": ["deep research"],
+        "tags": ["research"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/high-overlap",
+          "ref": "main",
+          "skill_path": "skills/deep-research",
+          "skill_url": "https://github.com/example/high-overlap/blob/main/skills/deep-research/SKILL.md"
+        }
+      },
+      {
+        "candidate_id": "implementation-planning",
+        "name": "implementation-planning",
+        "description": "Implementation planning helper.",
+        "trigger_phrases": ["implementation planning"],
+        "tags": ["planning"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/high-overlap",
+          "ref": "main",
+          "skill_path": "skills/implementation-planning",
+          "skill_url": "https://github.com/example/high-overlap/blob/main/skills/implementation-planning/SKILL.md"
+        }
+      },
+      {
+        "candidate_id": "keyword-research",
+        "name": "keyword-research",
+        "description": "Keyword research helper.",
+        "trigger_phrases": ["keyword research"],
+        "tags": ["seo"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/high-overlap",
+          "ref": "main",
+          "skill_path": "skills/keyword-research",
+          "skill_url": "https://github.com/example/high-overlap/blob/main/skills/keyword-research/SKILL.md"
+        }
+      },
+      {
+        "candidate_id": "fits-summary",
+        "name": "fits-summary",
+        "description": "FITS summary helper.",
+        "trigger_phrases": ["fits summary"],
+        "tags": ["astronomy"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/high-overlap",
+          "ref": "main",
+          "skill_path": "skills/fits-summary",
+          "skill_url": "https://github.com/example/high-overlap/blob/main/skills/fits-summary/SKILL.md"
+        }
+      }
+    ]
+  }
+}

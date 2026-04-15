@@ -1,0 +1,43 @@
+{
+  "scenario_kind": "runtime_analysis",
+  "run_record": {
+    "run_id": "run-op-json-1",
+    "task_id": "task-op-json-1",
+    "task_summary": "Need JSON output from inspect operation.",
+    "execution_result": "failed",
+    "failure_points": [
+      "Missing JSON result payload for the inspect operation."
+    ],
+    "skills_used": [
+      {
+        "skill_id": "native-cli-skill__v1_demo",
+        "skill_name": "native-cli-skill",
+        "selected": true,
+        "applied": true,
+        "steps_triggered": [
+          "inspect"
+        ],
+        "skill_archetype": "operation_backed",
+        "operation_validation_status": "validated",
+        "operation_contract": {
+          "name": "native-cli-skill",
+          "backend_kind": "repo_native_cli",
+          "supports_json": true,
+          "session_model": "stateless",
+          "mutability": "read_only",
+          "operations": [
+            {
+              "name": "main",
+              "operations": [
+                {
+                  "name": "inspect",
+                  "summary": "Inspect the target resource and return JSON."
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

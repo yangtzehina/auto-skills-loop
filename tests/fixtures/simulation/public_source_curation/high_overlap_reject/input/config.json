@@ -1,0 +1,10 @@
+[
+  {
+    "repo_full_name": "example/high-overlap",
+    "ecosystem": "claude",
+    "root_paths": ["skills"],
+    "priority": 30,
+    "verification_task": "Find reusable planning and research skills.",
+    "notes": "High-overlap rehearsal fixture."
+  }
+]

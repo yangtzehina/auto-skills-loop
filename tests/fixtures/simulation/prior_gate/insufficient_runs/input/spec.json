@@ -1,0 +1,35 @@
+{
+  "catalog": [
+    {
+      "candidate_id": "hf-trainer",
+      "name": "hf-trainer",
+      "description": "Handle Hugging Face trainer workflows.",
+      "trigger_phrases": ["hugging face trainer"],
+      "tags": ["huggingface", "trainer"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/hf-trainer",
+        "ref": "main",
+        "skill_path": "skills/hf-trainer",
+        "skill_url": "https://github.com/example/hf-trainer/blob/main/skills/hf-trainer/SKILL.md"
+      }
+    }
+  ],
+  "runtime_effectiveness_lookup": {
+    "hf-trainer": {
+      "skill_id": "hf-trainer__v2",
+      "skill_name": "hf-trainer",
+      "quality_score": 0.9,
+      "run_count": 2
+    }
+  },
+  "task_samples": [
+    {
+      "task": "Fix the Hugging Face trainer resume workflow",
+      "repo_context": {
+        "selected_files": []
+      }
+    }
+  ]
+}

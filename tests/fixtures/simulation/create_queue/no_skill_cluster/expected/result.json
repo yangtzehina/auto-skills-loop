@@ -1,0 +1,19 @@
+{
+  "runs_processed": 3,
+  "entries": [
+    {
+      "candidate_key": "missing-fits-calibration-and-astropy-verification-workflow",
+      "occurrence_count": 3,
+      "recommended_status": "review",
+      "source_run_ids": [
+        "run-no-skill-01",
+        "run-no-skill-02",
+        "run-no-skill-03"
+      ],
+      "requirement_gaps": [
+        "Missing FITS calibration and astropy verification workflow.",
+        "Need a dedicated FITS calibration workflow for astronomy reductions."
+      ]
+    }
+  ]
+}

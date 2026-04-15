@@ -1,0 +1,27 @@
+{
+  "run_id": "gap-run-03",
+  "task_id": "task-gap-streak",
+  "task_summary": "Use the skill in a Hugging Face trainer workflow and watch for stable missing steps.",
+  "execution_result": "partial",
+  "skills_used": [
+    {
+      "skill_id": "hf-trainer__v0_gap",
+      "skill_name": "hf-trainer",
+      "skill_path": "/tmp/hf-trainer",
+      "selected": true,
+      "applied": true,
+      "steps_triggered": [
+        "review references/hf.md"
+      ],
+      "notes": "The generic trainer flow was applied."
+    }
+  ],
+  "user_corrections": [
+    "Missing Hugging Face trainer resume step for distributed training."
+  ],
+  "output_summary": "Task completed partially with manual trainer corrections.",
+  "repo_paths": [
+    "/tmp/repo"
+  ],
+  "completed_at": "2026-04-12T12:20:00+08:00"
+}

@@ -1,0 +1,14 @@
+{
+  "task_id": "sim-intake-selected-only",
+  "task_summary": "Selected skill but never actually applied.",
+  "skills_used": [
+    {
+      "skill_id": "docs-skill__v1_idle",
+      "skill_name": "docs-skill",
+      "selected": true,
+      "applied": false,
+      "steps_triggered": []
+    }
+  ],
+  "execution_result": "failed"
+}

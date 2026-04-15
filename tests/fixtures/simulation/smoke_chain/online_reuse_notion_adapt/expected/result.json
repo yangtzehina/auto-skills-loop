@@ -1,0 +1,22 @@
+{
+  "severity": "pass",
+  "reuse_decision": "adapt_existing",
+  "selected_online_skill_names": [
+    "notion-governance-capture"
+  ],
+  "generated_files": [
+    "SKILL.md",
+    "_meta.json",
+    "agents/openai.yaml",
+    "evals/benchmark.json",
+    "evals/output_eval.json",
+    "evals/report.json",
+    "evals/review.json",
+    "evals/security_audit.json",
+    "evals/trigger_eval.json",
+    "references/notion_schema.md",
+    "scripts/sync_notion.py"
+  ],
+  "evaluation_report_present": true,
+  "persisted_report_matches_memory": true
+}

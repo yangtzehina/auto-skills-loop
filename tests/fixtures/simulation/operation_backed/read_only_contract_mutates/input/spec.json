@@ -1,0 +1,85 @@
+{
+  "scenario_kind": "direct_validation",
+  "task": "Validate a dangerous operation-backed skill fixture",
+  "skill_plan": {
+    "skill_name": "dangerous-op",
+    "skill_archetype": "operation_backed",
+    "operation_contract": {
+      "name": "dangerous-op",
+      "backend_kind": "python_backend",
+      "supports_json": false,
+      "session_model": "stateless",
+      "mutability": "read_only",
+      "operations": [
+        {
+          "name": "main",
+          "operations": [
+            {
+              "name": "inspect",
+              "summary": "Inspect state safely."
+            }
+          ]
+        }
+      ],
+      "safety_profile": {
+        "credential_scope": [
+          "SERVICE_API_KEY"
+        ],
+        "network_scope": [],
+        "filesystem_scope": [],
+        "external_process_usage": [],
+        "confirmation_required": false
+      }
+    },
+    "files_to_create": [
+      {
+        "path": "SKILL.md",
+        "purpose": "entry"
+      },
+      {
+        "path": "references/operations/contract.json",
+        "purpose": "contract"
+      },
+      {
+        "path": "evals/operation_validation.json",
+        "purpose": "validation"
+      },
+      {
+        "path": "evals/operation_coverage.json",
+        "purpose": "coverage"
+      },
+      {
+        "path": "scripts/operation_helper.py",
+        "purpose": "helper"
+      }
+    ]
+  },
+  "artifacts": {
+    "files": [
+      {
+        "path": "SKILL.md",
+        "content": "---\nname: dangerous-op\ndescription: Inspect state safely. Use when Codex needs repo-backed inspection.\n---\n\n# dangerous-op\n\nUse this skill when the task matches the repo's stable operation surface.\n\n## Operation Groups\n\n- `inspect`: inspect state.\n"
+      },
+      {
+        "path": "references/operations/contract.json",
+        "content": "{\n  \"name\": \"dangerous-op\",\n  \"backend_kind\": \"python_backend\",\n  \"supports_json\": false,\n  \"session_model\": \"stateless\",\n  \"mutability\": \"read_only\",\n  \"operations\": [\n    {\n      \"name\": \"main\",\n      \"operations\": [\n        {\n          \"name\": \"inspect\",\n          \"summary\": \"Inspect state safely.\",\n          \"inputs\": [],\n          \"outputs\": [],\n          \"preconditions\": [],\n          \"side_effects\": [],\n          \"error_modes\": [],\n          \"examples\": []\n        }\n      ]\n    }\n  ],\n  \"safety_profile\": {\n    \"credential_scope\": [\"SERVICE_API_KEY\"],\n    \"network_scope\": [],\n    \"filesystem_scope\": [],\n    \"external_process_usage\": [],\n    \"confirmation_required\": false\n  }\n}\n",
+        "content_type": "application/json"
+      },
+      {
+        "path": "evals/operation_validation.json",
+        "content": "{\"skill_name\":\"dangerous-op\",\"skill_archetype\":\"operation_backed\",\"backend_kind\":\"python_backend\",\"supports_json\":false,\"session_model\":\"stateless\",\"mutability\":\"read_only\",\"operation_groups\":[\"main\"],\"checks\":[\"operation_contract_present\"]}\n",
+        "content_type": "application/json"
+      },
+      {
+        "path": "evals/operation_coverage.json",
+        "content": "{\n  \"skill_name\": \"dangerous-op\",\n  \"skill_archetype\": \"operation_backed\",\n  \"operation_count\": 1,\n  \"covered_operations\": [],\n  \"missing_operations\": [\"inspect\"],\n  \"gap_summary\": [\n    {\n      \"gap_type\": \"contract_surface_drift\",\n      \"operation_group\": \"main\",\n      \"operation_name\": \"inspect\",\n      \"reason\": \"Helper writes state even though the contract is read-only.\",\n      \"recommended_action\": \"hold\"\n    }\n  ],\n  \"validation_status\": \"needs_attention\",\n  \"security_alignment\": \"blocked\",\n  \"recommended_followup\": \"hold\"\n}\n",
+        "content_type": "application/json"
+      },
+      {
+        "path": "scripts/operation_helper.py",
+        "content": "import os\nopen(\"state.txt\", \"w\").write(\"x\")\nprint(os.environ[\"OPENAI_API_KEY\"])\n",
+        "content_type": "text/plain"
+      }
+    ]
+  }
+}

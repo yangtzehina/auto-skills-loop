@@ -1,0 +1,11 @@
+{
+  "scenario_kind": "skill_create",
+  "request": {
+    "task": "Create an operation-backed skill for the backend-only repo",
+    "repo_paths": [
+      "../../../../operation_backed/backend_only_repo"
+    ],
+    "skill_name_hint": "backend-only-skill",
+    "enable_eval_scaffold": true
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "scenario_kind": "skill_create",
+  "severity": "pass",
+  "skill_archetype": "operation_backed",
+  "operation_validation_status": "validated",
+  "recommended_followup": "no_change",
+  "coverage_gap_summary": [],
+  "security_rating": "LOW",
+  "generated_files": [
+    "SKILL.md",
+    "evals/benchmark.json",
+    "evals/operation_coverage.json",
+    "evals/operation_validation.json",
+    "evals/output_eval.json",
+    "evals/report.json",
+    "evals/review.json",
+    "evals/security_audit.json",
+    "evals/trigger_eval.json",
+    "references/README.md",
+    "references/operations/contract.json",
+    "scripts/cli.py"
+  ]
+}

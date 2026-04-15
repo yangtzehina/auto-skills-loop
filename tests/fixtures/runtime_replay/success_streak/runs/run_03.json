@@ -1,0 +1,25 @@
+{
+  "run_id": "success-run-03",
+  "task_id": "task-success-streak",
+  "task_summary": "Use the packaged repo-aware skill without follow-up changes.",
+  "execution_result": "success",
+  "skills_used": [
+    {
+      "skill_id": "demo-skill__v0_success",
+      "skill_name": "demo-skill",
+      "skill_path": "/tmp/demo-skill",
+      "selected": true,
+      "applied": true,
+      "steps_triggered": [
+        "review references/usage.md",
+        "run scripts/build.py"
+      ],
+      "notes": "Applied the standard happy-path flow."
+    }
+  ],
+  "output_summary": "Completed successfully a third time.",
+  "repo_paths": [
+    "/tmp/repo"
+  ],
+  "completed_at": "2026-04-12T10:20:00+08:00"
+}

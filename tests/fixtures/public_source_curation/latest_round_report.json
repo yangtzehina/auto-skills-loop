@@ -1,0 +1,95 @@
+{
+  "rehearsal_matched_count": 3,
+  "rehearsal_drifted_count": 0,
+  "rehearsal_invalid_fixture_count": 0,
+  "rehearsal_passed": true,
+  "live_applied": true,
+  "live_report": {
+    "candidates": [
+      {
+        "repo_full_name": "Cam10001110101/claude-skills-base",
+        "ecosystem": "claude",
+        "root_paths": [
+          "skills",
+          ".claude/skills",
+          ""
+        ],
+        "priority": 40,
+        "verification_task": "Find repo-grounded Claude skills for engineering and research workflows.",
+        "notes": "Previously sampled with no stable candidates.",
+        "candidate_count": 0,
+        "sample_skill_names": [],
+        "overlap_assessment": "none",
+        "structure_supported": false,
+        "verdict": "reject",
+        "reason": "Only discovered 0 candidate(s)",
+        "smoke_required": false,
+        "selected_for_default": false
+      },
+      {
+        "repo_full_name": "giuseppe-trisciuoglio/developer-kit-claude-code",
+        "ecosystem": "claude",
+        "root_paths": [
+          "skills",
+          ".claude/skills",
+          ""
+        ],
+        "priority": 40,
+        "verification_task": "Find reusable Claude skills for engineering planning and workflow automation.",
+        "notes": "Previously sampled with no stable candidates.",
+        "candidate_count": 0,
+        "sample_skill_names": [],
+        "overlap_assessment": "none",
+        "structure_supported": false,
+        "verdict": "reject",
+        "reason": "Only discovered 0 candidate(s)",
+        "smoke_required": false,
+        "selected_for_default": false
+      },
+      {
+        "repo_full_name": "alirezarezvani/claude-skills",
+        "ecosystem": "claude",
+        "root_paths": [
+          "skills",
+          ".claude/skills",
+          ""
+        ],
+        "priority": 35,
+        "verification_task": "Find reusable Claude skills for SEO, Amazon, and business workflow tasks.",
+        "notes": "Yield exists, but prior review suggested heavy overlap with existing seeded collections.",
+        "candidate_count": 6,
+        "sample_skill_names": [
+          "amazon-keyword-optimizer",
+          "seo-content-brief",
+          "listing-health-audit",
+          "product-copy-optimizer",
+          "catalog-gap-review",
+          "conversion-insights"
+        ],
+        "overlap_assessment": "low",
+        "structure_supported": true,
+        "verdict": "accept",
+        "reason": "Discovered enough low-overlap candidates with supported structure",
+        "smoke_required": true,
+        "selected_for_default": true
+      }
+    ],
+    "accepted_repos": [
+      "alirezarezvani/claude-skills"
+    ],
+    "rejected_repos": [
+      "Cam10001110101/claude-skills-base",
+      "giuseppe-trisciuoglio/developer-kit-claude-code"
+    ],
+    "manual_review_repos": [],
+    "promoted_repos": [
+      "alirezarezvani/claude-skills"
+    ],
+    "summary": "Public source verification complete: accept=1 reject=2 manual_review=0 promoted=1"
+  },
+  "promoted_repos": [
+    "alirezarezvani/claude-skills"
+  ],
+  "summary": "Public source curation round complete: rehearsal_matched=3 accepted=1 promoted=1",
+  "markdown_summary": "# Public Source Curation Round\n\n- Summary: Public source curation round complete: rehearsal_matched=3 accepted=1 promoted=1\n- rehearsal_passed=True\n- live_applied=True\n- promoted_repos=['alirezarezvani/claude-skills']"
+}

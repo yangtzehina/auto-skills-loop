@@ -1,0 +1,22 @@
+{
+  "severity": "pass",
+  "reuse_decision": "adapt_existing",
+  "selected_online_skill_names": [
+    "business-workflow-optimizer"
+  ],
+  "generated_files": [
+    "SKILL.md",
+    "_meta.json",
+    "agents/openai.yaml",
+    "evals/benchmark.json",
+    "evals/output_eval.json",
+    "evals/report.json",
+    "evals/review.json",
+    "evals/security_audit.json",
+    "evals/trigger_eval.json",
+    "references/workflow_checklist.md",
+    "scripts/review_workflow.py"
+  ],
+  "evaluation_report_present": true,
+  "persisted_report_matches_memory": true
+}

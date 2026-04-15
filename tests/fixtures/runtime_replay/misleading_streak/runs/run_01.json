@@ -1,0 +1,27 @@
+{
+  "run_id": "mislead-run-01",
+  "task_id": "task-misleading-streak",
+  "task_summary": "Run the skill and capture when its scripted step misleads execution.",
+  "execution_result": "failed",
+  "skills_used": [
+    {
+      "skill_id": "broken-skill__v0_patch",
+      "skill_name": "broken-skill",
+      "skill_path": "/tmp/broken-skill",
+      "selected": true,
+      "applied": true,
+      "steps_triggered": [
+        "run scripts/build.py"
+      ],
+      "notes": "The scripted build helper was used."
+    }
+  ],
+  "failure_points": [
+    "The run scripts/build.py step used the wrong command and misled execution."
+  ],
+  "output_summary": "Execution failed because the scripted step was wrong.",
+  "repo_paths": [
+    "/tmp/repo"
+  ],
+  "completed_at": "2026-04-12T11:00:00+08:00"
+}

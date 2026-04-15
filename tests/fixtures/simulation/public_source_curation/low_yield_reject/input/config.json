@@ -1,0 +1,10 @@
+[
+  {
+    "repo_full_name": "example/low-yield",
+    "ecosystem": "claude",
+    "root_paths": ["skills"],
+    "priority": 20,
+    "verification_task": "Find reusable astronomy skills.",
+    "notes": "Low-yield rehearsal fixture."
+  }
+]

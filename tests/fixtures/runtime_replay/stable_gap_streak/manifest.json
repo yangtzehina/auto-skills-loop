@@ -1,0 +1,31 @@
+{
+  "scenario_id": "stable_gap_streak",
+  "description": "Three repeated domain gaps should derive a child skill on the third run.",
+  "run_files": [
+    "runs/run_01.json",
+    "runs/run_02.json",
+    "runs/run_03.json"
+  ],
+  "expected_actions": [
+    "no_change",
+    "no_change",
+    "derive_child"
+  ],
+  "expected_final_followup_action": "derive_child",
+  "expected_final_quality_score": 0.6,
+  "expected_final_usage_stats": {
+    "run_count": 3,
+    "helped_count": 3,
+    "misled_count": 0,
+    "patch_count": 0,
+    "derive_count": 1
+  },
+  "expected_final_recent_run_ids": [
+    "gap-run-01",
+    "gap-run-02",
+    "gap-run-03"
+  ],
+  "expected_final_requirement_gaps": [
+    "Missing Hugging Face trainer resume step for distributed training."
+  ]
+}

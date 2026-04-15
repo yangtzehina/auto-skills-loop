@@ -1,0 +1,47 @@
+{
+  "scenario_kind": "runtime_analysis",
+  "run_record": {
+    "run_id": "run-op-derive-1",
+    "task_id": "task-op-derive-1",
+    "task_summary": "Need the sync operation for the workspace workflow.",
+    "execution_result": "failed",
+    "failure_points": [
+      "Missing the sync operation for the workspace workflow."
+    ],
+    "skills_used": [
+      {
+        "skill_id": "workspace-skill__v1_demo",
+        "skill_name": "workspace-skill",
+        "selected": true,
+        "applied": true,
+        "steps_triggered": [
+          "inspect"
+        ],
+        "skill_archetype": "operation_backed",
+        "operation_validation_status": "validated",
+        "operation_contract": {
+          "name": "workspace-skill",
+          "backend_kind": "repo_native_cli",
+          "supports_json": true,
+          "session_model": "stateless",
+          "mutability": "read_only",
+          "operations": [
+            {
+              "name": "main",
+              "operations": [
+                {
+                  "name": "inspect",
+                  "summary": "Inspect the current workspace."
+                },
+                {
+                  "name": "sync",
+                  "summary": "Sync the current workspace."
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+name: astronomy-eval
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: python scripts/process_fits.py

@@ -1,0 +1,76 @@
+{
+  "scenario_baselines": [
+    {
+      "scenario_id": "misleading_streak",
+      "actual_actions": [
+        "patch_current",
+        "patch_current",
+        "patch_current"
+      ],
+      "actual_final_followup_action": "patch_current",
+      "actual_final_quality_score": 0.0,
+      "actual_final_usage_stats": {
+        "run_count": 3,
+        "helped_count": 0,
+        "misled_count": 3,
+        "patch_count": 3,
+        "derive_count": 0
+      },
+      "actual_final_recent_run_ids": [
+        "mislead-run-01",
+        "mislead-run-02",
+        "mislead-run-03"
+      ],
+      "actual_final_requirement_gaps": []
+    },
+    {
+      "scenario_id": "stable_gap_streak",
+      "actual_actions": [
+        "no_change",
+        "no_change",
+        "derive_child"
+      ],
+      "actual_final_followup_action": "derive_child",
+      "actual_final_quality_score": 0.6,
+      "actual_final_usage_stats": {
+        "run_count": 3,
+        "helped_count": 3,
+        "misled_count": 0,
+        "patch_count": 0,
+        "derive_count": 1
+      },
+      "actual_final_recent_run_ids": [
+        "gap-run-01",
+        "gap-run-02",
+        "gap-run-03"
+      ],
+      "actual_final_requirement_gaps": [
+        "Missing Hugging Face trainer resume step for distributed training."
+      ]
+    },
+    {
+      "scenario_id": "success_streak",
+      "actual_actions": [
+        "no_change",
+        "no_change",
+        "no_change"
+      ],
+      "actual_final_followup_action": "no_change",
+      "actual_final_quality_score": 1.0,
+      "actual_final_usage_stats": {
+        "run_count": 3,
+        "helped_count": 3,
+        "misled_count": 0,
+        "patch_count": 0,
+        "derive_count": 0
+      },
+      "actual_final_recent_run_ids": [
+        "success-run-01",
+        "success-run-02",
+        "success-run-03"
+      ],
+      "actual_final_requirement_gaps": []
+    }
+  ],
+  "summary": "Runtime replay baseline complete: scenarios=3"
+}

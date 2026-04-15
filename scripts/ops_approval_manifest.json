@@ -1,0 +1,23 @@
+{
+  "create_seed": [
+    {
+      "candidate_key": "missing-fits-calibration-and-astropy-verification-workflow",
+      "decision": "approved",
+      "notes": "Approved on 2026-04-13 after reviewing the create-seed proposal pack; materialize the manual round handoff but do not auto-run generator."
+    }
+  ],
+  "prior_pilot": [
+    {
+      "family": "hf-trainer",
+      "decision": "approved",
+      "notes": "Approved on 2026-04-13 for an opt-in, allowlisted manual trial only; runtime prior remains off by default."
+    }
+  ],
+  "source_promotion": [
+    {
+      "repo_full_name": "alirezarezvani/claude-skills",
+      "decision": "approved",
+      "notes": "Approved on 2026-04-13 after rehearsal, live curation, and required regressions/smoke were confirmed; allow a single seeded-collection promotion."
+    }
+  ]
+}

@@ -1,0 +1,362 @@
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+
+from ..models.public_source_verification import PublicSourceCurationRoundReport, PublicSourcePromotionPack
+from ..models.runtime_governance import (
+    RuntimeCreateSeedProposalPack,
+    RuntimeOpsDecisionPack,
+    RuntimePriorPilotExerciseReport,
+    RuntimePriorPilotReport,
+)
+from ..models.verify import OpsRoundbookReport, VerifyCommandResult, VerifyReport
+from .operation_backed_ops import build_operation_backed_backlog_report, build_operation_backed_status_report
+from .ops_approval import summarize_decision_statuses
+
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def _run_command(label: str, cmd: list[str]) -> VerifyCommandResult:
+    completed = subprocess.run(
+        cmd,
+        cwd=str(ROOT),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return VerifyCommandResult(
+        label=label,
+        command=cmd,
+        exit_code=completed.returncode,
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+    )
+
+
+def render_verify_report_markdown(report: VerifyReport) -> str:
+    lines = [
+        '# Verify Report',
+        '',
+        f'- Mode: {report.mode}',
+        f'- Overall status: {report.overall_status}',
+        f'- Summary: {report.summary}',
+        f'- decision_status_summary={report.decision_status_summary}',
+        f'- operation_backed_status_counts={report.operation_backed_status_counts}',
+        f'- operation_backed_actionable_count={report.operation_backed_actionable_count}',
+        f'- operation_backed_hold_count={report.operation_backed_hold_count}',
+        '',
+        '## Commands',
+    ]
+    for item in list(report.commands or []):
+        lines.append(f'- `{item.label}` exit_code={item.exit_code}')
+    if report.decision_statuses:
+        lines.extend(['', '## Decision Statuses'])
+        for status, values in list(report.decision_statuses.items()):
+            lines.append(f'- `{status}`: {values}')
+    lines.extend(['', '## Operation-Backed Summary'])
+    if not report.operation_backed_status_counts:
+        lines.append('- None')
+    else:
+        for status, count in list(report.operation_backed_status_counts.items()):
+            lines.append(f'- `{status}`: {count}')
+    return '\n'.join(lines).strip()
+
+
+def build_verify_report(
+    *,
+    mode: str,
+    include_live_curation: bool = False,
+    decision_statuses: dict[str, list[str]] | None = None,
+) -> VerifyReport:
+    operation_backed_status_report = build_operation_backed_status_report()
+    commands = [
+        _run_command(
+            'run_tests',
+            [sys.executable, 'scripts/run_tests.py'],
+        ),
+        _run_command(
+            'run_simulation_suite',
+            [sys.executable, 'scripts/run_simulation_suite.py', '--mode', mode],
+        ),
+    ]
+    if include_live_curation:
+        commands.append(
+            _run_command(
+                'run_public_source_curation_round',
+                [sys.executable, 'scripts/run_public_source_curation_round.py'],
+            )
+        )
+    failed = [item for item in commands if int(item.exit_code) != 0]
+    if failed:
+        if include_live_curation and all(item.label == 'run_public_source_curation_round' for item in failed):
+            overall_status = 'warn'
+        else:
+            overall_status = 'fail'
+    else:
+        overall_status = 'pass'
+    report = VerifyReport(
+        mode=mode,
+        include_live_curation=include_live_curation,
+        commands=commands,
+        decision_statuses=dict(decision_statuses or {}),
+        decision_status_summary={
+            key: len(list(values or []))
+            for key, values in dict(decision_statuses or {}).items()
+        },
+        operation_backed_status_counts=dict(operation_backed_status_report.recommended_followup_counts),
+        operation_backed_actionable_count=int(operation_backed_status_report.actionable_count or 0),
+        operation_backed_hold_count=int(operation_backed_status_report.hold_count or 0),
+        overall_status=overall_status,
+        summary=(
+            f'Verify report complete: commands={len(commands)} '
+            f'failed={len(failed)} overall_status={overall_status} '
+            f'operation_backed_actionable={operation_backed_status_report.actionable_count} '
+            f'operation_backed_hold={operation_backed_status_report.hold_count}'
+        ),
+    )
+    report.markdown_summary = render_verify_report_markdown(report)
+    return report
+
+
+def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
+    lines = [
+        '# Ops Roundbook',
+        '',
+        f'- verification_status={report.verification_status}',
+        f'- overall_readiness={report.overall_readiness}',
+        f'- Summary: {report.summary}',
+        '',
+        '## Pending Create Seed Decisions',
+    ]
+    if not report.pending_create_seed_decisions:
+        lines.append('- None')
+    else:
+        for item in report.pending_create_seed_decisions:
+            lines.append(f'- {item}')
+    lines.extend(['', '## Pending Prior Pilot Decisions'])
+    if not report.pending_prior_pilot_decisions:
+        lines.append('- None')
+    else:
+        for item in report.pending_prior_pilot_decisions:
+            lines.append(f'- {item}')
+    lines.extend(['', '## Pending Source Promotion Decisions'])
+    if not report.pending_source_promotion_decisions:
+        lines.append('- None')
+    else:
+        for item in report.pending_source_promotion_decisions:
+            lines.append(f'- {item}')
+    lines.extend(['', '## Approved Not Applied'])
+    if not (
+        report.approved_not_applied_create_seed_decisions
+        or report.approved_not_applied_prior_pilot_decisions
+        or report.approved_not_applied_source_promotion_decisions
+    ):
+        lines.append('- None')
+    else:
+        for item in report.approved_not_applied_create_seed_decisions:
+            lines.append(f'- create-seed:{item}')
+        for item in report.approved_not_applied_prior_pilot_decisions:
+            lines.append(f'- prior-pilot:{item}')
+        for item in report.approved_not_applied_source_promotion_decisions:
+            lines.append(f'- source-promotion:{item}')
+    lines.extend(['', '## Applied'])
+    if not (
+        report.applied_create_seed_decisions
+        or report.applied_prior_pilot_decisions
+        or report.applied_source_promotion_decisions
+    ):
+        lines.append('- None')
+    else:
+        for item in report.applied_create_seed_decisions:
+            lines.append(f'- create-seed:{item}')
+        for item in report.applied_prior_pilot_decisions:
+            lines.append(f'- prior-pilot:{item}')
+        for item in report.applied_source_promotion_decisions:
+            lines.append(f'- source-promotion:{item}')
+    lines.extend(['', '## Decision Refill'])
+    lines.append(f'- next_create_seed_candidate={report.next_create_seed_candidate or "(none)"}')
+    lines.append(f'- next_prior_family_on_hold={report.next_prior_family_on_hold or "(none)"}')
+    lines.append(f'- next_source_round_status={report.next_source_round_status or "(none)"}')
+    lines.extend(['', '## Operation-Backed Backlog'])
+    if not (
+        report.operation_backed_patch_current_candidates
+        or report.operation_backed_derive_child_candidates
+        or report.operation_backed_hold_candidates
+    ):
+        lines.append('- None')
+    else:
+        for item in report.operation_backed_patch_current_candidates:
+            lines.append(f'- patch_current:{item}')
+        for item in report.operation_backed_derive_child_candidates:
+            lines.append(f'- derive_child:{item}')
+        for item in report.operation_backed_hold_candidates:
+            lines.append(f'- hold:{item}')
+    return '\n'.join(lines).strip()
+
+
+def build_ops_roundbook_report(
+    *,
+    verify_report: VerifyReport,
+    runtime_ops_decision_pack: RuntimeOpsDecisionPack,
+    prior_pilot_exercise: RuntimePriorPilotExerciseReport,
+    source_promotion_pack: PublicSourcePromotionPack,
+    create_seed_pack: RuntimeCreateSeedProposalPack | None = None,
+    prior_pilot_report: RuntimePriorPilotReport | None = None,
+    source_curation_round: PublicSourceCurationRoundReport | None = None,
+) -> OpsRoundbookReport:
+    operation_backed_backlog_report = build_operation_backed_backlog_report()
+    status_groups = summarize_decision_statuses(
+        create_seed_candidates=list(runtime_ops_decision_pack.create_seed_candidates or []),
+        prior_pilot_candidates=list(runtime_ops_decision_pack.prior_pilot_candidates or []),
+        source_promotion_candidates=list(runtime_ops_decision_pack.source_promotion_candidates or []),
+    )
+    pending_create_seed_decisions = [
+        item.candidate_key
+        for item in list(runtime_ops_decision_pack.create_seed_candidates or [])
+        if item.decision_status == 'pending'
+    ]
+    pending_prior_pilot_decisions = [
+        item.family
+        for item in list(runtime_ops_decision_pack.prior_pilot_candidates or [])
+        if item.decision_status == 'pending'
+    ]
+    pending_source_promotion_decisions = [
+        item.repo_full_name
+        for item in list(runtime_ops_decision_pack.source_promotion_candidates or [])
+        if item.decision_status == 'pending'
+    ]
+    approved_not_applied_create_seed_decisions = [
+        item.candidate_key
+        for item in list(runtime_ops_decision_pack.create_seed_candidates or [])
+        if item.decision_status == 'approved_not_applied'
+    ]
+    approved_not_applied_prior_pilot_decisions = [
+        item.family
+        for item in list(runtime_ops_decision_pack.prior_pilot_candidates or [])
+        if item.decision_status == 'approved_not_applied'
+    ]
+    approved_not_applied_source_promotion_decisions = [
+        item.repo_full_name
+        for item in list(runtime_ops_decision_pack.source_promotion_candidates or [])
+        if item.decision_status == 'approved_not_applied'
+    ]
+    applied_create_seed_decisions = [
+        item.candidate_key
+        for item in list(runtime_ops_decision_pack.create_seed_candidates or [])
+        if item.decision_status == 'applied'
+    ]
+    applied_prior_pilot_decisions = [
+        item.family
+        for item in list(runtime_ops_decision_pack.prior_pilot_candidates or [])
+        if item.decision_status == 'applied'
+    ]
+    applied_source_promotion_decisions = [
+        item.repo_full_name
+        for item in list(runtime_ops_decision_pack.source_promotion_candidates or [])
+        if item.decision_status == 'applied'
+    ]
+    next_create_seed_candidate = (
+        pending_create_seed_decisions[0]
+        if pending_create_seed_decisions
+        else (
+            next(
+                (
+                    item.candidate_key
+                    for item in list(create_seed_pack.proposals or [])
+                    if item.recommended_decision in {'review', 'defer'}
+                    and item.candidate_key not in applied_create_seed_decisions
+                ),
+                '',
+            )
+            if create_seed_pack is not None
+            else ''
+        )
+    )
+    next_prior_family_on_hold = (
+        next(
+            (
+                item.family
+                for item in list(prior_pilot_report.profiles or [])
+                if item.recommended_status == 'hold'
+            ),
+            '',
+        )
+        if prior_pilot_report is not None
+        else ''
+    )
+    if pending_source_promotion_decisions or approved_not_applied_source_promotion_decisions:
+        next_source_round_status = 'wait_for_current_source_promotion_resolution'
+    elif applied_source_promotion_decisions:
+        next_source_round_status = 'wait_for_post_apply_stability_before_next_live_round'
+    elif source_curation_round is not None and source_curation_round.rehearsal_passed:
+        next_source_round_status = 'ready_for_next_live_round_when_new_candidates_exist'
+    elif source_curation_round is not None:
+        next_source_round_status = 'rehearsal_required_before_next_live_round'
+    else:
+        next_source_round_status = ''
+
+    if verify_report.overall_status == 'fail':
+        overall_readiness = 'blocked'
+    elif (
+        verify_report.overall_status == 'warn'
+        or pending_create_seed_decisions
+        or pending_prior_pilot_decisions
+        or pending_source_promotion_decisions
+        or approved_not_applied_create_seed_decisions
+        or approved_not_applied_prior_pilot_decisions
+        or approved_not_applied_source_promotion_decisions
+    ):
+        overall_readiness = 'caution'
+    else:
+        overall_readiness = 'ready'
+
+    report = OpsRoundbookReport(
+        verification_status=verify_report.overall_status,
+        verify_report=verify_report.model_copy(
+            update={
+                'decision_statuses': status_groups,
+                'decision_status_summary': {
+                    key: len(list(values or []))
+                    for key, values in status_groups.items()
+                },
+            }
+        ),
+        runtime_ops_decision_pack=runtime_ops_decision_pack,
+        prior_pilot_exercise=prior_pilot_exercise,
+        source_promotion_pack=source_promotion_pack,
+        pending_create_seed_decisions=pending_create_seed_decisions,
+        pending_prior_pilot_decisions=pending_prior_pilot_decisions,
+        pending_source_promotion_decisions=pending_source_promotion_decisions,
+        approved_not_applied_create_seed_decisions=approved_not_applied_create_seed_decisions,
+        approved_not_applied_prior_pilot_decisions=approved_not_applied_prior_pilot_decisions,
+        approved_not_applied_source_promotion_decisions=approved_not_applied_source_promotion_decisions,
+        applied_create_seed_decisions=applied_create_seed_decisions,
+        applied_prior_pilot_decisions=applied_prior_pilot_decisions,
+        applied_source_promotion_decisions=applied_source_promotion_decisions,
+        next_create_seed_candidate=next_create_seed_candidate,
+        next_prior_family_on_hold=next_prior_family_on_hold,
+        next_source_round_status=next_source_round_status,
+        operation_backed_backlog_report=operation_backed_backlog_report,
+        operation_backed_patch_current_candidates=list(operation_backed_backlog_report.patch_current_candidates or []),
+        operation_backed_derive_child_candidates=list(operation_backed_backlog_report.derive_child_candidates or []),
+        operation_backed_hold_candidates=list(operation_backed_backlog_report.hold_candidates or []),
+        overall_readiness=overall_readiness,
+        summary=(
+            f'Ops roundbook complete: verification={verify_report.overall_status} '
+            f'create_seed_pending={len(pending_create_seed_decisions)} '
+            f'prior_pending={len(pending_prior_pilot_decisions)} '
+            f'source_pending={len(pending_source_promotion_decisions)} '
+            f'approved_not_applied={len(status_groups.get("approved_not_applied", []))} '
+            f'operation_backed_patch={len(operation_backed_backlog_report.patch_current_candidates)} '
+            f'operation_backed_derive_child={len(operation_backed_backlog_report.derive_child_candidates)} '
+            f'operation_backed_hold={len(operation_backed_backlog_report.hold_candidates)} '
+            f'overall_readiness={overall_readiness} '
+            f'next_create_seed={next_create_seed_candidate or "none"} '
+            f'next_prior_hold={next_prior_family_on_hold or "none"}'
+        ),
+    )
+    report.markdown_summary = render_ops_roundbook_markdown(report)
+    return report

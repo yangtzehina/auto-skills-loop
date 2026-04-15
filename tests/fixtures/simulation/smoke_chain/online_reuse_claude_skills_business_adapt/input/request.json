@@ -1,0 +1,84 @@
+{
+  "task": "Audit an operations handoff workflow and package the business review steps into a reusable skill with evaluation coverage",
+  "repo_paths": ["../../../online_reuse_eval_repo"],
+  "skill_name_hint": "simulation-business-workflow-skill",
+  "enable_llm_extractor": false,
+  "enable_llm_planner": false,
+  "enable_llm_skill_md": false,
+  "enable_online_skill_discovery": true,
+  "enable_live_online_search": false,
+  "enable_repair": true,
+  "max_repair_attempts": 1,
+  "online_skill_candidates": [
+    {
+      "candidate_id": "fixture-business-workflow",
+      "name": "business-workflow-optimizer",
+      "description": "Optimize business workflows, SOPs, and operations handoff loops.",
+      "trigger_phrases": ["business workflow", "operations handoff", "sop optimization"],
+      "tags": ["business", "workflow", "operations"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "claude",
+        "repo_full_name": "alirezarezvani/claude-skills",
+        "ref": "main",
+        "skill_path": "skills/business-workflow-optimizer",
+        "skill_url": "https://github.com/alirezarezvani/claude-skills/blob/main/skills/business-workflow-optimizer/SKILL.md",
+        "source_license": "MIT",
+        "source_attribution": "alirezarezvani/claude-skills"
+      },
+      "score": 0.8,
+      "matched_signals": ["business", "workflow", "operations"]
+    }
+  ],
+  "online_skill_blueprints": [
+    {
+      "blueprint_id": "fixture-business-workflow__blueprint",
+      "name": "business-workflow-optimizer",
+      "description": "Optimize business workflows, SOPs, and operations handoff loops.",
+      "trigger_summary": "Use when an operations workflow or SOP needs to become a reusable repo-aware skill.",
+      "workflow_summary": [
+        "Read the current repo workflow before generating the skill",
+        "Include structured review notes, helper scripts, and agent metadata in the package"
+      ],
+      "artifacts": [
+        {
+          "path": "references/workflow_checklist.md",
+          "artifact_type": "reference",
+          "purpose": "Checklist for business workflow review and handoff coverage"
+        },
+        {
+          "path": "scripts/review_workflow.py",
+          "artifact_type": "script",
+          "purpose": "Deterministic helper for validating workflow handoff steps"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "artifact_type": "agent-config",
+          "purpose": "Agent metadata for the generated skill"
+        },
+        {
+          "path": "_meta.json",
+          "artifact_type": "metadata",
+          "purpose": "Generation metadata with source provenance"
+        }
+      ],
+      "interface": {
+        "display_name": "Business Workflow Review",
+        "short_description": "Audit operations handoffs and tighten workflow SOPs",
+        "default_prompt": "Use $business-workflow-review before packaging operations handoff changes."
+      },
+      "tags": ["business", "workflow", "operations"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "claude",
+        "repo_full_name": "alirezarezvani/claude-skills",
+        "ref": "main",
+        "skill_path": "skills/business-workflow-optimizer",
+        "skill_url": "https://github.com/alirezarezvani/claude-skills/blob/main/skills/business-workflow-optimizer/SKILL.md",
+        "source_license": "MIT",
+        "source_attribution": "alirezarezvani/claude-skills"
+      },
+      "notes": ["Fixture blueprint for claude-skills business workflow smoke coverage"]
+    }
+  ]
+}

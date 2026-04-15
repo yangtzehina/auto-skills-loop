@@ -1,0 +1,28 @@
+{
+  "run_id": "run-no-skill-01",
+  "task_id": "task-no-skill-astro",
+  "task_summary": "Handle astronomy FITS calibration edge cases.",
+  "skills_used": [
+    {
+      "skill_id": "generic-research__v0",
+      "skill_name": "generic-research",
+      "skill_path": "/tmp/generic-research",
+      "selected": true,
+      "applied": false,
+      "steps_triggered": [],
+      "notes": "Selected but never actually applied."
+    }
+  ],
+  "execution_result": "failed",
+  "failure_points": [
+    "Missing FITS calibration and astropy verification workflow."
+  ],
+  "user_corrections": [
+    "Need a dedicated FITS calibration workflow for astronomy reductions."
+  ],
+  "output_summary": "Manual repair was needed.",
+  "repo_paths": [
+    "/tmp/astro-repo"
+  ],
+  "completed_at": "2026-04-13T10:00:00+08:00"
+}

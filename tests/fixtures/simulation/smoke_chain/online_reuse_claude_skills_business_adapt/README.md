@@ -1,0 +1,1 @@
+Reuses a checked-in `alirezarezvani/claude-skills` business workflow blueprint and verifies that the smoke chain still adapts an online candidate into a generated skill package with persisted evaluation output.

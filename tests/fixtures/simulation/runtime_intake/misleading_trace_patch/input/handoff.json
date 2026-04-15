@@ -1,0 +1,34 @@
+{
+  "task_id": "sim-intake-mislead",
+  "task_summary": "Resume trainer workflow with runtime evidence.",
+  "skills_used": [
+    {
+      "skill_id": "hf-trainer__v1_badflag",
+      "skill_name": "hf-trainer",
+      "steps_triggered": ["resume trainer workflow"]
+    }
+  ],
+  "execution_result": "partial",
+  "failure_points": [
+    "The resume trainer workflow step suggested the wrong resume flag."
+  ],
+  "turn_trace": [
+    {
+      "skill_id": "hf-trainer__v1_badflag",
+      "skill_name": "hf-trainer",
+      "step": "load dataset card",
+      "phase": "prepare",
+      "tool": "python",
+      "status": "success"
+    },
+    {
+      "skill_id": "hf-trainer__v1_badflag",
+      "skill_name": "hf-trainer",
+      "step": "resume trainer workflow",
+      "phase": "execute",
+      "tool": "python",
+      "status": "corrected",
+      "notes": "Wrong resume flag."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "task_id": "sim-intake-partial",
+  "task_summary": "Verify astronomy runtime handoff.",
+  "skills_used": [
+    {
+      "skill_id": "astro-skill__v1_deadbeef",
+      "skill_name": "astro-skill",
+      "steps_triggered": ["load fits"]
+    }
+  ],
+  "execution_result": "partial",
+  "turn_trace": [
+    {
+      "skill_id": "astro-skill__v1_deadbeef",
+      "skill_name": "astro-skill",
+      "step": "load fits",
+      "phase": "prepare",
+      "tool": "python",
+      "status": "success"
+    }
+  ]
+}

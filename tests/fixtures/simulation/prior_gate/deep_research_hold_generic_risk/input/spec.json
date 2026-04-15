@@ -1,0 +1,56 @@
+{
+  "catalog": [
+    {
+      "candidate_id": "user-interview-synthesis",
+      "name": "user-interview-synthesis",
+      "description": "Synthesize user interviews into product findings.",
+      "trigger_phrases": ["user interview synthesis"],
+      "tags": ["research", "interviews", "product"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/product-research",
+        "ref": "main",
+        "skill_path": "skills/user-interview-synthesis",
+        "skill_url": "https://github.com/example/product-research/blob/main/skills/user-interview-synthesis/SKILL.md"
+      }
+    },
+    {
+      "candidate_id": "deep-research",
+      "name": "deep-research",
+      "description": "Generic research orchestration and docs workflows.",
+      "trigger_phrases": ["research workflow", "docs"],
+      "tags": ["research", "workflow"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/deep-research",
+        "ref": "main",
+        "skill_path": "skills/deep-research",
+        "skill_url": "https://github.com/example/deep-research/blob/main/skills/deep-research/SKILL.md"
+      }
+    }
+  ],
+  "runtime_effectiveness_lookup": {
+    "user-interview-synthesis": {
+      "skill_id": "user-interview-synthesis__v1_deadbeef",
+      "skill_name": "user-interview-synthesis",
+      "quality_score": 0.2,
+      "run_count": 10
+    },
+    "deep-research": {
+      "skill_id": "deep-research__v4_deadbeef",
+      "skill_name": "deep-research",
+      "quality_score": 1.0,
+      "run_count": 10
+    }
+  },
+  "task_samples": [
+    {
+      "task": "Draft a product research brief with competitive landscape notes",
+      "repo_context": {
+        "selected_files": []
+      }
+    }
+  ]
+}

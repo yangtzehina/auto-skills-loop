@@ -1,0 +1,36 @@
+{
+  "eligibility_summary": {
+    "skills_considered": 2,
+    "eligible_count": 2,
+    "positive_delta_count": 1,
+    "negative_delta_count": 1
+  },
+  "ranking_impact_summary": {
+    "tasks_evaluated": 1,
+    "prior_applied_count": 1,
+    "top_1_changed_count": 1,
+    "generic_promoted_count": 1
+  },
+  "eligible_skills": [
+    {
+      "skill_name": "deep-research",
+      "eligible": true,
+      "runtime_prior_delta": 0.06
+    },
+    {
+      "skill_name": "user-interview-synthesis",
+      "eligible": true,
+      "runtime_prior_delta": -0.036
+    }
+  ],
+  "task_impacts": [
+    {
+      "task": "Draft a product research brief with competitive landscape notes",
+      "baseline_top_candidate": "user-interview-synthesis",
+      "prior_top_candidate": "deep-research",
+      "changed_top_1": true,
+      "generic_promoted": true,
+      "prior_applied": true
+    }
+  ]
+}

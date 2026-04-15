@@ -1,0 +1,66 @@
+{
+  "repos": {
+    "example/acceptable": [
+      {
+        "candidate_id": "astropy",
+        "name": "astropy",
+        "description": "Astropy astronomy workflow.",
+        "trigger_phrases": ["astropy"],
+        "tags": ["astronomy", "astropy"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/acceptable",
+          "ref": "main",
+          "skill_path": "skills/astropy",
+          "skill_url": "https://github.com/example/acceptable/blob/main/skills/astropy/SKILL.md"
+        }
+      },
+      {
+        "candidate_id": "pymatgen",
+        "name": "pymatgen",
+        "description": "Materials science workflow.",
+        "trigger_phrases": ["pymatgen"],
+        "tags": ["materials"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/acceptable",
+          "ref": "main",
+          "skill_path": "skills/pymatgen",
+          "skill_url": "https://github.com/example/acceptable/blob/main/skills/pymatgen/SKILL.md"
+        }
+      },
+      {
+        "candidate_id": "xarray-astro",
+        "name": "xarray-astro",
+        "description": "Xarray astronomy workflow.",
+        "trigger_phrases": ["xarray astro"],
+        "tags": ["astronomy", "xarray"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/acceptable",
+          "ref": "main",
+          "skill_path": "skills/xarray-astro",
+          "skill_url": "https://github.com/example/acceptable/blob/main/skills/xarray-astro/SKILL.md"
+        }
+      },
+      {
+        "candidate_id": "fits-summary",
+        "name": "fits-summary",
+        "description": "Summarize FITS headers.",
+        "trigger_phrases": ["fits summary"],
+        "tags": ["astronomy", "fits"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/acceptable",
+          "ref": "main",
+          "skill_path": "skills/fits-summary",
+          "skill_url": "https://github.com/example/acceptable/blob/main/skills/fits-summary/SKILL.md"
+        }
+      }
+    ]
+  }
+}

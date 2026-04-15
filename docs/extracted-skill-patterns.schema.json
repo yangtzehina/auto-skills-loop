@@ -1,0 +1,363 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExtractedSkillPatterns",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pattern_set_id",
+    "scope",
+    "extraction",
+    "summary",
+    "patterns",
+    "aggregated_hints",
+    "quality"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "pattern_set_id": { "type": "string", "minLength": 1 },
+    "scope": {
+      "type": "object",
+      "required": ["domain", "target_kind"],
+      "properties": {
+        "domain": { "type": "string" },
+        "target_kind": { "type": "string" },
+        "target_name": { "type": "string" },
+        "request_modes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "repo_paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "existing_skill_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "extraction": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "created_at",
+        "extractor_version",
+        "source_case_ids",
+        "source_case_count"
+      ],
+      "properties": {
+        "run_id": { "type": "string" },
+        "created_at": { "type": "string" },
+        "extractor_version": { "type": "string" },
+        "source_case_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "source_case_count": { "type": "integer", "minimum": 0 },
+        "source_pattern_set_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "repo_snapshot_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "llm_model": { "type": "string" },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": ["goals"],
+      "properties": {
+        "goals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "common_constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "dominant_skill_types": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "recommended_defaults": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "open_questions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "patterns": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/skillPattern" }
+    },
+    "aggregated_hints": {
+      "type": "object",
+      "required": [
+        "planner_defaults",
+        "generator_defaults",
+        "validator_defaults",
+        "repair_defaults"
+      ],
+      "properties": {
+        "planner_defaults": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "generator_defaults": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "validator_defaults": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "repair_defaults": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "quality": {
+      "type": "object",
+      "required": ["confidence", "review_status"],
+      "properties": {
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        },
+        "coverage_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "consistency_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "review_status": {
+          "type": "string",
+          "enum": ["draft", "reviewed", "accepted", "rejected"]
+        },
+        "reviewer_notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "writeback": {
+      "type": "object",
+      "required": ["should_persist_patterns", "should_store_case_deltas"],
+      "properties": {
+        "should_persist_patterns": { "type": "boolean" },
+        "should_store_case_deltas": { "type": "boolean" },
+        "memory_candidates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/memoryCandidate" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "examples": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/exampleSnippet" }
+    }
+  },
+  "$defs": {
+    "exampleSnippet": {
+      "type": "object",
+      "required": ["case_id"],
+      "properties": {
+        "case_id": { "type": "string" },
+        "prompt_excerpt": { "type": "string" },
+        "outcome_excerpt": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "memoryCandidate": {
+      "type": "object",
+      "required": ["title", "content"],
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "importance": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "applicability": {
+      "type": "object",
+      "required": ["use_when"],
+      "properties": {
+        "use_when": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "avoid_when": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "required_repo_signals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "negative_repo_signals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "request_modes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["source_case_ids", "occurrence_count"],
+      "properties": {
+        "source_case_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "occurrence_count": { "type": "integer", "minimum": 0 },
+        "success_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "example_snippets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/exampleSnippet" }
+        },
+        "failure_modes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "fileShape": {
+      "type": "object",
+      "properties": {
+        "required_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "optional_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "extraction_targets": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "script_strategy": { "type": "string" },
+        "content_budget_hint": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "contentHints": {
+      "type": "object",
+      "properties": {
+        "must_include": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "should_include": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "must_avoid": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "references_to_read": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "example_phrasings": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "downstreamHints": {
+      "type": "object",
+      "required": ["planner_actions", "generator_actions", "validator_checks", "repair_recipes"],
+      "properties": {
+        "planner_actions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "generator_actions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "validator_checks": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "repair_recipes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "skillPattern": {
+      "type": "object",
+      "required": [
+        "pattern_id",
+        "pattern_type",
+        "status",
+        "title",
+        "summary",
+        "applicability",
+        "evidence",
+        "downstream_hints",
+        "confidence",
+        "support"
+      ],
+      "properties": {
+        "pattern_id": { "type": "string" },
+        "pattern_type": {
+          "type": "string",
+          "enum": [
+            "trigger-description",
+            "skill-shape",
+            "reference-split",
+            "script-threshold",
+            "workflow-structure",
+            "validator-rule",
+            "repair-recipe",
+            "anti-pattern"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["candidate", "accepted", "deprecated"]
+        },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "applicability": { "$ref": "#/$defs/applicability" },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "file_shape": { "$ref": "#/$defs/fileShape" },
+        "content_hints": { "$ref": "#/$defs/contentHints" },
+        "downstream_hints": { "$ref": "#/$defs/downstreamHints" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "support": { "type": "integer", "minimum": 0 },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "supersedes_pattern_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

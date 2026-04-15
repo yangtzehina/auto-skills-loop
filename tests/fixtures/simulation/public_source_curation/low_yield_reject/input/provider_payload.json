@@ -1,0 +1,21 @@
+{
+  "repos": {
+    "example/low-yield": [
+      {
+        "candidate_id": "astro-single",
+        "name": "astro-single",
+        "description": "Single astronomy helper.",
+        "trigger_phrases": ["astronomy helper"],
+        "tags": ["astronomy"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "claude",
+          "repo_full_name": "example/low-yield",
+          "ref": "main",
+          "skill_path": "skills/astro-single",
+          "skill_url": "https://github.com/example/low-yield/blob/main/skills/astro-single/SKILL.md"
+        }
+      }
+    ]
+  }
+}

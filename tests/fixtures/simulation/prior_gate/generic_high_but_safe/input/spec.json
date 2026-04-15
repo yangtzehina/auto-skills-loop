@@ -1,0 +1,56 @@
+{
+  "catalog": [
+    {
+      "candidate_id": "hf-trainer",
+      "name": "hf-trainer",
+      "description": "Handle Hugging Face trainer resume workflows.",
+      "trigger_phrases": ["hugging face trainer", "resume trainer"],
+      "tags": ["huggingface", "trainer"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/hf-trainer",
+        "ref": "main",
+        "skill_path": "skills/hf-trainer",
+        "skill_url": "https://github.com/example/hf-trainer/blob/main/skills/hf-trainer/SKILL.md"
+      }
+    },
+    {
+      "candidate_id": "deep-research",
+      "name": "deep-research",
+      "description": "Generic research orchestration and docs workflows.",
+      "trigger_phrases": ["research workflow", "docs"],
+      "tags": ["research", "workflow"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/deep-research",
+        "ref": "main",
+        "skill_path": "skills/deep-research",
+        "skill_url": "https://github.com/example/deep-research/blob/main/skills/deep-research/SKILL.md"
+      }
+    }
+  ],
+  "runtime_effectiveness_lookup": {
+    "deep-research": {
+      "skill_id": "deep-research__v1",
+      "skill_name": "deep-research",
+      "quality_score": 1.0,
+      "run_count": 10
+    },
+    "hf-trainer": {
+      "skill_id": "hf-trainer__v1",
+      "skill_name": "hf-trainer",
+      "quality_score": 0.2,
+      "run_count": 10
+    }
+  },
+  "task_samples": [
+    {
+      "task": "Fix the Hugging Face trainer resume workflow",
+      "repo_context": {
+        "selected_files": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "repo_full_name": "Cam10001110101/claude-skills-base",
+    "ecosystem": "claude",
+    "root_paths": ["skills", ".claude/skills", ""],
+    "priority": 40,
+    "verification_task": "Find repo-grounded Claude skills for engineering and research workflows.",
+    "notes": "Previously sampled with no stable candidates."
+  },
+  {
+    "repo_full_name": "giuseppe-trisciuoglio/developer-kit-claude-code",
+    "ecosystem": "claude",
+    "root_paths": ["skills", ".claude/skills", ""],
+    "priority": 40,
+    "verification_task": "Find reusable Claude skills for engineering planning and workflow automation.",
+    "notes": "Previously sampled with no stable candidates."
+  },
+  {
+    "repo_full_name": "alirezarezvani/claude-skills",
+    "ecosystem": "claude",
+    "root_paths": ["skills", ".claude/skills", ""],
+    "priority": 35,
+    "verification_task": "Find reusable Claude skills for SEO, Amazon, and business workflow tasks.",
+    "notes": "Yield exists, but prior review suggested heavy overlap with existing seeded collections."
+  }
+]

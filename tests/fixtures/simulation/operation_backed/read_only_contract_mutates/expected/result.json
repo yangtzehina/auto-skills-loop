@@ -1,0 +1,11 @@
+{
+  "scenario_kind": "direct_validation",
+  "severity": "fail",
+  "skill_archetype": "operation_backed",
+  "operation_validation_status": "needs_attention",
+  "recommended_followup": "hold",
+  "coverage_gap_summary": [
+    "contract_surface_drift"
+  ],
+  "security_rating": "REJECT"
+}

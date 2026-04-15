@@ -1,0 +1,84 @@
+{
+  "task": "Capture architecture decisions into Notion with repo-aware governance workflow and evaluation coverage",
+  "repo_paths": ["../../../online_reuse_eval_repo"],
+  "skill_name_hint": "simulation-governance-skill",
+  "enable_llm_extractor": false,
+  "enable_llm_planner": false,
+  "enable_llm_skill_md": false,
+  "enable_online_skill_discovery": true,
+  "enable_live_online_search": false,
+  "enable_repair": true,
+  "max_repair_attempts": 1,
+  "online_skill_candidates": [
+    {
+      "candidate_id": "fixture-notion-governance",
+      "name": "notion-governance-capture",
+      "description": "Capture architecture decisions into structured Notion pages with governance-aware templates and sync steps.",
+      "trigger_phrases": ["notion", "architecture decision", "decision record", "governance sync"],
+      "tags": ["notion", "governance", "capture", "decision-log"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/notion-governance-capture",
+        "ref": "main",
+        "skill_path": "skills/notion-governance-capture",
+        "skill_url": "https://github.com/example/notion-governance-capture/blob/main/skills/notion-governance-capture/SKILL.md",
+        "source_license": "MIT",
+        "source_attribution": "example/notion-governance-capture"
+      },
+      "score": 0.78,
+      "matched_signals": ["notion", "decision", "governance"]
+    }
+  ],
+  "online_skill_blueprints": [
+    {
+      "blueprint_id": "fixture-notion-governance__blueprint",
+      "name": "notion-governance-capture",
+      "description": "Capture architecture decisions into structured Notion pages with governance-aware templates and sync steps.",
+      "trigger_summary": "Use when a repo-backed decision needs to become a durable Notion record.",
+      "workflow_summary": [
+        "Read the repo decision workflow and schema before generating the skill",
+        "Include sync helpers, references, and agent metadata in the package"
+      ],
+      "artifacts": [
+        {
+          "path": "references/notion_schema.md",
+          "artifact_type": "reference",
+          "purpose": "Schema notes for Notion database mapping"
+        },
+        {
+          "path": "scripts/sync_notion.py",
+          "artifact_type": "script",
+          "purpose": "Deterministic helper for publishing decision pages"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "artifact_type": "agent-config",
+          "purpose": "Agent metadata for the generated skill"
+        },
+        {
+          "path": "_meta.json",
+          "artifact_type": "metadata",
+          "purpose": "Generation metadata with source provenance"
+        }
+      ],
+      "interface": {
+        "display_name": "Governance Sync",
+        "short_description": "Capture repo decisions into Notion with templates and sync helpers",
+        "default_prompt": "Use $governance-sync-skill before publishing architecture decisions."
+      },
+      "tags": ["notion", "governance", "decision-log"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/notion-governance-capture",
+        "ref": "main",
+        "skill_path": "skills/notion-governance-capture",
+        "skill_url": "https://github.com/example/notion-governance-capture/blob/main/skills/notion-governance-capture/SKILL.md",
+        "source_license": "MIT",
+        "source_attribution": "example/notion-governance-capture"
+      },
+      "notes": ["Fixture blueprint for smoke coverage"]
+    }
+  ]
+}

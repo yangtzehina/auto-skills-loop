@@ -1,0 +1,59 @@
+{
+  "catalog": [
+    {
+      "candidate_id": "hf-trainer",
+      "name": "hf-trainer",
+      "description": "Handle Hugging Face trainer workflows.",
+      "trigger_phrases": ["hugging face trainer"],
+      "tags": ["huggingface", "trainer"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/hf-trainer",
+        "ref": "main",
+        "skill_path": "skills/hf-trainer",
+        "skill_url": "https://github.com/example/hf-trainer/blob/main/skills/hf-trainer/SKILL.md"
+      }
+    },
+    {
+      "candidate_id": "deep-research",
+      "name": "deep-research",
+      "description": "General deep research workflow.",
+      "trigger_phrases": ["deep research"],
+      "tags": ["research", "workflow"],
+      "provenance": {
+        "source_type": "community",
+        "ecosystem": "codex",
+        "repo_full_name": "example/deep-research",
+        "ref": "main",
+        "skill_path": "skills/deep-research",
+        "skill_url": "https://github.com/example/deep-research/blob/main/skills/deep-research/SKILL.md"
+      }
+    }
+  ],
+  "runtime_effectiveness_lookup": {
+    "hf-trainer": {
+      "skill_id": "hf-trainer__v2_deadbeef",
+      "skill_name": "hf-trainer",
+      "quality_score": 0.91,
+      "run_count": 8
+    },
+    "deep-research": {
+      "skill_id": "deep-research__v4_deadbeef",
+      "skill_name": "deep-research",
+      "quality_score": 0.97,
+      "run_count": 10
+    }
+  },
+  "runtime_effectiveness_allowed_families": [
+    "hf-trainer"
+  ],
+  "task_samples": [
+    {
+      "task": "Resume the Hugging Face trainer checkpoint and fix evaluation resume logic",
+      "repo_context": {
+        "selected_files": []
+      }
+    }
+  ]
+}

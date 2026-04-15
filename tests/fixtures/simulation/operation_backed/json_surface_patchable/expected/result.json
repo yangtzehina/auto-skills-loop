@@ -1,0 +1,10 @@
+{
+  "scenario_kind": "runtime_analysis",
+  "skill_archetype": "operation_backed",
+  "selected_action": "patch_current",
+  "operation_validation_status": "validated",
+  "recommended_followup": "patch_current",
+  "coverage_gap_summary": [
+    "missing_json_surface"
+  ]
+}

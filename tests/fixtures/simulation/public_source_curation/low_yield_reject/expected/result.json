@@ -1,0 +1,20 @@
+{
+  "summary_counts": {
+    "accepted": 0,
+    "rejected": 1,
+    "manual_review": 0,
+    "promoted": 0
+  },
+  "candidates": [
+    {
+      "repo_full_name": "example/low-yield",
+      "candidate_count": 1,
+      "overlap_assessment": "low",
+      "structure_supported": true,
+      "verdict": "reject",
+      "smoke_required": false,
+      "selected_for_default": false
+    }
+  ],
+  "promoted_repos": []
+}

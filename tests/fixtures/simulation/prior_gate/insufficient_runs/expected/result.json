@@ -1,0 +1,31 @@
+{
+  "eligibility_summary": {
+    "skills_considered": 1,
+    "eligible_count": 0,
+    "positive_delta_count": 0,
+    "negative_delta_count": 0
+  },
+  "ranking_impact_summary": {
+    "tasks_evaluated": 1,
+    "prior_applied_count": 0,
+    "top_1_changed_count": 0,
+    "generic_promoted_count": 0
+  },
+  "eligible_skills": [
+    {
+      "skill_name": "hf-trainer",
+      "eligible": false,
+      "runtime_prior_delta": 0.0
+    }
+  ],
+  "task_impacts": [
+    {
+      "task": "Fix the Hugging Face trainer resume workflow",
+      "baseline_top_candidate": "hf-trainer",
+      "prior_top_candidate": "hf-trainer",
+      "changed_top_1": false,
+      "generic_promoted": false,
+      "prior_applied": false
+    }
+  ]
+}

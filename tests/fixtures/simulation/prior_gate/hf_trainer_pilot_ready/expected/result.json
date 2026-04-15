@@ -1,0 +1,36 @@
+{
+  "eligibility_summary": {
+    "skills_considered": 2,
+    "eligible_count": 1,
+    "positive_delta_count": 1,
+    "negative_delta_count": 0
+  },
+  "ranking_impact_summary": {
+    "tasks_evaluated": 1,
+    "prior_applied_count": 1,
+    "top_1_changed_count": 0,
+    "generic_promoted_count": 0
+  },
+  "eligible_skills": [
+    {
+      "skill_name": "hf-trainer",
+      "eligible": true,
+      "runtime_prior_delta": 0.0492
+    },
+    {
+      "skill_name": "deep-research",
+      "eligible": false,
+      "runtime_prior_delta": 0.0
+    }
+  ],
+  "task_impacts": [
+    {
+      "task": "Resume the Hugging Face trainer checkpoint and fix evaluation resume logic",
+      "baseline_top_candidate": "hf-trainer",
+      "prior_top_candidate": "hf-trainer",
+      "changed_top_1": false,
+      "generic_promoted": false,
+      "prior_applied": true
+    }
+  ]
+}

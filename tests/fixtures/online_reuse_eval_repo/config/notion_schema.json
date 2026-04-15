@@ -1,0 +1,10 @@
+{
+  "database": "governance-decisions",
+  "properties": {
+    "Title": "title",
+    "Status": "select",
+    "Owner": "person",
+    "Evidence": "rich_text",
+    "ReviewDate": "date"
+  }
+}

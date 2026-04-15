@@ -1,0 +1,63 @@
+{
+  "run_id": "trace-run-3",
+  "task_id": "trace-task",
+  "task_summary": "Replay richer runtime traces for trainer workflows.",
+  "execution_result": "partial",
+  "skills_used": [
+    {
+      "skill_id": "trainer-skill__v0_trace",
+      "skill_name": "trainer-skill",
+      "skill_path": "/tmp/trainer-skill",
+      "selected": true,
+      "applied": true,
+      "steps_triggered": [
+        "trainer workflow"
+      ],
+      "notes": "Applied trainer workflow."
+    }
+  ],
+  "failure_points": [],
+  "user_corrections": [],
+  "output_summary": "The trainer run completed but evaluation remained partial.",
+  "repo_paths": [
+    "/tmp/repo"
+  ],
+  "step_trace": [
+    {
+      "skill_id": "trainer-skill__v0_trace",
+      "skill_name": "trainer-skill",
+      "step": "collect dataset manifest",
+      "phase": "prepare",
+      "tool": "python",
+      "status": "success",
+      "notes": "Loaded dataset manifest."
+    },
+    {
+      "skill_id": "trainer-skill__v0_trace",
+      "skill_name": "trainer-skill",
+      "step": "launch trainer loop",
+      "phase": "execute",
+      "tool": "python",
+      "status": "partial",
+      "notes": "Training completed with partial eval coverage."
+    },
+    {
+      "skill_id": "trainer-skill__v0_trace",
+      "skill_name": "trainer-skill",
+      "step": "summarize eval metrics",
+      "phase": "evaluate",
+      "tool": "python",
+      "status": "success",
+      "notes": "Captured eval metrics."
+    }
+  ],
+  "phase_markers": [
+    "prepare",
+    "execute",
+    "evaluate"
+  ],
+  "tool_summary": [
+    "python"
+  ],
+  "completed_at": "2026-04-13T09:10:00Z"
+}

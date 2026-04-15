@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local dependency state
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Generated skill packages and local run artifacts
+.generated-skills/
+logs/
+tmp/
+reports/
+
+# Local OS/editor files
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Secrets and private keys
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+*.p12
+*.pfx
+credentials.json
+token.json

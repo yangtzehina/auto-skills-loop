@@ -1,0 +1,5 @@
+{
+  "instrument": "hst-wfc3",
+  "observation_mode": "spectroscopy",
+  "default_filters": ["g280", "f606w"]
+}

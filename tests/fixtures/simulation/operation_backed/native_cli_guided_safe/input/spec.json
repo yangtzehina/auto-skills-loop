@@ -1,0 +1,11 @@
+{
+  "scenario_kind": "skill_create",
+  "request": {
+    "task": "Create an operation-backed skill for the native CLI repo",
+    "repo_paths": [
+      "../../../../operation_backed/native_cli_repo"
+    ],
+    "skill_name_hint": "native-cli-skill",
+    "enable_eval_scaffold": true
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "runtime_followup_action": "no_change",
+  "change_pack_action": "keep_baseline",
+  "approval_decision": "reject_refresh",
+  "skills_analyzed": [
+    {
+      "skill_id": "astro-skill__v1_deadbeef",
+      "recommended_action": "no_change",
+      "most_valuable_step": "load fits",
+      "misleading_step": ""
+    }
+  ],
+  "create_candidate_count": 0
+}

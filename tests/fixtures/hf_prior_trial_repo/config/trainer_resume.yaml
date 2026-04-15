@@ -1,0 +1,9 @@
+trainer:
+  framework: huggingface
+  resume_from_checkpoint: true
+  evaluation_strategy: steps
+  save_strategy: steps
+  load_best_model_at_end: true
+tracking:
+  provider: tensorboard
+  keep_resume_metadata: true

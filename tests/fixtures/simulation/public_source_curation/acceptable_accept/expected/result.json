@@ -1,0 +1,22 @@
+{
+  "summary_counts": {
+    "accepted": 1,
+    "rejected": 0,
+    "manual_review": 0,
+    "promoted": 1
+  },
+  "candidates": [
+    {
+      "repo_full_name": "example/acceptable",
+      "candidate_count": 4,
+      "overlap_assessment": "low",
+      "structure_supported": true,
+      "verdict": "accept",
+      "smoke_required": true,
+      "selected_for_default": true
+    }
+  ],
+  "promoted_repos": [
+    "example/acceptable"
+  ]
+}

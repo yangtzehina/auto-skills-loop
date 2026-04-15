@@ -1,0 +1,21 @@
+{
+  "runs_processed": 3,
+  "action_counts": {
+    "no_change": 2,
+    "derive_child": 1
+  },
+  "approval_counts": {
+    "reject_refresh": 3
+  },
+  "judge_applied_count": 0,
+  "create_candidate_count": 0,
+  "per_skill": [
+    {
+      "skill_id": "hf-trainer__v0_gap",
+      "latest_recommended_action": "derive_child",
+      "quality_score": 0.6,
+      "lineage_version": 0,
+      "latest_lineage_event": ""
+    }
+  ]
+}

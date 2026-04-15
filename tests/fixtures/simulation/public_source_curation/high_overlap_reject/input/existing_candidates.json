@@ -1,0 +1,51 @@
+{
+  "tasks": {
+    "Find reusable planning and research skills.": [
+      {
+        "candidate_id": "existing-deep-research",
+        "name": "deep-research",
+        "description": "Existing deep research helper.",
+        "trigger_phrases": ["deep research"],
+        "tags": ["research"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "codex",
+          "repo_full_name": "existing/research",
+          "ref": "main",
+          "skill_path": "skills/deep-research",
+          "skill_url": "https://github.com/existing/research/blob/main/skills/deep-research/SKILL.md"
+        }
+      },
+      {
+        "candidate_id": "existing-implementation-planning",
+        "name": "implementation-planning",
+        "description": "Existing planning helper.",
+        "trigger_phrases": ["implementation planning"],
+        "tags": ["planning"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "codex",
+          "repo_full_name": "existing/planning",
+          "ref": "main",
+          "skill_path": "skills/implementation-planning",
+          "skill_url": "https://github.com/existing/planning/blob/main/skills/implementation-planning/SKILL.md"
+        }
+      },
+      {
+        "candidate_id": "existing-keyword-research",
+        "name": "keyword-research",
+        "description": "Existing keyword research helper.",
+        "trigger_phrases": ["keyword research"],
+        "tags": ["seo"],
+        "provenance": {
+          "source_type": "community",
+          "ecosystem": "codex",
+          "repo_full_name": "existing/seo",
+          "ref": "main",
+          "skill_path": "skills/keyword-research",
+          "skill_url": "https://github.com/existing/seo/blob/main/skills/keyword-research/SKILL.md"
+        }
+      }
+    ]
+  }
+}
