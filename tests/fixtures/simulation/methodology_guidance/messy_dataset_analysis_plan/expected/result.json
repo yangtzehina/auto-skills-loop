@@ -1,7 +1,7 @@
 {
   "severity": "pass",
   "skill_archetype": "methodology_guidance",
-  "fully_correct": true,
+  "fully_correct": false,
   "body_quality_status": "pass",
   "self_review_status": "pass",
   "domain_specificity_status": "pass",
@@ -10,6 +10,9 @@
   "domain_expertise_status": "pass",
   "domain_move_coverage_min_met": true,
   "domain_expertise_warn_count": 0,
+  "expert_structure_status": "warn",
+  "expert_structure_min_met": true,
+  "expert_structure_warn_count": 1,
   "body_lines_min_met": true,
   "required_sections_missing": [],
   "generated_files_contains_sidecars": true

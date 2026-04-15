@@ -4,6 +4,7 @@ from .comparison import SkillCreateComparisonCaseResult, SkillCreateComparisonMe
 from .diagnostics import Diagnostics, ValidationResult
 from .domain_specificity import SkillDomainSpecificityReport
 from .domain_expertise import SkillDomainExpertiseReport
+from .expert_structure import ExpertSkillProfile, SkillExpertStructureReport
 from .findings import CandidateResources, RepoFinding, RepoFindings
 from .lineage import SkillLineageHistoryEntry, SkillLineageManifest
 from .orchestrator import ExecutionTimings
@@ -118,6 +119,8 @@ __all__ = [
     'SkillSelfReviewReport',
     'SkillDomainSpecificityReport',
     'SkillDomainExpertiseReport',
+    'ExpertSkillProfile',
+    'SkillExpertStructureReport',
     'SkillCreateComparisonCaseResult',
     'SkillCreateComparisonMetrics',
     'SkillCreateComparisonReport',

@@ -368,6 +368,13 @@ def run_repair(
             'domain_pitfalls_missing',
             'domain_moves_underdeveloped',
             'generic_domain_move_shell',
+            'expert_headings_missing',
+            'expert_action_clusters_missing',
+            'expert_output_fields_missing',
+            'expert_quality_checks_missing',
+            'generic_expert_skeleton',
+            'high_generated_heading_overlap',
+            'high_generated_line_jaccard',
         }
         if body_issue_types & set(repairable_issue_types):
             changed = _repair_methodology_body(

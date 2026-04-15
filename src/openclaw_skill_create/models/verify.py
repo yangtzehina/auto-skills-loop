@@ -32,6 +32,11 @@ class VerifyReport(BaseModel):
     domain_expertise_status: str = 'pass'
     domain_expertise_fail_count: int = 0
     domain_expertise_warn_count: int = 0
+    expert_structure_status: str = 'pass'
+    expert_structure_fail_count: int = 0
+    expert_structure_warn_count: int = 0
+    expert_structure_gap_count: int = 0
+    pairwise_similarity_gap_count: int = 0
     hermes_comparison_gap_count: int = 0
     skill_create_comparison_report: SkillCreateComparisonReport | None = None
     overall_status: str = 'pass'
@@ -69,6 +74,11 @@ class OpsRoundbookReport(BaseModel):
     domain_expertise_status: str = 'pass'
     domain_expertise_fail_count: int = 0
     domain_expertise_warn_count: int = 0
+    expert_structure_status: str = 'pass'
+    expert_structure_fail_count: int = 0
+    expert_structure_warn_count: int = 0
+    expert_structure_gap_count: int = 0
+    pairwise_similarity_gap_count: int = 0
     hermes_comparison_gap_count: int = 0
     overall_readiness: str = 'ready'
     summary: str = ''

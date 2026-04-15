@@ -5,6 +5,7 @@ from openclaw_skill_create.models.plan import PlannedFile, SkillPlan
 from openclaw_skill_create.models.request import SkillCreateRequestV6
 from openclaw_skill_create.services.domain_expertise import build_skill_domain_expertise_report
 from openclaw_skill_create.services.domain_specificity import build_skill_domain_specificity_report
+from openclaw_skill_create.services.expert_structure import build_skill_expert_structure_report
 from openclaw_skill_create.services.generator_fallback import fallback_generate_methodology_skill_md
 from openclaw_skill_create.services.orchestrator import derive_validation_severity
 from openclaw_skill_create.services.review import run_skill_quality_review
@@ -175,7 +176,7 @@ def test_domain_specificity_requires_workflow_anchors_not_just_overview_echo():
     assert 'domain_workflow_missing' in report.blocking_issues
 
 
-def test_domain_specificity_warning_blocks_fully_correct_but_not_validation_pass():
+def test_unknown_methodology_expert_profile_warning_blocks_fully_correct_but_not_validation_pass():
     request = SkillCreateRequestV6(
         task='Audit an operations handoff workflow and package the business review steps into a reusable skill with evaluation coverage',
         skill_name_hint='simulation-business-workflow-skill',
@@ -216,11 +217,13 @@ def test_domain_specificity_warning_blocks_fully_correct_but_not_validation_pass
     )
 
     assert diagnostics.domain_specificity is not None
-    assert diagnostics.domain_specificity.status == 'warn'
-    assert 'domain_workflow_missing' in diagnostics.domain_specificity.warning_issues
+    assert diagnostics.domain_specificity.status == 'pass'
+    assert diagnostics.expert_structure is not None
+    assert diagnostics.expert_structure.status == 'warn'
+    assert 'expert_profile_missing' in diagnostics.expert_structure.warning_issues
     assert derive_validation_severity(diagnostics) == 'pass'
     assert review.fully_correct is False
-    assert review.domain_specificity_status == 'warn'
+    assert review.expert_structure_status == 'warn'
 
 
 def test_domain_expertise_passes_known_game_design_moves():
@@ -334,3 +337,128 @@ def test_domain_expertise_warning_blocks_fully_correct_but_not_validation_pass()
     assert derive_validation_severity(diagnostics) == 'pass'
     assert review.fully_correct is False
     assert review.domain_expertise_status == 'warn'
+
+
+def test_expert_structure_passes_known_game_design_profile():
+    request = SkillCreateRequestV6(
+        task='Create a game design methodology skill for decision-loop-stress-test.',
+        skill_name_hint='decision-loop-stress-test',
+        skill_archetype='methodology_guidance',
+    )
+    plan = _methodology_plan('decision-loop-stress-test')
+    content = fallback_generate_methodology_skill_md(
+        skill_name='decision-loop-stress-test',
+        description='Stress test a game decision loop.',
+        task=request.task,
+        references=[],
+        scripts=[],
+    )
+
+    report = build_skill_expert_structure_report(request=request, skill_plan=plan, artifacts=_artifacts(content))
+
+    assert report.status == 'pass'
+    assert report.expert_heading_recall >= 0.30
+    assert report.expert_action_cluster_recall >= 0.75
+    assert report.expert_output_field_recall >= 0.70
+    assert report.expert_quality_check_recall >= 0.70
+
+
+def test_expert_structure_rejects_generic_methodology_shell():
+    request = SkillCreateRequestV6(
+        task='Create a concept-to-mvp-pack skill for game design.',
+        skill_name_hint='concept-to-mvp-pack',
+        skill_archetype='methodology_guidance',
+    )
+    plan = _methodology_plan('concept-to-mvp-pack')
+    content = _methodology_shell(
+        name='concept-to-mvp-pack',
+        overview='Use this generic method to organize notes and produce a practical handoff.',
+        workflow='\n'.join(
+            [
+                '1. Name the real job and write the operating context.',
+                '2. Identify the operating context and constraints.',
+                '3. Build the working frame from the available notes.',
+                '4. Run the method against the current draft.',
+                '5. Produce the artifact with concise recommendations.',
+                '6. Run the guardrail pass before final delivery.',
+            ]
+        ),
+        output='\n'.join(
+            [
+                '- Context summary',
+                '- Decision list',
+                '- Open risks',
+                '- Recommended next action',
+                '- Final handoff note',
+            ]
+        ),
+    )
+
+    report = build_skill_expert_structure_report(request=request, skill_plan=plan, artifacts=_artifacts(content))
+
+    assert report.status == 'fail'
+    assert 'expert_action_clusters_missing' in report.blocking_issues
+    assert 'expert_output_fields_missing' in report.blocking_issues
+
+
+def test_expert_structure_rejects_anchor_echo_without_expert_actions():
+    request = SkillCreateRequestV6(
+        task='Create a concept-to-mvp-pack skill with validation question, smallest honest loop, feature cut, content scope, out-of-scope, and mvp pack decisions.',
+        skill_name_hint='concept-to-mvp-pack',
+        skill_archetype='methodology_guidance',
+    )
+    plan = _methodology_plan('concept-to-mvp-pack')
+    anchors = 'validation question, smallest honest loop, feature cut, content scope, out-of-scope, and mvp pack'
+    content = _methodology_shell(
+        name='concept-to-mvp-pack',
+        overview=f'This overview repeats {anchors}, but the workflow below stays generic.',
+        workflow='\n'.join(
+            [
+                '1. Mention validation question and smallest honest loop without turning them into build decisions.',
+                '2. Mention feature cut, content scope, out-of-scope, and mvp pack as terms.',
+                '3. Summarize the task and choose a clean recommendation.',
+                '4. List risks and assumptions in a generic order.',
+                '5. Deliver the final handoff.',
+            ]
+        ),
+        output='\n'.join(
+            [
+                '- Decision summary',
+                '- Risk list',
+                '- Next action',
+                '- Final checklist',
+            ]
+        ),
+    )
+
+    report = build_skill_expert_structure_report(request=request, skill_plan=plan, artifacts=_artifacts(content))
+
+    assert report.status == 'fail'
+    assert 'expert_output_fields_missing' in report.blocking_issues
+    assert 'expert_headings_missing' in report.blocking_issues
+
+
+def test_expert_structure_rejects_high_generated_similarity():
+    request = SkillCreateRequestV6(
+        task='Create a game design methodology skill for simulation-resource-loop-design.',
+        skill_name_hint='simulation-resource-loop-design',
+        skill_archetype='methodology_guidance',
+    )
+    plan = _methodology_plan('simulation-resource-loop-design')
+    content = fallback_generate_methodology_skill_md(
+        skill_name='simulation-resource-loop-design',
+        description='Design a simulation resource loop.',
+        task=request.task,
+        references=[],
+        scripts=[],
+    )
+
+    report = build_skill_expert_structure_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=_artifacts(content),
+        generated_vs_generated_heading_overlap=0.85,
+    )
+
+    assert report.status == 'fail'
+    assert 'high_generated_heading_overlap' in report.blocking_issues

@@ -20,6 +20,7 @@ from ..models.request import SkillCreateRequestV6
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
+from .expert_structure import build_skill_expert_structure_report
 from .orchestrator import run_skill_create
 
 
@@ -105,6 +106,7 @@ def _metrics_from_reports(
     self_review,
     domain_specificity=None,
     domain_expertise=None,
+    expert_structure=None,
     severity: str = '',
     fully_correct: bool = False,
 ) -> SkillCreateComparisonMetrics:
@@ -129,12 +131,21 @@ def _metrics_from_reports(
         domain_move_coverage=float(getattr(domain_expertise, 'domain_move_coverage', 0.0) or 0.0),
         prompt_phrase_echo_ratio=float(getattr(domain_expertise, 'prompt_phrase_echo_ratio', 0.0) or 0.0),
         generic_expertise_shell_ratio=float(getattr(domain_expertise, 'generic_expertise_shell_ratio', 0.0) or 0.0),
+        expert_structure_status=str(getattr(expert_structure, 'status', 'unknown') or 'unknown'),
+        expert_heading_recall=float(getattr(expert_structure, 'expert_heading_recall', 0.0) or 0.0),
+        expert_action_cluster_recall=float(getattr(expert_structure, 'expert_action_cluster_recall', 0.0) or 0.0),
+        expert_output_field_recall=float(getattr(expert_structure, 'expert_output_field_recall', 0.0) or 0.0),
+        expert_pitfall_cluster_recall=float(getattr(expert_structure, 'expert_pitfall_cluster_recall', 0.0) or 0.0),
+        expert_quality_check_recall=float(getattr(expert_structure, 'expert_quality_check_recall', 0.0) or 0.0),
+        generated_vs_generated_heading_overlap=float(getattr(expert_structure, 'generated_vs_generated_heading_overlap', 0.0) or 0.0),
+        generated_vs_generated_line_jaccard=float(getattr(expert_structure, 'generated_vs_generated_line_jaccard', 0.0) or 0.0),
+        generic_skeleton_ratio=float(getattr(expert_structure, 'generic_skeleton_ratio', 0.0) or 0.0),
         fully_correct=bool(fully_correct),
         severity=str(severity or ''),
     )
 
 
-def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any]:
+def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any]:
     request = _request(case)
     plan = _plan(case)
     artifacts = _artifact_skill_md(content)
@@ -155,23 +166,36 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         skill_plan=plan,
         artifacts=artifacts,
     )
+    expert_structure = build_skill_expert_structure_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+    )
     return (
         _metrics_from_reports(
             body_quality=body_quality,
             self_review=self_review,
             domain_specificity=domain_specificity,
             domain_expertise=domain_expertise,
+            expert_structure=expert_structure,
             severity='reference',
-            fully_correct=body_quality.passed and self_review.status == 'pass' and domain_specificity.status == 'pass' and domain_expertise.status == 'pass',
+            fully_correct=(
+                body_quality.passed
+                and self_review.status == 'pass'
+                and domain_specificity.status == 'pass'
+                and domain_expertise.status == 'pass'
+                and expert_structure.status == 'pass'
+            ),
         ),
         body_quality,
         self_review,
         domain_specificity,
         domain_expertise,
+        expert_structure,
     )
 
 
-def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, str]:
+def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, str]:
     with tempfile.TemporaryDirectory(prefix='auto-skills-loop-comparison-') as tmpdir:
         response = run_skill_create(
             _request(case),
@@ -187,12 +211,14 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
     self_review = getattr(response.diagnostics, 'self_review', None) if response.diagnostics is not None else None
     domain_specificity = getattr(response.diagnostics, 'domain_specificity', None) if response.diagnostics is not None else None
     domain_expertise = getattr(response.diagnostics, 'domain_expertise', None) if response.diagnostics is not None else None
+    expert_structure = getattr(response.diagnostics, 'expert_structure', None) if response.diagnostics is not None else None
     return (
         _metrics_from_reports(
             body_quality=body_quality,
             self_review=self_review,
             domain_specificity=domain_specificity,
             domain_expertise=domain_expertise,
+            expert_structure=expert_structure,
             severity=response.severity,
             fully_correct=bool(getattr(response.quality_review, 'fully_correct', False)),
         ),
@@ -200,6 +226,7 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
         self_review,
         domain_specificity,
         domain_expertise,
+        expert_structure,
         _skill_md_content(response.artifacts),
     )
 
@@ -260,7 +287,7 @@ def _run_hermes_case(case: dict[str, str], wrapper: Path) -> tuple[SkillCreateCo
         skill_md = generated_root / 'SKILL.md'
         if not skill_md.exists():
             return None, f'Hermes wrapper did not write SKILL.md under {generated_root}'
-        metrics, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
+        metrics, _, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
         metrics.severity = str(payload.get('severity') or '')
         return metrics, None
 
@@ -294,6 +321,66 @@ def _content_similarity(left: str, right: str) -> float:
     return round(len(left_tokens & right_tokens) / max(1, len(left_tokens | right_tokens)), 4)
 
 
+def _normalized_headings(content: str) -> set[str]:
+    headings: set[str] = set()
+    in_fence = False
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith('```'):
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped.startswith('#'):
+            continue
+        heading = stripped.lstrip('#').strip().lower()
+        heading = ' '.join(token for token in heading.replace(':', ' ').split() if token)
+        if heading:
+            headings.add(heading)
+    return headings
+
+
+def _heading_overlap(left: str, right: str) -> float:
+    left_headings = _normalized_headings(left)
+    right_headings = _normalized_headings(right)
+    if not left_headings or not right_headings:
+        return 0.0
+    return round(len(left_headings & right_headings) / max(1, min(len(left_headings), len(right_headings))), 4)
+
+
+def _normalized_body_lines(content: str) -> set[str]:
+    lines: set[str] = set()
+    in_frontmatter = False
+    seen_first_fm = False
+    in_fence = False
+    for raw in content.splitlines():
+        stripped = raw.strip()
+        if stripped == '---' and not seen_first_fm:
+            seen_first_fm = True
+            in_frontmatter = True
+            continue
+        if stripped == '---' and in_frontmatter:
+            in_frontmatter = False
+            continue
+        if in_frontmatter:
+            continue
+        if stripped.startswith('```'):
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped:
+            continue
+        normalized = ' '.join(stripped.lower().split())
+        if normalized and normalized not in {'## overview', '## workflow', '## output format', '## quality checks', '## common pitfalls'}:
+            lines.add(normalized)
+    return lines
+
+
+def _line_jaccard(left: str, right: str) -> float:
+    left_lines = _normalized_body_lines(left)
+    right_lines = _normalized_body_lines(right)
+    if not left_lines or not right_lines:
+        return 0.0
+    return round(len(left_lines & right_lines) / max(1, len(left_lines | right_lines)), 4)
+
+
 def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateComparisonMetrics) -> list[str]:
     issues: list[str] = []
     if auto.body_lines < 40 and reference.body_lines > 150:
@@ -314,10 +401,26 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_domain_specificity_not_pass')
     if auto.domain_expertise_status != 'pass':
         issues.append('auto_domain_expertise_not_pass')
+    if auto.expert_structure_status != 'pass':
+        issues.append('auto_expert_structure_not_pass')
+    if auto.expert_action_cluster_recall < 0.75 and reference.expert_action_cluster_recall >= 0.75:
+        issues.append('auto_expert_action_clusters_missing')
+    if auto.expert_output_field_recall < 0.70 and reference.expert_output_field_recall >= 0.70:
+        issues.append('auto_expert_output_fields_missing')
+    if auto.expert_heading_recall < 0.30 and reference.expert_heading_recall >= 0.30:
+        issues.append('auto_expert_headings_missing')
+    if auto.expert_quality_check_recall < 0.70 and reference.expert_quality_check_recall >= 0.70:
+        issues.append('auto_expert_quality_checks_missing')
+    if auto.generated_vs_generated_heading_overlap >= 0.80:
+        issues.append('auto_generated_heading_overlap_high')
+    if auto.generated_vs_generated_line_jaccard >= 0.42:
+        issues.append('auto_generated_line_jaccard_high')
     if auto.missing_domain_anchors:
         issues.append('auto_missing_domain_anchors')
     if auto.cross_case_similarity >= 0.82:
         issues.append('auto_generic_shell_gap')
+    if auto.generic_skeleton_ratio >= 0.50 and auto.expert_action_cluster_recall < 0.90:
+        issues.append('auto_generic_skeleton_gap')
     return sorted(set(issues))
 
 
@@ -331,7 +434,7 @@ def _anthropic_reference_metrics() -> tuple[SkillCreateComparisonMetrics | None,
             'skill_name': 'skill-creator',
             'task': 'Create and iteratively improve skills with evals, baseline comparisons, qualitative review, and quantitative benchmarks.',
         }
-        metrics, _, _, _, _ = _metrics_from_markdown(case, content)
+        metrics, _, _, _, _, _ = _metrics_from_markdown(case, content)
         summary = [
             'Anthropic skill-creator reference available',
             f'body_lines={metrics.body_lines}',
@@ -355,6 +458,9 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         f'- comparison_independence_status={report.comparison_independence_status}',
         f'- reference_role={report.reference_role}',
         f'- anthropic_reference_available={report.anthropic_reference_available}',
+        f'- expert_structure_gap_count={report.expert_structure_gap_count}',
+        f'- generic_shell_gap_count={report.generic_shell_gap_count}',
+        f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
         f'- Summary: {report.summary}',
         '',
     ]
@@ -368,6 +474,15 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_domain_anchor_coverage={case.auto_metrics.domain_anchor_coverage:.2f}')
         lines.append(f'- auto_domain_expertise={case.auto_metrics.domain_expertise_status}')
         lines.append(f'- auto_domain_move_coverage={case.auto_metrics.domain_move_coverage:.2f}')
+        lines.append(f'- auto_expert_structure={case.auto_metrics.expert_structure_status}')
+        lines.append(f'- auto_expert_heading_recall={case.auto_metrics.expert_heading_recall:.2f}')
+        lines.append(f'- auto_expert_action_cluster_recall={case.auto_metrics.expert_action_cluster_recall:.2f}')
+        lines.append(f'- auto_expert_output_field_recall={case.auto_metrics.expert_output_field_recall:.2f}')
+        lines.append(f'- auto_expert_pitfall_cluster_recall={case.auto_metrics.expert_pitfall_cluster_recall:.2f}')
+        lines.append(f'- auto_expert_quality_check_recall={case.auto_metrics.expert_quality_check_recall:.2f}')
+        lines.append(f'- auto_generated_heading_overlap={case.auto_metrics.generated_vs_generated_heading_overlap:.2f}')
+        lines.append(f'- auto_generated_line_jaccard={case.auto_metrics.generated_vs_generated_line_jaccard:.2f}')
+        lines.append(f'- auto_generic_skeleton_ratio={case.auto_metrics.generic_skeleton_ratio:.2f}')
         lines.append(f'- auto_prompt_phrase_echo_ratio={case.auto_metrics.prompt_phrase_echo_ratio:.2f}')
         if case.auto_metrics.missing_domain_anchors:
             lines.append(f'- missing_domain_anchors={case.auto_metrics.missing_domain_anchors}')
@@ -402,8 +517,8 @@ def build_skill_create_comparison_report(
     hermes_errors: list[str] = []
     case_payloads: list[dict[str, Any]] = []
     for case in COMPARISON_CASES:
-        auto_metrics, body_quality, self_review, domain_specificity, domain_expertise, auto_content = _run_auto_case(case)
-        golden_metrics, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, root))
+        auto_metrics, body_quality, self_review, domain_specificity, domain_expertise, expert_structure, auto_content = _run_auto_case(case)
+        golden_metrics, _, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, root))
         hermes_metrics = None
         if hermes_wrapper is not None:
             hermes_metrics, error = _run_hermes_case(case, hermes_wrapper)
@@ -419,6 +534,7 @@ def build_skill_create_comparison_report(
                 'self_review': self_review,
                 'domain_specificity': domain_specificity,
                 'domain_expertise': domain_expertise,
+                'expert_structure': expert_structure,
                 'auto_content': auto_content,
             }
         )
@@ -430,28 +546,52 @@ def build_skill_create_comparison_report(
             if other is not payload
         ]
         max_similarity = max(similarities or [0.0])
+        heading_overlaps = [
+            _heading_overlap(payload['auto_content'], other['auto_content'])
+            for other in case_payloads
+            if other is not payload
+        ]
+        line_jaccards = [
+            _line_jaccard(payload['auto_content'], other['auto_content'])
+            for other in case_payloads
+            if other is not payload
+        ]
+        max_heading_overlap = max(heading_overlaps or [0.0])
+        max_line_jaccard = max(line_jaccards or [0.0])
         payload['auto_metrics'].cross_case_similarity = max_similarity
+        payload['auto_metrics'].generated_vs_generated_heading_overlap = max_heading_overlap
+        payload['auto_metrics'].generated_vs_generated_line_jaccard = max_line_jaccard
         if payload['domain_specificity'] is not None:
             payload['domain_specificity'].cross_case_similarity = max_similarity
             if max_similarity >= 0.82 and 'high_cross_case_similarity' not in payload['domain_specificity'].blocking_issues:
                 payload['domain_specificity'].blocking_issues.append('high_cross_case_similarity')
                 payload['domain_specificity'].status = 'fail'
             payload['auto_metrics'].domain_specificity_status = payload['domain_specificity'].status
+        if payload['expert_structure'] is not None:
+            payload['expert_structure'].generated_vs_generated_heading_overlap = max_heading_overlap
+            payload['expert_structure'].generated_vs_generated_line_jaccard = max_line_jaccard
+            if max_heading_overlap >= 0.80 and 'high_generated_heading_overlap' not in payload['expert_structure'].blocking_issues:
+                payload['expert_structure'].blocking_issues.append('high_generated_heading_overlap')
+                payload['expert_structure'].status = 'fail'
+            if max_line_jaccard >= 0.42 and 'high_generated_line_jaccard' not in payload['expert_structure'].blocking_issues:
+                payload['expert_structure'].blocking_issues.append('high_generated_line_jaccard')
+                payload['expert_structure'].status = 'fail'
+            payload['auto_metrics'].expert_structure_status = payload['expert_structure'].status
 
     if not include_hermes:
         hermes_execution_status = 'not_requested'
         comparison_independence_status = 'golden_only'
-        comparison_source = 'golden'
+        comparison_source = 'expert_golden'
         reference_role = 'quality_baseline'
     elif hermes_wrapper is None:
         hermes_execution_status = 'unavailable'
         comparison_independence_status = 'golden_only'
-        comparison_source = 'golden_fallback'
+        comparison_source = 'expert_golden'
         reference_role = 'quality_baseline'
     elif hermes_errors:
         hermes_execution_status = 'failed'
         comparison_independence_status = 'golden_only'
-        comparison_source = 'golden_fallback'
+        comparison_source = 'expert_golden'
         reference_role = 'quality_baseline'
     else:
         hermes_execution_status = 'passed'
@@ -460,7 +600,7 @@ def build_skill_create_comparison_report(
             comparison_source = 'hermes'
             reference_role = 'quality_baseline'
         else:
-            comparison_source = 'golden'
+            comparison_source = 'expert_golden'
             reference_role = 'entrypoint_smoke'
 
     cases: list[SkillCreateComparisonCaseResult] = []
@@ -484,12 +624,32 @@ def build_skill_create_comparison_report(
                 self_review=payload['self_review'],
                 domain_specificity=payload['domain_specificity'],
                 domain_expertise=payload['domain_expertise'],
+                expert_structure=payload['expert_structure'],
                 gap_issues=gap_issues,
                 status=status,
                 summary=f'{case["case_id"]}: {status}',
             )
         )
     gap_count = sum(1 for item in cases if item.status == 'gap')
+    expert_structure_gap_count = sum(
+        1
+        for item in cases
+        if any(issue.startswith('auto_expert_') for issue in list(item.gap_issues or []))
+        or item.auto_metrics.expert_structure_status != 'pass'
+    )
+    generic_shell_gap_count = sum(
+        1
+        for item in cases
+        if any(issue in {'auto_generic_shell_gap', 'auto_generic_skeleton_gap'} for issue in list(item.gap_issues or []))
+    )
+    pairwise_similarity_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue in {'auto_generated_heading_overlap_high', 'auto_generated_line_jaccard_high'}
+            for issue in list(item.gap_issues or [])
+        )
+    )
     anthropic_metrics, anthropic_summary = _anthropic_reference_metrics()
     report = SkillCreateComparisonReport(
         cases=cases,
@@ -504,6 +664,9 @@ def build_skill_create_comparison_report(
         anthropic_reference_available=anthropic_metrics is not None,
         anthropic_reference_metrics=anthropic_metrics,
         anthropic_reference_summary=anthropic_summary,
+        expert_structure_gap_count=expert_structure_gap_count,
+        generic_shell_gap_count=generic_shell_gap_count,
+        pairwise_similarity_gap_count=pairwise_similarity_gap_count,
         gap_count=gap_count,
         overall_status='fail' if gap_count else 'pass',
         summary=(

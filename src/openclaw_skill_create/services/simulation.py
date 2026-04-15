@@ -280,6 +280,9 @@ def _validate_methodology_guidance_projection(payload: Any) -> dict[str, Any]:
             'domain_expertise_status',
             'domain_move_coverage_min_met',
             'domain_expertise_warn_count',
+            'expert_structure_status',
+            'expert_structure_min_met',
+            'expert_structure_warn_count',
             'body_lines_min_met',
             'required_sections_missing',
             'generated_files_contains_sidecars',
@@ -705,6 +708,7 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
         self_review = getattr(response.diagnostics, 'self_review', None) if response.diagnostics is not None else None
         domain_specificity = getattr(response.diagnostics, 'domain_specificity', None) if response.diagnostics is not None else None
         domain_expertise = getattr(response.diagnostics, 'domain_expertise', None) if response.diagnostics is not None else None
+        expert_structure = getattr(response.diagnostics, 'expert_structure', None) if response.diagnostics is not None else None
         generated_files = sorted(item.path for item in list(response.artifacts.files or [])) if response.artifacts is not None else []
         return {
             'severity': response.severity,
@@ -718,6 +722,12 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
             'domain_expertise_status': str(getattr(domain_expertise, 'status', '') or ''),
             'domain_move_coverage_min_met': float(getattr(domain_expertise, 'domain_move_coverage', 0.0) or 0.0) >= 0.45,
             'domain_expertise_warn_count': len(list(getattr(domain_expertise, 'warning_issues', []) or [])),
+            'expert_structure_status': str(getattr(expert_structure, 'status', '') or ''),
+            'expert_structure_min_met': (
+                str(getattr(expert_structure, 'status', '') or '') == 'pass'
+                or str(getattr(expert_structure, 'status', '') or '') == 'warn'
+            ),
+            'expert_structure_warn_count': len(list(getattr(expert_structure, 'warning_issues', []) or [])),
             'body_lines_min_met': int(getattr(body_quality, 'body_lines', 0) or 0) >= 35,
             'required_sections_missing': list(getattr(body_quality, 'missing_required_sections', []) or []),
             'generated_files_contains_sidecars': (
@@ -725,6 +735,7 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
                 and 'evals/self_review.json' in generated_files
                 and 'evals/domain_specificity.json' in generated_files
                 and 'evals/domain_expertise.json' in generated_files
+                and 'evals/expert_structure.json' in generated_files
             ),
         }
 

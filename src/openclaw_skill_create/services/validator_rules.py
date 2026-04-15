@@ -10,6 +10,7 @@ from ..models.plan import SkillPlan
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
+from .expert_structure import build_skill_expert_structure_report
 
 
 REFERENCE_REQUIRED_SECTIONS = ('## Overview', '## Key points')
@@ -556,6 +557,18 @@ def classify_validation_issues(validation: ValidationResult) -> tuple[list[str],
             ):
                 if issue_type in item:
                     repairable.append(issue_type)
+        if item.startswith('Expert structure failed:'):
+            for issue_type in (
+                'expert_headings_missing',
+                'expert_action_clusters_missing',
+                'expert_output_fields_missing',
+                'expert_quality_checks_missing',
+                'generic_expert_skeleton',
+                'high_generated_heading_overlap',
+                'high_generated_line_jaccard',
+            ):
+                if issue_type in item:
+                    repairable.append(issue_type)
     if validation.unsupported_claims_found:
         non_repairable.append('unsupported_claims')
 
@@ -695,6 +708,11 @@ def run_rule_validation(
         skill_plan=skill_plan,
         artifacts=artifacts,
     )
+    expert_structure = build_skill_expert_structure_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+    )
     for issue in list(body_quality.blocking_issues or []):
         validation.summary.append(f'Body quality failed: {issue}')
     for issue in list(self_review.blocking_issues or []):
@@ -707,6 +725,10 @@ def run_rule_validation(
         validation.summary.append(f'Domain expertise failed: {issue}')
     for issue in list(domain_expertise.warning_issues or []):
         validation.summary.append(f'Domain expertise warning: {issue}')
+    for issue in list(expert_structure.blocking_issues or []):
+        validation.summary.append(f'Expert structure failed: {issue}')
+    for issue in list(expert_structure.warning_issues or []):
+        validation.summary.append(f'Expert structure warning: {issue}')
 
     pattern_summary, pattern_notes = run_pattern_validator_checks(
         extracted_patterns=extracted_patterns,
@@ -750,6 +772,7 @@ def run_rule_validation(
     notes.extend(list(self_review.summary or []))
     notes.extend(list(domain_specificity.summary or []))
     notes.extend(list(domain_expertise.summary or []))
+    notes.extend(list(expert_structure.summary or []))
 
     return Diagnostics(
         warnings=list(validation.summary),
@@ -759,6 +782,7 @@ def run_rule_validation(
         self_review=self_review,
         domain_specificity=domain_specificity,
         domain_expertise=domain_expertise,
+        expert_structure=expert_structure,
         notes=notes,
     )
 

@@ -10,6 +10,9 @@
   "domain_expertise_status": "pass",
   "domain_move_coverage_min_met": true,
   "domain_expertise_warn_count": 0,
+  "expert_structure_status": "pass",
+  "expert_structure_min_met": true,
+  "expert_structure_warn_count": 0,
   "body_lines_min_met": true,
   "required_sections_missing": [],
   "generated_files_contains_sidecars": true

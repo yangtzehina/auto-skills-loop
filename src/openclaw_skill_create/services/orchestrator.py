@@ -26,6 +26,7 @@ from .persistence import (
     artifacts_with_domain_expertise,
     artifacts_with_domain_specificity,
     artifacts_with_evaluation_report,
+    artifacts_with_expert_structure,
     artifacts_with_operation_coverage,
     artifacts_with_quality_review,
     artifacts_with_security_audit,
@@ -102,6 +103,13 @@ BLOCKING_REPAIRABLE_ISSUES = {
     "domain_pitfalls_missing",
     "domain_moves_underdeveloped",
     "generic_domain_move_shell",
+    "expert_headings_missing",
+    "expert_action_clusters_missing",
+    "expert_output_fields_missing",
+    "expert_quality_checks_missing",
+    "generic_expert_skeleton",
+    "high_generated_heading_overlap",
+    "high_generated_line_jaccard",
 }
 
 
@@ -562,6 +570,11 @@ def run_skill_create(
             domain_expertise=getattr(diagnostics, "domain_expertise", None),
             policy=effective_persistence_policy,
         )
+        artifacts = artifacts_with_expert_structure(
+            artifacts=artifacts,
+            expert_structure=getattr(diagnostics, "expert_structure", None),
+            policy=effective_persistence_policy,
+        )
 
     if artifacts is not None and diagnostics is not None:
         artifacts = artifacts_with_body_quality(
@@ -582,6 +595,11 @@ def run_skill_create(
         artifacts = artifacts_with_domain_expertise(
             artifacts=artifacts,
             domain_expertise=getattr(diagnostics, "domain_expertise", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_expert_structure(
+            artifacts=artifacts,
+            expert_structure=getattr(diagnostics, "expert_structure", None),
             policy=effective_persistence_policy,
         )
         operation_coverage = None

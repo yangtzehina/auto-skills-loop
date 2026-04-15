@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from .domain_expertise import SkillDomainExpertiseReport
 from .domain_specificity import SkillDomainSpecificityReport
+from .expert_structure import SkillExpertStructureReport
 from .security import SecurityAuditReport
 
 
@@ -32,4 +33,5 @@ class Diagnostics(BaseModel):
     self_review: Optional[SkillSelfReviewReport] = None
     domain_specificity: Optional[SkillDomainSpecificityReport] = None
     domain_expertise: Optional[SkillDomainExpertiseReport] = None
+    expert_structure: Optional[SkillExpertStructureReport] = None
     notes: list[str] = Field(default_factory=list)

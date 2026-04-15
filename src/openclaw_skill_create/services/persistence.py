@@ -10,6 +10,7 @@ from ..models.artifacts import ArtifactFile, Artifacts
 from ..models.body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from ..models.domain_expertise import SkillDomainExpertiseReport
 from ..models.domain_specificity import SkillDomainSpecificityReport
+from ..models.expert_structure import SkillExpertStructureReport
 from ..models.evaluation import EvaluationRunReport
 from ..models.persistence import PersistencePolicy
 from ..models.plan import SkillPlan
@@ -31,6 +32,7 @@ BODY_QUALITY_REPORT_PATH = 'evals/body_quality.json'
 SELF_REVIEW_REPORT_PATH = 'evals/self_review.json'
 DOMAIN_SPECIFICITY_REPORT_PATH = 'evals/domain_specificity.json'
 DOMAIN_EXPERTISE_REPORT_PATH = 'evals/domain_expertise.json'
+EXPERT_STRUCTURE_REPORT_PATH = 'evals/expert_structure.json'
 SECURITY_AUDIT_REPORT_PATH = 'evals/security_audit.json'
 OPERATION_COVERAGE_REPORT_PATH = 'evals/operation_coverage.json'
 
@@ -233,6 +235,32 @@ def artifacts_with_domain_expertise(
     return Artifacts(files=files)
 
 
+def artifacts_with_expert_structure(
+    *,
+    artifacts: Artifacts,
+    expert_structure: Optional[SkillExpertStructureReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if expert_structure is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=EXPERT_STRUCTURE_REPORT_PATH,
+        content=json.dumps(expert_structure.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['expert_structure'],
+        status='new',
+    )
+
+    files = [file for file in artifacts.files if file.path != EXPERT_STRUCTURE_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
 def artifacts_with_security_audit(
     *,
     artifacts: Artifacts,
@@ -371,6 +399,11 @@ def persist_artifacts(
         'domain_expertise_path': (
             str(target_dir / DOMAIN_EXPERTISE_REPORT_PATH)
             if DOMAIN_EXPERTISE_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'expert_structure_path': (
+            str(target_dir / EXPERT_STRUCTURE_REPORT_PATH)
+            if EXPERT_STRUCTURE_REPORT_PATH in artifact_paths(artifacts)
             else None
         ),
         'security_audit_path': (

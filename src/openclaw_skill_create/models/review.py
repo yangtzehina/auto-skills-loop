@@ -58,4 +58,6 @@ class SkillQualityReview(BaseModel):
     domain_specificity_issues: list[str] = Field(default_factory=list)
     domain_expertise_status: str = "not_applicable"
     domain_expertise_issues: list[str] = Field(default_factory=list)
+    expert_structure_status: str = "not_applicable"
+    expert_structure_issues: list[str] = Field(default_factory=list)
     summary: list[str] = Field(default_factory=list)

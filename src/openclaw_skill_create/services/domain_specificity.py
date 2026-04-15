@@ -131,6 +131,7 @@ def _extract_section(body: str, heading_aliases: tuple[str, ...]) -> str:
     lines = body.splitlines()
     capture = False
     in_fence = False
+    capture_level = 0
     captured: list[str] = []
     aliases = tuple(_normalize(alias) for alias in heading_aliases)
     for line in lines:
@@ -141,10 +142,16 @@ def _extract_section(body: str, heading_aliases: tuple[str, ...]) -> str:
             in_fence = not in_fence
             continue
         if stripped.startswith("#") and not in_fence:
+            level = len(stripped) - len(stripped.lstrip("#"))
             heading = _normalize(stripped.lstrip("#").strip())
-            if capture and heading:
+            if capture and heading and level <= capture_level:
                 break
+            if capture:
+                captured.append(line)
+                continue
             capture = any(alias in heading for alias in aliases)
+            if capture:
+                capture_level = level
             continue
         if capture:
             captured.append(line)

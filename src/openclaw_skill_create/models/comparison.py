@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from .domain_expertise import SkillDomainExpertiseReport
 from .domain_specificity import SkillDomainSpecificityReport
+from .expert_structure import SkillExpertStructureReport
 
 
 class SkillCreateComparisonMetrics(BaseModel):
@@ -28,6 +29,15 @@ class SkillCreateComparisonMetrics(BaseModel):
     domain_move_coverage: float = 0.0
     prompt_phrase_echo_ratio: float = 0.0
     generic_expertise_shell_ratio: float = 0.0
+    expert_structure_status: str = "unknown"
+    expert_heading_recall: float = 0.0
+    expert_action_cluster_recall: float = 0.0
+    expert_output_field_recall: float = 0.0
+    expert_pitfall_cluster_recall: float = 0.0
+    expert_quality_check_recall: float = 0.0
+    generated_vs_generated_heading_overlap: float = 0.0
+    generated_vs_generated_line_jaccard: float = 0.0
+    generic_skeleton_ratio: float = 0.0
     fully_correct: bool = False
     severity: str = ""
 
@@ -42,6 +52,7 @@ class SkillCreateComparisonCaseResult(BaseModel):
     self_review: SkillSelfReviewReport | None = None
     domain_specificity: SkillDomainSpecificityReport | None = None
     domain_expertise: SkillDomainExpertiseReport | None = None
+    expert_structure: SkillExpertStructureReport | None = None
     gap_issues: list[str] = Field(default_factory=list)
     status: str = "matched"
     summary: str = ""
@@ -61,6 +72,9 @@ class SkillCreateComparisonReport(BaseModel):
     anthropic_reference_available: bool = False
     anthropic_reference_metrics: SkillCreateComparisonMetrics | None = None
     anthropic_reference_summary: list[str] = Field(default_factory=list)
+    expert_structure_gap_count: int = 0
+    generic_shell_gap_count: int = 0
+    pairwise_similarity_gap_count: int = 0
     gap_count: int = 0
     overall_status: str = "pass"
     summary: str = ""
