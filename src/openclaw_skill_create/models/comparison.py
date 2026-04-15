@@ -7,7 +7,7 @@ from .domain_expertise import SkillDomainExpertiseReport
 from .domain_specificity import SkillDomainSpecificityReport
 from .depth_quality import SkillDepthQualityReport
 from .editorial_quality import SkillEditorialQualityReport
-from .expert_dna import SkillMoveQualityReport
+from .expert_dna import ExpertDNAAuthoringPack, SkillMoveQualityReport, SkillUsefulnessEvalReport
 from .expert_structure import SkillExpertStructureReport
 from .style_diversity import SkillStyleDiversityReport
 
@@ -117,6 +117,12 @@ class SkillCreateComparisonReport(BaseModel):
     anthropic_reference_available: bool = False
     anthropic_reference_metrics: SkillCreateComparisonMetrics | None = None
     anthropic_reference_summary: list[str] = Field(default_factory=list)
+    expert_dna_authoring_pack: ExpertDNAAuthoringPack | None = None
+    skill_usefulness_eval_report: SkillUsefulnessEvalReport | None = None
+    dna_authoring_status: str = "pass"
+    candidate_dna_count: int = 0
+    usefulness_eval_status: str = "pass"
+    usefulness_gap_count: int = 0
     expert_structure_gap_count: int = 0
     depth_quality_gap_count: int = 0
     editorial_gap_count: int = 0

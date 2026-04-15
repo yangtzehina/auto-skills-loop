@@ -22,10 +22,12 @@ from .depth_quality import build_skill_depth_quality_report
 from .editorial_quality import build_skill_editorial_quality_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
+from .expert_dna_authoring import build_expert_dna_authoring_pack
 from .expert_dna import move_signature_from_markdown
 from .expert_structure import build_skill_expert_structure_report
 from .move_quality import build_skill_move_quality_report
 from .orchestrator import run_skill_create
+from .skill_usefulness_eval import build_skill_usefulness_eval_report
 from .style_diversity import (
     build_skill_style_diversity_report,
     shared_boilerplate_sentence_ratio,
@@ -611,6 +613,10 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         f'- comparison_independence_status={report.comparison_independence_status}',
         f'- reference_role={report.reference_role}',
         f'- anthropic_reference_available={report.anthropic_reference_available}',
+        f'- dna_authoring_status={report.dna_authoring_status}',
+        f'- candidate_dna_count={report.candidate_dna_count}',
+        f'- usefulness_eval_status={report.usefulness_eval_status}',
+        f'- usefulness_gap_count={report.usefulness_gap_count}',
         f'- expert_structure_gap_count={report.expert_structure_gap_count}',
         f'- depth_quality_gap_count={report.depth_quality_gap_count}',
         f'- editorial_gap_count={report.editorial_gap_count}',
@@ -691,6 +697,17 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.extend(['', '## Anthropic Skill-Creator Reference'])
         for item in report.anthropic_reference_summary:
             lines.append(f'- {item}')
+    if report.expert_dna_authoring_pack is not None:
+        lines.extend(['', '## Expert DNA Authoring'])
+        lines.append(f'- ready_for_review={len(report.expert_dna_authoring_pack.ready_for_review)}')
+        lines.append(f'- needs_human_authoring={len(report.expert_dna_authoring_pack.needs_human_authoring)}')
+        lines.append(f'- rejected={len(report.expert_dna_authoring_pack.rejected)}')
+    if report.skill_usefulness_eval_report is not None:
+        lines.extend(['', '## Skill Usefulness Eval'])
+        lines.append(f'- status={report.skill_usefulness_eval_report.status}')
+        lines.append(f'- probe_count={report.skill_usefulness_eval_report.probe_count}')
+        lines.append(f'- usefulness_gap_count={report.skill_usefulness_eval_report.usefulness_gap_count}')
+        lines.append(f'- with_skill_average={report.skill_usefulness_eval_report.with_skill_average:.2f}')
     return '\n'.join(lines).strip()
 
 
@@ -996,6 +1013,16 @@ def build_skill_create_comparison_report(
         )
     )
     anthropic_metrics, anthropic_summary = _anthropic_reference_metrics()
+    auto_content_by_name = {
+        str(payload['case']['skill_name']): str(payload.get('auto_content') or '')
+        for payload in case_payloads
+    }
+    authoring_pack = build_expert_dna_authoring_pack()
+    usefulness_report = build_skill_usefulness_eval_report(
+        generated_skill_markdown_by_name=auto_content_by_name,
+    )
+    dna_authoring_status = 'pass' if authoring_pack.rejected == [] else 'fail'
+    usefulness_eval_status = usefulness_report.status
     report = SkillCreateComparisonReport(
         cases=cases,
         include_hermes=include_hermes,
@@ -1009,6 +1036,12 @@ def build_skill_create_comparison_report(
         anthropic_reference_available=anthropic_metrics is not None,
         anthropic_reference_metrics=anthropic_metrics,
         anthropic_reference_summary=anthropic_summary,
+        expert_dna_authoring_pack=authoring_pack,
+        skill_usefulness_eval_report=usefulness_report,
+        dna_authoring_status=dna_authoring_status,
+        candidate_dna_count=authoring_pack.candidate_dna_count,
+        usefulness_eval_status=usefulness_eval_status,
+        usefulness_gap_count=usefulness_report.usefulness_gap_count,
         expert_structure_gap_count=expert_structure_gap_count,
         depth_quality_gap_count=depth_quality_gap_count,
         editorial_gap_count=editorial_gap_count,
@@ -1017,14 +1050,16 @@ def build_skill_create_comparison_report(
         generic_shell_gap_count=generic_shell_gap_count,
         pairwise_similarity_gap_count=pairwise_similarity_gap_count,
         gap_count=gap_count,
-        overall_status='fail' if gap_count else 'pass',
+        overall_status='fail' if gap_count or usefulness_report.usefulness_gap_count or dna_authoring_status == 'fail' else 'pass',
         summary=(
             f'Skill create comparison complete: cases={len(cases)} gaps={gap_count} '
             f'comparison_source={comparison_source} '
             f'independence={comparison_independence_status} '
             f'reference_role={reference_role} '
             f'hermes_status={hermes_execution_status} '
-            f'move_quality_gaps={move_quality_gap_count}'
+            f'move_quality_gaps={move_quality_gap_count} '
+            f'dna_candidates={authoring_pack.candidate_dna_count} '
+            f'usefulness_gaps={usefulness_report.usefulness_gap_count}'
         ),
     )
     report.markdown_summary = render_skill_create_comparison_markdown(report)

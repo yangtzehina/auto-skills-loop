@@ -75,6 +75,10 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- move_quality_fail_count={report.move_quality_fail_count}',
         f'- move_quality_warn_count={report.move_quality_warn_count}',
         f'- move_quality_gap_count={report.move_quality_gap_count}',
+        f'- dna_authoring_status={report.dna_authoring_status}',
+        f'- candidate_dna_count={report.candidate_dna_count}',
+        f'- usefulness_eval_status={report.usefulness_eval_status}',
+        f'- usefulness_gap_count={report.usefulness_gap_count}',
         f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
         f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}',
@@ -127,7 +131,7 @@ def build_verify_report(
             overall_status = 'warn'
         else:
             overall_status = 'fail'
-    elif comparison_report.gap_count:
+    elif comparison_report.overall_status == 'fail':
         overall_status = 'fail'
     else:
         overall_status = 'pass'
@@ -289,6 +293,10 @@ def build_verify_report(
             if item.auto_metrics.move_quality_status == 'warn'
         ),
         move_quality_gap_count=int(comparison_report.move_quality_gap_count or 0),
+        dna_authoring_status=str(comparison_report.dna_authoring_status or 'pass'),
+        candidate_dna_count=int(comparison_report.candidate_dna_count or 0),
+        usefulness_eval_status=str(comparison_report.usefulness_eval_status or 'pass'),
+        usefulness_gap_count=int(comparison_report.usefulness_gap_count or 0),
         pairwise_similarity_gap_count=int(comparison_report.pairwise_similarity_gap_count or 0),
         generic_shell_gap_count=sum(
             1
@@ -311,6 +319,8 @@ def build_verify_report(
             f'editorial_quality={editorial_quality_status} '
             f'style_diversity={style_diversity_status} '
             f'move_quality={move_quality_status} '
+            f'dna_authoring={comparison_report.dna_authoring_status} '
+            f'usefulness_eval={comparison_report.usefulness_eval_status} '
             f'hermes_comparison_gaps={comparison_report.gap_count}'
         ),
     )
@@ -419,6 +429,10 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- move_quality_fail_count={report.move_quality_fail_count}')
     lines.append(f'- move_quality_warn_count={report.move_quality_warn_count}')
     lines.append(f'- move_quality_gap_count={report.move_quality_gap_count}')
+    lines.append(f'- dna_authoring_status={report.dna_authoring_status}')
+    lines.append(f'- candidate_dna_count={report.candidate_dna_count}')
+    lines.append(f'- usefulness_eval_status={report.usefulness_eval_status}')
+    lines.append(f'- usefulness_gap_count={report.usefulness_gap_count}')
     lines.append(f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}')
     lines.append(f'- generic_shell_gap_count={report.generic_shell_gap_count}')
     lines.append(f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}')
@@ -598,6 +612,10 @@ def build_ops_roundbook_report(
         move_quality_fail_count=verify_report.move_quality_fail_count,
         move_quality_warn_count=verify_report.move_quality_warn_count,
         move_quality_gap_count=verify_report.move_quality_gap_count,
+        dna_authoring_status=verify_report.dna_authoring_status,
+        candidate_dna_count=verify_report.candidate_dna_count,
+        usefulness_eval_status=verify_report.usefulness_eval_status,
+        usefulness_gap_count=verify_report.usefulness_gap_count,
         pairwise_similarity_gap_count=verify_report.pairwise_similarity_gap_count,
         generic_shell_gap_count=verify_report.generic_shell_gap_count,
         hermes_comparison_gap_count=verify_report.hermes_comparison_gap_count,
@@ -617,6 +635,8 @@ def build_ops_roundbook_report(
             f'editorial_quality={verify_report.editorial_quality_status} '
             f'style_diversity={verify_report.style_diversity_status} '
             f'move_quality={verify_report.move_quality_status} '
+            f'dna_authoring={verify_report.dna_authoring_status} '
+            f'usefulness_eval={verify_report.usefulness_eval_status} '
             f'overall_readiness={overall_readiness} '
             f'next_create_seed={next_create_seed_candidate or "none"} '
             f'next_prior_hold={next_prior_family_on_hold or "none"}'

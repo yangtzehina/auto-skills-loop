@@ -52,6 +52,10 @@ class VerifyReport(BaseModel):
     move_quality_fail_count: int = 0
     move_quality_warn_count: int = 0
     move_quality_gap_count: int = 0
+    dna_authoring_status: str = 'pass'
+    candidate_dna_count: int = 0
+    usefulness_eval_status: str = 'pass'
+    usefulness_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
     hermes_comparison_gap_count: int = 0
     skill_create_comparison_report: SkillCreateComparisonReport | None = None
@@ -110,6 +114,10 @@ class OpsRoundbookReport(BaseModel):
     move_quality_fail_count: int = 0
     move_quality_warn_count: int = 0
     move_quality_gap_count: int = 0
+    dna_authoring_status: str = 'pass'
+    candidate_dna_count: int = 0
+    usefulness_eval_status: str = 'pass'
+    usefulness_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
     hermes_comparison_gap_count: int = 0
     overall_readiness: str = 'ready'

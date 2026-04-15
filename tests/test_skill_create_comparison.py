@@ -40,6 +40,10 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     assert all(item.auto_metrics.output_field_semantics_coverage >= 0.75 for item in report.cases)
     assert all(item.auto_metrics.failure_repair_coverage >= 0.75 for item in report.cases)
     assert all(item.auto_metrics.numbered_workflow_spine_present for item in report.cases)
+    assert report.dna_authoring_status == 'pass'
+    assert report.candidate_dna_count >= 8
+    assert report.usefulness_eval_status == 'pass'
+    assert report.usefulness_gap_count == 0
 
 
 def test_skill_create_comparison_cli_writes_sidecar(tmp_path: Path):
@@ -64,3 +68,5 @@ def test_skill_create_comparison_cli_writes_sidecar(tmp_path: Path):
     assert payload['editorial_gap_count'] == 0
     assert payload['style_gap_count'] == 0
     assert payload['move_quality_gap_count'] == 0
+    assert payload['dna_authoring_status'] == 'pass'
+    assert payload['usefulness_eval_status'] == 'pass'

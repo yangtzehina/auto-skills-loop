@@ -4,7 +4,16 @@ from .body_quality import build_skill_body_quality_report, build_skill_self_revi
 from .domain_specificity import build_skill_domain_specificity_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .expert_structure import build_skill_expert_structure_report
+from .expert_dna_authoring import (
+    build_expert_dna_authoring_pack,
+    build_expert_dna_review_batch_report,
+    build_expert_dna_review_report,
+    render_expert_dna_authoring_pack_markdown,
+    render_expert_dna_review_batch_markdown,
+    render_expert_dna_review_markdown,
+)
 from .move_quality import build_skill_move_quality_report
+from .skill_usefulness_eval import build_skill_usefulness_eval_report, render_skill_usefulness_eval_markdown
 from .style_diversity import build_skill_style_diversity_report
 from .orchestrator import run_skill_create
 from .ops_approval import (
@@ -117,6 +126,14 @@ __all__ = [
     'build_skill_domain_specificity_report',
     'build_skill_domain_expertise_report',
     'build_skill_expert_structure_report',
+    'build_expert_dna_authoring_pack',
+    'build_expert_dna_review_report',
+    'build_expert_dna_review_batch_report',
+    'render_expert_dna_authoring_pack_markdown',
+    'render_expert_dna_review_markdown',
+    'render_expert_dna_review_batch_markdown',
+    'build_skill_usefulness_eval_report',
+    'render_skill_usefulness_eval_markdown',
     'build_skill_style_diversity_report',
     'run_skill_create',
     'detect_skill_archetype',

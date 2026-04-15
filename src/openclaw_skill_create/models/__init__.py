@@ -6,7 +6,18 @@ from .domain_specificity import SkillDomainSpecificityReport
 from .domain_expertise import SkillDomainExpertiseReport
 from .depth_quality import ExpertDepthProfile, SkillDepthQualityReport
 from .editorial_quality import ExpertEditorialProfile, SkillEditorialQualityReport
-from .expert_dna import DomainMovePlan, ExpertSkillDNA, ExpertWorkflowMove, SkillMoveQualityReport
+from .expert_dna import (
+    CandidateExpertSkillDNA,
+    DomainMovePlan,
+    ExpertDNAAuthoringPack,
+    ExpertDNAReviewBatchReport,
+    ExpertDNAReviewReport,
+    ExpertSkillDNA,
+    ExpertWorkflowMove,
+    SkillMoveQualityReport,
+    SkillUsefulnessEvalReport,
+    SkillUsefulnessProbeResult,
+)
 from .expert_structure import ExpertSkillProfile, SkillExpertStructureReport
 from .findings import CandidateResources, RepoFinding, RepoFindings
 from .lineage import SkillLineageHistoryEntry, SkillLineageManifest
@@ -133,6 +144,12 @@ __all__ = [
     'ExpertSkillDNA',
     'DomainMovePlan',
     'SkillMoveQualityReport',
+    'CandidateExpertSkillDNA',
+    'ExpertDNAAuthoringPack',
+    'ExpertDNAReviewReport',
+    'ExpertDNAReviewBatchReport',
+    'SkillUsefulnessProbeResult',
+    'SkillUsefulnessEvalReport',
     'SkillCreateComparisonCaseResult',
     'SkillCreateComparisonMetrics',
     'SkillCreateComparisonReport',
