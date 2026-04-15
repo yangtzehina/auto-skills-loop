@@ -23,6 +23,8 @@ from .online_discovery import (
 from .operation_coverage import build_operation_coverage_report
 from .persistence import (
     artifacts_with_body_quality,
+    artifacts_with_domain_expertise,
+    artifacts_with_domain_specificity,
     artifacts_with_evaluation_report,
     artifacts_with_operation_coverage,
     artifacts_with_quality_review,
@@ -88,6 +90,18 @@ BLOCKING_REPAIRABLE_ISSUES = {
     "prompt_echo",
     "description_stuffing",
     "self_review_failed",
+    "missing_domain_anchors",
+    "generic_methodology_shell",
+    "high_cross_case_similarity",
+    "body_prompt_echo",
+    "domain_workflow_missing",
+    "domain_output_missing",
+    "domain_actions_missing",
+    "domain_output_fields_missing",
+    "domain_judgment_checks_missing",
+    "domain_pitfalls_missing",
+    "domain_moves_underdeveloped",
+    "generic_domain_move_shell",
 }
 
 
@@ -538,6 +552,16 @@ def run_skill_create(
             self_review=getattr(diagnostics, "self_review", None),
             policy=effective_persistence_policy,
         )
+        artifacts = artifacts_with_domain_specificity(
+            artifacts=artifacts,
+            domain_specificity=getattr(diagnostics, "domain_specificity", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_domain_expertise(
+            artifacts=artifacts,
+            domain_expertise=getattr(diagnostics, "domain_expertise", None),
+            policy=effective_persistence_policy,
+        )
 
     if artifacts is not None and diagnostics is not None:
         artifacts = artifacts_with_body_quality(
@@ -548,6 +572,16 @@ def run_skill_create(
         artifacts = artifacts_with_self_review(
             artifacts=artifacts,
             self_review=getattr(diagnostics, "self_review", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_domain_specificity(
+            artifacts=artifacts,
+            domain_specificity=getattr(diagnostics, "domain_specificity", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_domain_expertise(
+            artifacts=artifacts,
+            domain_expertise=getattr(diagnostics, "domain_expertise", None),
             policy=effective_persistence_policy,
         )
         operation_coverage = None

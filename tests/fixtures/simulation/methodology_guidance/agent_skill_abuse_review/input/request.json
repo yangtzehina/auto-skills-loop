@@ -1,0 +1,6 @@
+{
+  "task": "Create a security audit methodology skill for agent skill abuse review using `credential boundary`, `prompt injection path`, `runtime side effect`, `confirmation bypass`, and `exfiltration risk` as audit anchors. Include workflow, output format, quality checks, and pitfalls.",
+  "skill_name_hint": "agent-skill-abuse-review",
+  "skill_archetype": "methodology_guidance",
+  "enable_eval_scaffold": true
+}

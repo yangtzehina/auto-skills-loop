@@ -26,7 +26,7 @@ def test_build_simulation_suite_report_full_includes_smoke_chain():
         fixture_root=SIMULATION_FIXTURE_ROOT,
     )
 
-    assert report.matched_count == 24
+    assert report.matched_count == 28
     assert report.drifted_count == 0
     assert report.invalid_fixture_count == 0
     assert any(

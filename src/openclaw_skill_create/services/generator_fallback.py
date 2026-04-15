@@ -1,6 +1,134 @@
 from __future__ import annotations
 
 from ..models.artifacts import ArtifactFile
+from .domain_specificity import extract_task_domain_anchors, profile_for_skill
+
+
+def _display_subject(*, skill_name: str, task: str) -> str:
+    profile = profile_for_skill(skill_name=skill_name, task=task)
+    if profile is not None:
+        return profile.label
+    words = skill_name.replace('-', ' ').replace('_', ' ').strip()
+    return words or 'methodology task'
+
+
+def _domain_methodology_sections(*, skill_name: str, task: str) -> dict[str, list[str]]:
+    profile = profile_for_skill(skill_name=skill_name, task=task)
+    if profile is not None and profile.skill_name == 'concept-to-mvp-pack':
+        return {
+            'workflow': [
+                'Frame the validation question: name the risky promise the concept must prove before scope grows.',
+                'Define the smallest honest loop: one playable loop that exposes the core fantasy without hiding behind future content.',
+                'Make the feature cut: separate must-prove mechanics from nice-to-have polish, meta, economy, and spectacle.',
+                'Set the content scope: choose the smallest level, encounter, toy set, or scenario count that can prove the loop.',
+                'Write the out-of-scope list: explicitly park systems that would dilute the MVP pack or delay learning.',
+                'Assemble the MVP pack: goal, player promise, loop, feature cut, content scope, risks, and next validation step.',
+            ],
+            'outputs': [
+                '- Validation question: <what must be proven>',
+                '- Smallest honest loop: <30-90 second playable loop>',
+                '- Feature cut: <keep / cut / defer>',
+                '- Content scope: <minimum content needed>',
+                '- Out-of-scope: <tempting work not included>',
+                '- MVP pack: <the concise build target>',
+            ],
+            'checks': [
+                '- The validation question can fail; it is not a slogan.',
+                '- The smallest honest loop can be built without postponed invisible systems.',
+                '- The feature cut removes at least one attractive but nonessential idea.',
+                '- The content scope is small enough to test before expanding the concept.',
+                '- The out-of-scope list is specific enough to stop hidden scope creep.',
+                '- The MVP pack is a concrete build target, not a mood board.',
+            ],
+            'pitfalls': [
+                '- Treating the MVP pack as a mini vertical slice with every system represented.',
+                '- Hiding uncertainty by adding more content scope instead of testing the loop.',
+                '- Leaving the out-of-scope list vague, which lets deferred features sneak back in.',
+            ],
+        }
+    if profile is not None and profile.skill_name == 'decision-loop-stress-test':
+        return {
+            'workflow': [
+                'Map the decision loop: write the repeated choice, feedback, reward, and next-choice trigger.',
+                'Test the first hour: ask whether new players understand the choice and feel a reason to repeat it.',
+                'Test the midgame: check whether constraints, tradeoffs, and variation quality keep the loop alive.',
+                'Test the lategame: identify whether mastery creates new decisions or collapses into rote execution.',
+                'Find the solved state: describe the dominant strategy that would make the decision loop stale.',
+                'Audit reinforcement: confirm rewards teach the intended behavior instead of rewarding autopilot.',
+            ],
+            'outputs': [
+                '- Decision loop: <choice -> feedback -> reward -> next choice>',
+                '- First hour risk: <confusion, boredom, missing hook>',
+                '- Midgame pressure: <what changes and why it matters>',
+                '- Lategame evolution: <new mastery demand or collapse point>',
+                '- Solved state: <dominant strategy to prevent>',
+                '- Reinforcement check: <what behavior the game is training>',
+            ],
+            'checks': [
+                '- First hour, midgame, and lategame each create a different stress signal.',
+                '- Variation quality changes decisions, not just surface content.',
+                '- The solved state is concrete enough to design against.',
+                '- Reinforcement aligns with the intended player fantasy.',
+            ],
+            'pitfalls': [
+                '- Confusing more options with better variation quality.',
+                '- Testing only the first hour and missing midgame or lategame collapse.',
+                '- Rewarding efficiency while claiming to encourage expressive decisions.',
+            ],
+        }
+    if profile is not None and profile.skill_name == 'simulation-resource-loop-design':
+        return {
+            'workflow': [
+                'Draw the variable web: list resources, sinks, converters, bottlenecks, and player-visible states.',
+                'Name pressure relationships: explain which variables push or pull on each other over time.',
+                'Trace the positive loop: identify what compounds, accelerates, or snowballs when the player succeeds.',
+                'Trace the negative loop: identify brakes, costs, decay, scarcity, or counterpressure.',
+                'Design failure recovery: define how the player can recover without erasing consequences.',
+                'Check emotional fantasy: verify the resource loop supports the intended feeling, not just balance math.',
+            ],
+            'outputs': [
+                '- Variable web: <resources, sinks, converters, caps>',
+                '- Pressure relationships: <cause/effect pairs>',
+                '- Positive loop: <what compounds>',
+                '- Negative loop: <what stabilizes or taxes>',
+                '- Failure recovery: <how players recover and what remains costly>',
+                '- Emotional fantasy: <what the loop should make the player feel>',
+            ],
+            'checks': [
+                '- The variable web has visible player decisions, not only hidden simulation state.',
+                '- Positive loop and negative loop pressures are both present.',
+                '- Failure recovery avoids both death spirals and consequence-free resets.',
+                '- Emotional fantasy and resource math point in the same direction.',
+            ],
+            'pitfalls': [
+                '- Building a spreadsheet loop that has no player-facing emotional fantasy.',
+                '- Adding only a positive loop, creating runaway snowballing.',
+                '- Making failure recovery so generous that pressure relationships stop mattering.',
+            ],
+        }
+    anchors = extract_task_domain_anchors(task, limit=6)
+    if not anchors:
+        anchors = [_display_subject(skill_name=skill_name, task=task), 'decision frame', 'quality bar']
+    while len(anchors) < 3:
+        anchors.append(f'task-specific slot {len(anchors) + 1}')
+    return {
+        'workflow': [
+            f'Convert `{anchors[0]}` into a concrete decision or output target.',
+            f'Use `{anchors[1]}` to define the main tradeoff, constraint, or evaluation lens.',
+            f'Turn `{anchors[2]}` into an explicit workflow step with observable evidence.',
+            f'Check `{anchors[0]}` against `{anchors[1]}` and name the risk if they conflict.',
+            f'Use `{anchors[2]}` to choose the smallest useful next action.',
+            'Add one guardrail that would catch a generic answer before it reaches the user.',
+            'Produce the structured output and mark any unresolved assumptions.',
+        ],
+        'outputs': [f'- {anchor}: <task-specific result>' for anchor in anchors[:5]],
+        'checks': [f'- Check that `{anchor}` has a specific decision, risk, or quality bar.' for anchor in anchors[:5]],
+        'pitfalls': [
+            f'- Leaving `{anchors[0]}` only in the description or overview.',
+            f'- Reusing a generic methodology shell where `{anchors[1]}` should drive a domain decision.',
+            f'- Treating `{anchors[2]}` as permission to invent unsupported details.',
+        ],
+    }
 
 
 def fallback_generate_skill_md(*, skill_name: str, description: str, references: list[str], scripts: list[str]) -> str:
@@ -52,7 +180,12 @@ def fallback_generate_methodology_skill_md(
     references: list[str],
     scripts: list[str],
 ) -> str:
-    subject = task.strip() or skill_name.replace('-', ' ')
+    subject = _display_subject(skill_name=skill_name, task=task)
+    domain_sections = _domain_methodology_sections(skill_name=skill_name, task=task)
+    workflow_lines = domain_sections['workflow']
+    output_lines = domain_sections['outputs']
+    check_lines = domain_sections['checks']
+    pitfall_lines = domain_sections['pitfalls']
     lines = [
         '---',
         f'name: {skill_name}',
@@ -65,9 +198,9 @@ def fallback_generate_methodology_skill_md(
         '',
         '## Overview',
         '',
-        f'This skill helps Codex handle: {subject}',
+        f'This skill helps Codex turn a {subject} request into a domain-specific method and output.',
         '',
-        'The goal is not to restate the request. The goal is to transform it into a repeatable method: clarify the decision, run the workflow, produce a concrete output, and catch common failure modes before they leak into the final answer.',
+        'The goal is to avoid a generic advice shell. Convert the user request into domain actions, produce a concrete artifact, and catch failure modes that would make the result look structured but feel unusable.',
         '',
         '## When to Use',
         '',
@@ -92,25 +225,10 @@ def fallback_generate_methodology_skill_md(
         '',
         '## Workflow',
         '',
-        '1. Name the real job.',
-        '   - Convert the user request into one sentence that says what decision or artifact must exist at the end.',
-        '   - Separate the desired outcome from any accidental phrasing in the prompt.',
-        '2. Identify the operating context.',
-        '   - Capture audience, constraints, available inputs, missing context, and risk level.',
-        '   - Mark anything that should remain out of scope.',
-        '3. Build the working frame.',
-        '   - Choose 3-5 criteria that determine whether the output is good.',
-        '   - Turn abstract goals into concrete checks.',
-        '4. Run the method.',
-        '   - Work through the criteria in order.',
-        '   - Make tradeoffs visible instead of hiding them inside prose.',
-        '   - Keep intermediate judgments short and grounded in the provided context.',
-        '5. Produce the artifact.',
-        '   - Use the output template below.',
-        '   - Make the result directly usable, not just descriptive.',
-        '6. Run the guardrail pass.',
-        '   - Check for prompt echo, unsupported certainty, missing constraints, and vague recommendations.',
-        '   - If a blocker appears, report it instead of pretending the method succeeded.',
+    ]
+    for index, item in enumerate(workflow_lines, start=1):
+        lines.append(f'{index}. {item}')
+    lines.extend([
         '',
         '## Output Format',
         '',
@@ -120,44 +238,41 @@ def fallback_generate_methodology_skill_md(
         '## Goal',
         '<One sentence describing the concrete decision or artifact.>',
         '',
-        '## Context',
-        '- Audience: <who this is for>',
-        '- Constraints: <hard limits>',
-        '- Non-goals: <what not to solve>',
+        '## Domain Frame',
+    ])
+    lines.extend(output_lines)
+    lines.extend([
         '',
-        '## Method',
-        '1. <Step name>: <finding or action>',
-        '2. <Step name>: <finding or action>',
-        '3. <Step name>: <finding or action>',
-        '',
-        '## Output',
+        '## Method Result',
         '<The actual designed artifact, decision, checklist, or recommendation.>',
         '',
-        '## Quality Checks',
-        '- <Check 1>',
-        '- <Check 2>',
-        '- <Check 3>',
+        '## Tradeoffs',
+        '- <Choice made and why>',
+        '- <Risk accepted or deferred>',
         '',
-        '## Open Questions',
-        '- <Only include questions that materially change the result.>',
+        '## Quality Checks',
+    ])
+    lines.extend(check_lines[:4])
+    lines.extend([
         '```',
         '',
         '## Quality Checks',
         '',
-        '- The body must do real work; it cannot simply repeat the original prompt.',
-        '- The workflow must produce a concrete artifact or decision.',
-        '- The output must include the user-facing template or structured result.',
-        '- Tradeoffs and failure risks must be visible.',
-        '- The final answer should be usable by another agent without rereading the entire conversation.',
+    ])
+    lines.extend(check_lines)
+    lines.extend([
+        '- The workflow must include domain actions, not just generic planning verbs.',
+        '- The output template must be specific enough for another agent to fill without rereading the prompt.',
+        '- The final answer should name tradeoffs and unresolved assumptions.',
         '',
         '## Common Pitfalls',
         '',
-        '- Prompt echo: copying the request into the description and leaving the body generic.',
-        '- False completion: saying the skill is ready while omitting the workflow or template.',
-        '- Over-broad advice: giving generic design principles instead of task-shaped steps.',
-        '- Hidden assumptions: making a recommendation without naming constraints or uncertainty.',
-        '- Missing guardrails: failing to include when not to use the method or how to reject a bad result.',
-    ]
+    ])
+    lines.extend(pitfall_lines)
+    lines.extend([
+        '- Prompt echo: copying the request into description or overview instead of transforming it.',
+        '- False completion: passing shape checks while the domain-specific workflow is still missing.',
+    ])
     if references:
         lines.extend(['', '## References', ''])
         lines.extend(f'- See `{path}` for supporting material.' for path in references)

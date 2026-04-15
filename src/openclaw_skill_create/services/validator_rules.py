@@ -8,6 +8,8 @@ from ..models.artifacts import Artifacts
 from ..models.diagnostics import Diagnostics, ValidationResult
 from ..models.plan import SkillPlan
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
+from .domain_expertise import build_skill_domain_expertise_report
+from .domain_specificity import build_skill_domain_specificity_report
 
 
 REFERENCE_REQUIRED_SECTIONS = ('## Overview', '## Key points')
@@ -532,6 +534,28 @@ def classify_validation_issues(validation: ValidationResult) -> tuple[list[str],
                 repairable.append('methodology_section_missing')
         if item.startswith('Self review failed:'):
             repairable.append('self_review_failed')
+        if item.startswith('Domain specificity failed:'):
+            for issue_type in (
+                'missing_domain_anchors',
+                'generic_methodology_shell',
+                'high_cross_case_similarity',
+                'body_prompt_echo',
+                'domain_workflow_missing',
+                'domain_output_missing',
+            ):
+                if issue_type in item:
+                    repairable.append(issue_type)
+        if item.startswith('Domain expertise failed:'):
+            for issue_type in (
+                'domain_actions_missing',
+                'domain_output_fields_missing',
+                'domain_judgment_checks_missing',
+                'domain_pitfalls_missing',
+                'domain_moves_underdeveloped',
+                'generic_domain_move_shell',
+            ):
+                if issue_type in item:
+                    repairable.append(issue_type)
     if validation.unsupported_claims_found:
         non_repairable.append('unsupported_claims')
 
@@ -661,10 +685,28 @@ def run_rule_validation(
         artifacts=artifacts,
         body_quality=body_quality,
     )
+    domain_specificity = build_skill_domain_specificity_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+    )
+    domain_expertise = build_skill_domain_expertise_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+    )
     for issue in list(body_quality.blocking_issues or []):
         validation.summary.append(f'Body quality failed: {issue}')
     for issue in list(self_review.blocking_issues or []):
         validation.summary.append(f'Self review failed: {issue}')
+    for issue in list(domain_specificity.blocking_issues or []):
+        validation.summary.append(f'Domain specificity failed: {issue}')
+    for issue in list(domain_specificity.warning_issues or []):
+        validation.summary.append(f'Domain specificity warning: {issue}')
+    for issue in list(domain_expertise.blocking_issues or []):
+        validation.summary.append(f'Domain expertise failed: {issue}')
+    for issue in list(domain_expertise.warning_issues or []):
+        validation.summary.append(f'Domain expertise warning: {issue}')
 
     pattern_summary, pattern_notes = run_pattern_validator_checks(
         extracted_patterns=extracted_patterns,
@@ -706,6 +748,8 @@ def run_rule_validation(
     notes.extend(operation_notes)
     notes.extend(list(body_quality.summary or []))
     notes.extend(list(self_review.summary or []))
+    notes.extend(list(domain_specificity.summary or []))
+    notes.extend(list(domain_expertise.summary or []))
 
     return Diagnostics(
         warnings=list(validation.summary),
@@ -713,6 +757,8 @@ def run_rule_validation(
         validation=validation,
         body_quality=body_quality,
         self_review=self_review,
+        domain_specificity=domain_specificity,
+        domain_expertise=domain_expertise,
         notes=notes,
     )
 

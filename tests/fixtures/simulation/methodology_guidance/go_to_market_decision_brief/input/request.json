@@ -1,0 +1,6 @@
+{
+  "task": "Create a product strategy methodology skill for a go-to-market decision brief using `target segment`, `positioning claim`, `channel bet`, `launch constraint`, and `success signal` as decision anchors. Include workflow, output format, quality checks, and pitfalls.",
+  "skill_name_hint": "go-to-market-decision-brief",
+  "skill_archetype": "methodology_guidance",
+  "enable_eval_scaffold": true
+}

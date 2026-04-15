@@ -356,6 +356,18 @@ def run_repair(
             'prompt_echo',
             'description_stuffing',
             'self_review_failed',
+            'missing_domain_anchors',
+            'generic_methodology_shell',
+            'high_cross_case_similarity',
+            'body_prompt_echo',
+            'domain_workflow_missing',
+            'domain_output_missing',
+            'domain_actions_missing',
+            'domain_output_fields_missing',
+            'domain_judgment_checks_missing',
+            'domain_pitfalls_missing',
+            'domain_moves_underdeveloped',
+            'generic_domain_move_shell',
         }
         if body_issue_types & set(repairable_issue_types):
             changed = _repair_methodology_body(

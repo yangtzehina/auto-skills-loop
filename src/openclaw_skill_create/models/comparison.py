@@ -3,6 +3,8 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
+from .domain_expertise import SkillDomainExpertiseReport
+from .domain_specificity import SkillDomainSpecificityReport
 
 
 class SkillCreateComparisonMetrics(BaseModel):
@@ -17,6 +19,15 @@ class SkillCreateComparisonMetrics(BaseModel):
     description_body_ratio: float = 0.0
     body_quality_status: str = "unknown"
     self_review_status: str = "unknown"
+    domain_specificity_status: str = "unknown"
+    domain_anchor_coverage: float = 0.0
+    missing_domain_anchors: list[str] = Field(default_factory=list)
+    generic_template_ratio: float = 0.0
+    cross_case_similarity: float = 0.0
+    domain_expertise_status: str = "unknown"
+    domain_move_coverage: float = 0.0
+    prompt_phrase_echo_ratio: float = 0.0
+    generic_expertise_shell_ratio: float = 0.0
     fully_correct: bool = False
     severity: str = ""
 
@@ -29,6 +40,8 @@ class SkillCreateComparisonCaseResult(BaseModel):
     hermes_metrics: SkillCreateComparisonMetrics | None = None
     body_quality: SkillBodyQualityReport | None = None
     self_review: SkillSelfReviewReport | None = None
+    domain_specificity: SkillDomainSpecificityReport | None = None
+    domain_expertise: SkillDomainExpertiseReport | None = None
     gap_issues: list[str] = Field(default_factory=list)
     status: str = "matched"
     summary: str = ""
@@ -39,7 +52,15 @@ class SkillCreateComparisonReport(BaseModel):
     cases: list[SkillCreateComparisonCaseResult] = Field(default_factory=list)
     include_hermes: bool = False
     hermes_available: bool = False
+    hermes_execution_status: str = "not_requested"
+    hermes_error_count: int = 0
     hermes_errors: list[str] = Field(default_factory=list)
+    comparison_source: str = "golden"
+    comparison_independence_status: str = "golden_only"
+    reference_role: str = "quality_baseline"
+    anthropic_reference_available: bool = False
+    anthropic_reference_metrics: SkillCreateComparisonMetrics | None = None
+    anthropic_reference_summary: list[str] = Field(default_factory=list)
     gap_count: int = 0
     overall_status: str = "pass"
     summary: str = ""

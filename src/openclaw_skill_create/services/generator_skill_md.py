@@ -50,6 +50,13 @@ def generate_skill_md_artifact(
     references = collect_reference_paths(skill_plan)
     scripts = collect_script_paths(skill_plan)
 
+    if skill_archetype == 'methodology_guidance':
+        display_name = str(skill_name or 'methodology guidance').replace('-', ' ').replace('_', ' ')
+        description = (
+            f'{display_name[:1].upper() + display_name[1:]} methodology; '
+            'use when the task needs a domain-specific workflow, output template, quality checks, and pitfalls.'
+        )
+
     if skill_archetype == 'operation_backed' and contract is not None:
         return fallback_generate_operation_skill_md_artifact(
             skill_name=skill_name,

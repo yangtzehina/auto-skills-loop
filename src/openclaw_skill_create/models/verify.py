@@ -26,6 +26,12 @@ class VerifyReport(BaseModel):
     operation_backed_hold_count: int = 0
     methodology_body_quality_status: str = 'pass'
     self_review_fail_count: int = 0
+    domain_specificity_status: str = 'pass'
+    domain_specificity_fail_count: int = 0
+    generic_shell_gap_count: int = 0
+    domain_expertise_status: str = 'pass'
+    domain_expertise_fail_count: int = 0
+    domain_expertise_warn_count: int = 0
     hermes_comparison_gap_count: int = 0
     skill_create_comparison_report: SkillCreateComparisonReport | None = None
     overall_status: str = 'pass'
@@ -57,6 +63,12 @@ class OpsRoundbookReport(BaseModel):
     operation_backed_hold_candidates: list[str] = Field(default_factory=list)
     methodology_body_quality_status: str = 'pass'
     self_review_fail_count: int = 0
+    domain_specificity_status: str = 'pass'
+    domain_specificity_fail_count: int = 0
+    generic_shell_gap_count: int = 0
+    domain_expertise_status: str = 'pass'
+    domain_expertise_fail_count: int = 0
+    domain_expertise_warn_count: int = 0
     hermes_comparison_gap_count: int = 0
     overall_readiness: str = 'ready'
     summary: str = ''

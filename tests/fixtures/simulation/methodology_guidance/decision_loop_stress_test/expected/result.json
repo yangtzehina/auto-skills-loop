@@ -4,6 +4,12 @@
   "fully_correct": true,
   "body_quality_status": "pass",
   "self_review_status": "pass",
+  "domain_specificity_status": "pass",
+  "domain_anchor_coverage_min_met": true,
+  "missing_domain_anchors": [],
+  "domain_expertise_status": "pass",
+  "domain_move_coverage_min_met": true,
+  "domain_expertise_warn_count": 0,
   "body_lines_min_met": true,
   "required_sections_missing": [],
   "generated_files_contains_sidecars": true

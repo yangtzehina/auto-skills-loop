@@ -1,0 +1,6 @@
+{
+  "task": "Create a data workflow methodology skill for messy dataset analysis plan using `source reliability`, `schema drift`, `missingness pattern`, `outlier policy`, and `analysis question` as workflow anchors. Include workflow, output format, quality checks, and pitfalls.",
+  "skill_name_hint": "messy-dataset-analysis-plan",
+  "skill_archetype": "methodology_guidance",
+  "enable_eval_scaffold": true
+}

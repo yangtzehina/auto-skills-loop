@@ -1,0 +1,6 @@
+{
+  "task": "Create an engineering decision methodology skill for architecture tradeoff review using `constraint map`, `failure mode`, `migration cost`, `operational burden`, and `reversibility` as decision anchors. Include workflow, output format, quality checks, and pitfalls.",
+  "skill_name_hint": "architecture-tradeoff-review",
+  "skill_archetype": "methodology_guidance",
+  "enable_eval_scaffold": true
+}

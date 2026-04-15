@@ -2,6 +2,8 @@ from .artifacts import ArtifactFile, Artifacts
 from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from .comparison import SkillCreateComparisonCaseResult, SkillCreateComparisonMetrics, SkillCreateComparisonReport
 from .diagnostics import Diagnostics, ValidationResult
+from .domain_specificity import SkillDomainSpecificityReport
+from .domain_expertise import SkillDomainExpertiseReport
 from .findings import CandidateResources, RepoFinding, RepoFindings
 from .lineage import SkillLineageHistoryEntry, SkillLineageManifest
 from .orchestrator import ExecutionTimings
@@ -114,6 +116,8 @@ __all__ = [
     'Diagnostics',
     'SkillBodyQualityReport',
     'SkillSelfReviewReport',
+    'SkillDomainSpecificityReport',
+    'SkillDomainExpertiseReport',
     'SkillCreateComparisonCaseResult',
     'SkillCreateComparisonMetrics',
     'SkillCreateComparisonReport',

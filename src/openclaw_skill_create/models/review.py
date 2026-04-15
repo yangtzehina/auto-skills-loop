@@ -54,4 +54,8 @@ class SkillQualityReview(BaseModel):
     body_quality_status: str = "not_applicable"
     body_quality_issues: list[str] = Field(default_factory=list)
     self_review_status: str = "not_applicable"
+    domain_specificity_status: str = "not_applicable"
+    domain_specificity_issues: list[str] = Field(default_factory=list)
+    domain_expertise_status: str = "not_applicable"
+    domain_expertise_issues: list[str] = Field(default_factory=list)
     summary: list[str] = Field(default_factory=list)

@@ -50,6 +50,12 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- operation_backed_hold_count={report.operation_backed_hold_count}',
         f'- methodology_body_quality_status={report.methodology_body_quality_status}',
         f'- self_review_fail_count={report.self_review_fail_count}',
+        f'- domain_specificity_status={report.domain_specificity_status}',
+        f'- domain_specificity_fail_count={report.domain_specificity_fail_count}',
+        f'- domain_expertise_status={report.domain_expertise_status}',
+        f'- domain_expertise_fail_count={report.domain_expertise_fail_count}',
+        f'- domain_expertise_warn_count={report.domain_expertise_warn_count}',
+        f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}',
         '',
         '## Commands',
@@ -104,6 +110,24 @@ def build_verify_report(
         overall_status = 'fail'
     else:
         overall_status = 'pass'
+    domain_specificity_status = (
+        'fail'
+        if any(item.auto_metrics.domain_specificity_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.domain_specificity_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
+    domain_expertise_status = (
+        'fail'
+        if any(item.auto_metrics.domain_expertise_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.domain_expertise_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
     report = VerifyReport(
         mode=mode,
         include_live_curation=include_live_curation,
@@ -122,6 +146,28 @@ def build_verify_report(
             for item in list(comparison_report.cases or [])
             if item.auto_metrics.self_review_status != 'pass'
         ),
+        domain_specificity_status=domain_specificity_status,
+        domain_specificity_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.domain_specificity_status != 'pass'
+        ),
+        domain_expertise_status=domain_expertise_status,
+        domain_expertise_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.domain_expertise_status == 'fail'
+        ),
+        domain_expertise_warn_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.domain_expertise_status == 'warn'
+        ),
+        generic_shell_gap_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if 'auto_generic_shell_gap' in list(item.gap_issues or [])
+        ),
         hermes_comparison_gap_count=int(comparison_report.gap_count or 0),
         skill_create_comparison_report=comparison_report,
         overall_status=overall_status,
@@ -131,6 +177,8 @@ def build_verify_report(
             f'operation_backed_actionable={operation_backed_status_report.actionable_count} '
             f'operation_backed_hold={operation_backed_status_report.hold_count} '
             f'methodology_body_quality={comparison_report.overall_status} '
+            f'domain_specificity={domain_specificity_status} '
+            f'domain_expertise={domain_expertise_status} '
             f'hermes_comparison_gaps={comparison_report.gap_count}'
         ),
     )
@@ -214,6 +262,12 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.extend(['', '## Methodology Guidance Readiness'])
     lines.append(f'- methodology_body_quality_status={report.methodology_body_quality_status}')
     lines.append(f'- self_review_fail_count={report.self_review_fail_count}')
+    lines.append(f'- domain_specificity_status={report.domain_specificity_status}')
+    lines.append(f'- domain_specificity_fail_count={report.domain_specificity_fail_count}')
+    lines.append(f'- domain_expertise_status={report.domain_expertise_status}')
+    lines.append(f'- domain_expertise_fail_count={report.domain_expertise_fail_count}')
+    lines.append(f'- domain_expertise_warn_count={report.domain_expertise_warn_count}')
+    lines.append(f'- generic_shell_gap_count={report.generic_shell_gap_count}')
     lines.append(f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}')
     return '\n'.join(lines).strip()
 
@@ -366,6 +420,12 @@ def build_ops_roundbook_report(
         operation_backed_hold_candidates=list(operation_backed_backlog_report.hold_candidates or []),
         methodology_body_quality_status=verify_report.methodology_body_quality_status,
         self_review_fail_count=verify_report.self_review_fail_count,
+        domain_specificity_status=verify_report.domain_specificity_status,
+        domain_specificity_fail_count=verify_report.domain_specificity_fail_count,
+        domain_expertise_status=verify_report.domain_expertise_status,
+        domain_expertise_fail_count=verify_report.domain_expertise_fail_count,
+        domain_expertise_warn_count=verify_report.domain_expertise_warn_count,
+        generic_shell_gap_count=verify_report.generic_shell_gap_count,
         hermes_comparison_gap_count=verify_report.hermes_comparison_gap_count,
         overall_readiness=overall_readiness,
         summary=(
@@ -377,6 +437,7 @@ def build_ops_roundbook_report(
             f'operation_backed_patch={len(operation_backed_backlog_report.patch_current_candidates)} '
             f'operation_backed_derive_child={len(operation_backed_backlog_report.derive_child_candidates)} '
             f'operation_backed_hold={len(operation_backed_backlog_report.hold_candidates)} '
+            f'domain_expertise={verify_report.domain_expertise_status} '
             f'overall_readiness={overall_readiness} '
             f'next_create_seed={next_create_seed_candidate or "none"} '
             f'next_prior_hold={next_prior_family_on_hold or "none"}'

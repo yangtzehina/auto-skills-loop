@@ -38,7 +38,7 @@ def test_run_simulation_suite_cli_supports_full_json(monkeypatch):
     assert stderr == ''
     payload = json.loads(stdout)
     assert payload['mode'] == 'full'
-    assert payload['matched_count'] == 24
+    assert payload['matched_count'] == 28
 
 
 def test_run_simulation_suite_cli_rejects_bad_mode(monkeypatch):
