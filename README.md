@@ -84,6 +84,31 @@ The main flow is:
 5. **Review** requirement coverage, quality, and repair suggestions.
 6. **Govern** runtime follow-up through read-only reports and explicit approval surfaces.
 
+## Creation Flow Diagram
+
+```mermaid
+flowchart TD
+    A["Task request + repo path"] --> B["Preload and extract repo evidence"]
+    B --> C["Plan skill archetype"]
+    C --> D{"Stable operation surface?"}
+    D -- "Yes" --> E["Operation-backed track: operation contract + helper surface"]
+    D -- "No" --> F["Guidance or methodology track: skill blueprint"]
+    E --> G["Generate artifacts: SKILL.md, references, scripts, evals"]
+    F --> G
+    G --> H["Deterministic audits: structure, body quality, domain specificity, expert structure, security"]
+    H --> I{"Validation result"}
+    I -- "fail" --> J["Stop or run controlled repair for repairable quality issues"]
+    J --> G
+    I -- "warn" --> K["Review summary + human decision"]
+    I -- "pass" --> L["Persist package + sidecar reports"]
+    K --> L
+    L --> M["Simulation, verify report, ops roundbook"]
+    M --> N{"Runtime evidence later?"}
+    N -- "No" --> O["Steady state: no automatic mutation"]
+    N -- "Yes" --> P["Runtime governance: no_change, patch_current, derive_child, hold"]
+    P --> K
+```
+
 Generated local packages and run artifacts are written under `.generated-skills/` by default. That directory is intentionally ignored for public releases because it is local runtime output, not source code.
 
 You can override the local output root:

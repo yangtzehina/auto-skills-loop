@@ -84,6 +84,31 @@ PYTHONPATH=src python3 scripts/run_operation_backed_backlog.py --format markdown
 5. **Review**：评审需求覆盖、质量和 repair suggestion。
 6. **Govern**：用只读报告和 approval surface 管理运行时 follow-up。
 
+## 创建链路图
+
+```mermaid
+flowchart TD
+    A["任务请求 + 仓库路径"] --> B["预加载并提取仓库证据"]
+    B --> C["规划 skill 类型"]
+    C --> D{"是否存在稳定操作面？"}
+    D -- "是" --> E["Operation-backed 轨道：operation contract + helper surface"]
+    D -- "否" --> F["Guidance / methodology 轨道：skill blueprint"]
+    E --> G["生成产物：SKILL.md、references、scripts、evals"]
+    F --> G
+    G --> H["确定性审计：结构、正文质量、领域专用性、专家结构、安全"]
+    H --> I{"校验结果"}
+    I -- "fail" --> J["停止，或仅对可修复质量问题做受控 repair"]
+    J --> G
+    I -- "warn" --> K["Review 摘要 + 人工决策"]
+    I -- "pass" --> L["持久化 package + sidecar reports"]
+    K --> L
+    L --> M["Simulation、verify report、ops roundbook"]
+    M --> N{"后续是否出现运行时证据？"}
+    N -- "否" --> O["稳态：不自动 mutation"]
+    N -- "是" --> P["运行时治理：no_change、patch_current、derive_child、hold"]
+    P --> K
+```
+
 默认生成物会写到 `.generated-skills/`。该目录是本地运行产物，不是源码，公开发布时默认忽略。
 
 可以通过环境变量修改生成目录：
