@@ -43,7 +43,7 @@ def build_change_summary(payload: dict[str, Any], *, existing: bool) -> str:
     validation = diagnostics.get('validation') or {}
     security_audit = diagnostics.get('security_audit') or {}
     issues = list(validation.get('repairable_issue_types') or []) + list(validation.get('non_repairable_issue_types') or [])
-    summary = 'Observed skill-create-v6 initial capture' if not existing else 'Observed skill-create-v6 overwrite'
+    summary = 'Observed auto-skills-loop initial capture' if not existing else 'Observed auto-skills-loop overwrite'
     summary += f' (severity={severity})'
     if timings.get('repair_applied'):
         summary += ', after deterministic repair'
@@ -84,7 +84,7 @@ def build_execution_note(payload: dict[str, Any]) -> str:
     validation = diagnostics.get('validation') or {}
     security_audit = diagnostics.get('security_audit') or {}
     notes = [
-        f'skill-create-v6 observation for task: {task}',
+        f'auto-skills-loop observation for task: {task}',
         f'severity={severity}',
     ]
     if objective:
@@ -231,7 +231,7 @@ async def _observe(payload: dict[str, Any]) -> dict[str, Any]:
                 path=str(skill_md),
                 is_active=True,
                 category=category,
-                tags=sorted({'skill-create-v6', skill_type}),
+                tags=sorted({'auto-skills-loop', skill_type}),
                 lineage=SkillLineage(
                     origin=SkillOrigin.CAPTURED,
                     generation=0,
@@ -249,7 +249,7 @@ async def _observe(payload: dict[str, Any]) -> dict[str, Any]:
             event = 'created'
 
         analysis = ExecutionAnalysis(
-            task_id=payload.get('task_id', f'skill-create-v6:{uuid.uuid4()}'),
+            task_id=payload.get('task_id', f'auto-skills-loop:{uuid.uuid4()}'),
             timestamp=now,
             task_completed=(payload.get('severity') != 'fail'),
             execution_note=build_execution_note(payload),
@@ -258,11 +258,11 @@ async def _observe(payload: dict[str, Any]) -> dict[str, Any]:
                 SkillJudgment(
                     skill_id=record.skill_id,
                     skill_applied=True,
-                    note=f"observe-only via skill-create-v6; severity={payload.get('severity', 'unknown')}",
+                    note=f"observe-only via auto-skills-loop; severity={payload.get('severity', 'unknown')}",
                 )
             ],
             evolution_suggestions=[],
-            analyzed_by=payload.get('analyzed_by', 'skill-create-v6.observe-only'),
+            analyzed_by=payload.get('analyzed_by', 'auto-skills-loop.observe-only'),
             analyzed_at=now,
         )
         await store.record_analysis(analysis)

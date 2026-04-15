@@ -2,7 +2,7 @@
 
 ## Current status
 
-The current `skill-create-v6` chain is in a deliverable state.
+The current `auto-skills-loop` chain is in a deliverable state.
 
 Completed core items:
 

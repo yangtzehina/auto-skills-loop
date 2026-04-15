@@ -1,6 +1,6 @@
-# skill-create-v6
+# auto-skills-loop
 
-`skill-create-v6` 是一个本地优先、带策略约束的 AI agent skill 创建与治理框架。它不是只生成 `SKILL.md`，而是把 repo 证据、skill 规划、产物生成、结构校验、安全审计、运行时治理和稳态运营串成一条可复查的链路。
+`auto-skills-loop` 是一个本地优先、带策略约束的 AI agent skill 创建与治理框架。它不是只生成 `SKILL.md`，而是把 repo 证据、skill 规划、产物生成、结构校验、安全审计、运行时治理和稳态运营串成一条可复查的链路。
 
 [English README](README.md)
 
@@ -35,8 +35,8 @@
 - `pydantic`
 
 ```bash
-git clone https://github.com/<your-org>/skill-create-v6.git
-cd skill-create-v6
+git clone https://github.com/yangtzehina/auto-skills-loop.git
+cd auto-skills-loop
 python3 -m venv .venv
 source .venv/bin/activate
 pip install pydantic
@@ -89,15 +89,17 @@ PYTHONPATH=src python3 scripts/run_operation_backed_backlog.py --format markdown
 可以通过环境变量修改生成目录：
 
 ```bash
-export SKILL_CREATE_OUTPUT_ROOT=/path/to/generated-skills
+export AUTO_SKILLS_LOOP_OUTPUT_ROOT=/path/to/generated-skills
 ```
 
 OpenSpace 观察和运行时使用报告是可选能力，默认关闭。需要时显式配置：
 
 ```bash
-export SKILL_CREATE_OPENSPACE_PYTHON=/path/to/openspace/python
-export SKILL_CREATE_OPENSPACE_DB_PATH=/path/to/openspace.db
+export AUTO_SKILLS_LOOP_OPENSPACE_PYTHON=/path/to/openspace/python
+export AUTO_SKILLS_LOOP_OPENSPACE_DB_PATH=/path/to/openspace.db
 ```
+
+为了兼容已有本地配置，旧的 `SKILL_CREATE_*` 环境变量仍然会被识别。
 
 ## 安全模型
 

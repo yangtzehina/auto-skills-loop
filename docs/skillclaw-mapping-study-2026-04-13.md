@@ -1,15 +1,15 @@
-# SkillClaw to skill-create-v6 Mapping Study
+# SkillClaw to auto-skills-loop Mapping Study
 
 Date: 2026-04-13
 
 ## Scope
 
 This note maps the current local `SkillClaw` codebase against the current local
-`skill-create-v6` baseline.
+`auto-skills-loop` baseline.
 
 The goal is not to restate both projects. The goal is to answer:
 
-1. Which `SkillClaw` ideas are already covered by `skill-create-v6`
+1. Which `SkillClaw` ideas are already covered by `auto-skills-loop`
 2. Which gaps are worth closing next
 3. Which `SkillClaw` complexities should stay out of our roadmap for now
 
@@ -27,7 +27,7 @@ Baselines used in this study:
   - `evolve_server/session_judge.py`
   - `agent_evolve_server/server.py`
 
-- `skill-create-v6`
+- `auto-skills-loop`
   - `docs/status-and-next-plan.md`
   - `models/online.py`
   - `models/review.py`
@@ -49,7 +49,7 @@ Baselines used in this study:
 not a skill generator. Its strongest idea is that skill quality is decided by
 real session evidence and then fed back into shared skill evolution.
 
-`skill-create-v6` already covers more of that philosophy than it may look like
+`auto-skills-loop` already covers more of that philosophy than it may look like
 at first glance:
 
 - online discovery + blueprint normalization + reuse decision
@@ -72,7 +72,7 @@ The main `SkillClaw` ideas we should reject for now are also clear:
 
 ## Module Mapping Matrix
 
-| Plane | SkillClaw current capability | skill-create-v6 current capability | Gap / overlap | Conclusion |
+| Plane | SkillClaw current capability | auto-skills-loop current capability | Gap / overlap | Conclusion |
 | --- | --- | --- | --- | --- |
 | runtime request plane | FastAPI proxy intercepts `/v1/chat/completions` and `/v1/messages`, injects skills, normalizes provider/tool-call quirks, tracks sessions, and forwards to upstream LLMs | No proxy layer. Current runtime entry is post-run via `SkillRunRecord`, `runtime_hook`, governance bundle/batch, and normalize-only `RuntimeHandoffEnvelope` | We already have a clean handoff contract, but not a real request/runtime surface. SkillClaw owns the whole execution edge; we intentionally do not | `adapt later` |
 | skill retrieval / injection plane | Local `SkillManager` loads OpenClaw-compatible `SKILL.md`, ranks by embedding/effectiveness, injects `<available_skills>` catalog, and resolves `read` usage lazily | Discovery is generation-time, not runtime-time: `SkillSourceCandidate`, `SkillBlueprint`, `SkillReuseDecision`, seeded collections, ranking regressions, domain smoke fixtures | Strong overlap on retrieval thinking and reuse selection. Missing runtime-time catalog injection and runtime effectiveness feedback into ranking | `adapt later` |
@@ -83,7 +83,7 @@ The main `SkillClaw` ideas we should reject for now are also clear:
 
 ## What We Already Cover from SkillClaw
 
-These are core ideas where `skill-create-v6` is already meaningfully aligned:
+These are core ideas where `auto-skills-loop` is already meaningfully aligned:
 
 1. `reuse before regenerate`
    - `SkillClaw` does this at runtime via retrieval/injection
@@ -116,7 +116,7 @@ These are core ideas where `skill-create-v6` is already meaningfully aligned:
 - `_summary` is meant for causal, semantic interpretation
 - Session judge consumes both
 
-**skill-create-v6**
+**auto-skills-loop**
 
 - `SkillRunRecord` captures `skills_used`, `failure_points`, `user_corrections`,
   `step_trace`, `phase_markers`, `tool_summary`
@@ -182,7 +182,7 @@ requiring a proxy runtime.
 - `aggregate_sessions_by_skill(...)` places skill-less sessions in `NO_SKILL_KEY`
 - `run_once(...)` routes that bucket to `create_skill_from_sessions(...)`
 
-**skill-create-v6**
+**auto-skills-loop**
 
 - `decide_skill_reuse(...)` can choose `generate_fresh`
 - runtime follow-up supports `derive_child`, but only from a known skill
@@ -239,7 +239,7 @@ never provided skill context."
 - `SkillManager` records injection and PRM feedback in `skill_stats.json`
 - embedding retrieval multiplies semantic similarity by effectiveness
 
-**skill-create-v6**
+**auto-skills-loop**
 
 - discovery ranking is task-shaped and domain-regression-tested
 - runtime stack already aggregates `quality_score`, `usage_stats`,
@@ -297,7 +297,7 @@ skills unfairly.
 - prompts explicitly protect correct environment details from being deleted
 - prompts repeatedly prefer targeted edits over rewrites
 
-**skill-create-v6**
+**auto-skills-loop**
 
 - structured review already emits typed `RepairSuggestion`
 - deterministic repair uses issue types and repo-grounded coverage
@@ -361,7 +361,7 @@ This is a low-risk, high-signal improvement to an area we already own.
 - per-skill version and content history
 - same-name conflict detection and merge
 
-**skill-create-v6**
+**auto-skills-loop**
 
 - `_meta.json` and sidecar lineage already carry parent/evidence
 - OpenSpace runtime history stores quality evolution

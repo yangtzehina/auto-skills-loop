@@ -2,7 +2,7 @@
 
 ## 目标
 
-为 `skill-create-v6` 增加一层“模式沉淀”中间产物：把离散案例、repo 信号、生成/修复结果，收敛成一份可被 planner / generator / validator / repair 复用的结构化模式集 `ExtractedSkillPatterns`。
+为 `auto-skills-loop` 增加一层“模式沉淀”中间产物：把离散案例、repo 信号、生成/修复结果，收敛成一份可被 planner / generator / validator / repair 复用的结构化模式集 `ExtractedSkillPatterns`。
 
 这层的价值是：
 

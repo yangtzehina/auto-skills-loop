@@ -1,6 +1,6 @@
 # Team Skill Catalog Manifest
 
-Use a team skill catalog manifest when `skill-create-v6` should consider private or team-curated skill blueprints in addition to the built-in static catalog and live GitHub repo search.
+Use a team skill catalog manifest when `auto-skills-loop` should consider private or team-curated skill blueprints in addition to the built-in static catalog and live GitHub repo search.
 
 Set manifest URLs through `SkillCreateRequestV6.online_skill_manifest_urls`. Each URL should return UTF-8 JSON over HTTPS. The current provider accepts either of these top-level shapes:
 

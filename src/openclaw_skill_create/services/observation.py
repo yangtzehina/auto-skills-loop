@@ -90,7 +90,7 @@ def observe_with_openspace(
 
     payload = {
         'request_id': request_id,
-        'task_id': f'skill-create-v6:{request_id}',
+        'task_id': f'auto-skills-loop:{request_id}',
         'task': request.task,
         'repo_paths': list(request.repo_paths),
         'severity': severity,

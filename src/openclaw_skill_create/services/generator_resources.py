@@ -444,7 +444,7 @@ def _generate_meta_json_content(*, request: Any, skill_plan: Any) -> str:
         'skill_name': getattr(skill_plan, 'skill_name', 'generated-skill'),
         'skill_type': getattr(skill_plan, 'skill_type', 'mixed'),
         'skill_archetype': getattr(skill_plan, 'skill_archetype', 'guidance'),
-        'generated_by': 'skill-create-v6',
+        'generated_by': 'auto-skills-loop',
         'repo_grounded': bool(getattr(request, 'repo_paths', []) or []),
         'eval_scaffold_enabled': bool(getattr(request, 'enable_eval_scaffold', False)),
         'online_blueprint_sources': provenance,

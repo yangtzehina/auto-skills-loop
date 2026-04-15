@@ -78,7 +78,7 @@ def online_blueprint() -> SkillBlueprint:
 
 
 def main() -> None:
-    with tempfile.TemporaryDirectory(prefix='skill-create-v6-online-eval-') as tmp:
+    with tempfile.TemporaryDirectory(prefix='auto-skills-loop-online-eval-') as tmp:
         temp_root = Path(tmp)
         output_root = temp_root / 'generated'
         request = SkillCreateRequestV6(

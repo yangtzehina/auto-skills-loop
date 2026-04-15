@@ -260,7 +260,7 @@ async def _analyze_runtime_payload(
             tool_issues=[],
             skill_judgments=judgments,
             evolution_suggestions=evolution_suggestions,
-            analyzed_by=payload.get('analyzed_by', 'skill-create-v6.runtime-analysis'),
+            analyzed_by=payload.get('analyzed_by', 'auto-skills-loop.runtime-analysis'),
             analyzed_at=datetime.now(),
         )
         await _maybe_await(store.record_analysis(execution_analysis))

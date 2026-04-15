@@ -17,7 +17,7 @@ def seed_demo_repo(root: Path) -> None:
 
 
 def main() -> None:
-    with tempfile.TemporaryDirectory(prefix='skill-create-v6-smoke-') as tmp:
+    with tempfile.TemporaryDirectory(prefix='auto-skills-loop-smoke-') as tmp:
         repo_root = Path(tmp) / 'demo-repo'
         repo_root.mkdir(parents=True, exist_ok=True)
         seed_demo_repo(repo_root)

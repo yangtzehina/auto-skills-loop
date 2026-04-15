@@ -70,12 +70,12 @@ STOPWORDS = {
 
 GITHUB_API_HEADERS = {
     'Accept': 'application/vnd.github+json',
-    'User-Agent': 'openclaw-skill-create-v6',
+    'User-Agent': 'openclaw-auto-skills-loop',
 }
 
 GITHUB_HTML_HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'User-Agent': 'Mozilla/5.0 (compatible; openclaw-skill-create-v6/1.0)',
+    'User-Agent': 'Mozilla/5.0 (compatible; openclaw-auto-skills-loop/1.0)',
 }
 
 FETCH_TEXT_CACHE: dict[str, str] = {}

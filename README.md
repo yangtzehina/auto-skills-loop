@@ -1,6 +1,6 @@
-# skill-create-v6
+# auto-skills-loop
 
-`skill-create-v6` is a local, policy-aware framework for creating and governing AI agent skills. It turns repository evidence into skill packages, validates generated artifacts, runs deterministic safety checks, and keeps runtime follow-up decisions reviewable instead of silently mutating state.
+`auto-skills-loop` is a local, policy-aware framework for creating and governing AI agent skills. It turns repository evidence into skill packages, validates generated artifacts, runs deterministic safety checks, and keeps runtime follow-up decisions reviewable instead of silently mutating state.
 
 [中文说明](README.zh-CN.md)
 
@@ -35,8 +35,8 @@ Requirements:
 - `pydantic`
 
 ```bash
-git clone https://github.com/<your-org>/skill-create-v6.git
-cd skill-create-v6
+git clone https://github.com/yangtzehina/auto-skills-loop.git
+cd auto-skills-loop
 python3 -m venv .venv
 source .venv/bin/activate
 pip install pydantic
@@ -89,15 +89,17 @@ Generated local packages and run artifacts are written under `.generated-skills/
 You can override the local output root:
 
 ```bash
-export SKILL_CREATE_OUTPUT_ROOT=/path/to/generated-skills
+export AUTO_SKILLS_LOOP_OUTPUT_ROOT=/path/to/generated-skills
 ```
 
 Optional OpenSpace observation/runtime usage integration is disabled unless configured explicitly:
 
 ```bash
-export SKILL_CREATE_OPENSPACE_PYTHON=/path/to/openspace/python
-export SKILL_CREATE_OPENSPACE_DB_PATH=/path/to/openspace.db
+export AUTO_SKILLS_LOOP_OPENSPACE_PYTHON=/path/to/openspace/python
+export AUTO_SKILLS_LOOP_OPENSPACE_DB_PATH=/path/to/openspace.db
 ```
+
+Legacy `SKILL_CREATE_*` environment variables are still honored for existing local setups.
 
 ## Safety Model
 
@@ -116,7 +118,7 @@ Security failures are treated as non-repairable by default. The system should no
 
 Operation-backed skills are used only when a repository has a stable operation surface, such as a native CLI, Python backend, shell wrapper, or API client.
 
-For those skills, `skill-create-v6` can generate:
+For those skills, `auto-skills-loop` can generate:
 
 - `references/operations/contract.json`
 - `evals/operation_validation.json`

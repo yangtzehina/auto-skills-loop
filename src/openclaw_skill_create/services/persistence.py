@@ -16,7 +16,11 @@ from ..models.operation_coverage import OperationCoverageReport
 
 
 ROOT = Path(__file__).resolve().parents[3]
-_OUTPUT_ROOT_ENV = os.environ.get('SKILL_CREATE_OUTPUT_ROOT', '').strip()
+_OUTPUT_ROOT_ENV = (
+    os.environ.get('AUTO_SKILLS_LOOP_OUTPUT_ROOT')
+    or os.environ.get('SKILL_CREATE_OUTPUT_ROOT')
+    or ''
+).strip()
 DEFAULT_OUTPUT_ROOT = Path(_OUTPUT_ROOT_ENV).expanduser() if _OUTPUT_ROOT_ENV else ROOT / '.generated-skills'
 EVALUATION_REPORT_PATH = 'evals/report.json'
 QUALITY_REVIEW_PATH = 'evals/review.json'

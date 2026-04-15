@@ -1,4 +1,4 @@
-# skill-create-v6 Dev Notes
+# auto-skills-loop Dev Notes
 
 ## Current Chain
 
@@ -725,7 +725,7 @@ This gate is deliberately conservative about what it blocks. `MEDIUM` findings d
 
 ## Operation-backed Skill Track
 
-`skill-create-v6` now has a second planning/generation track inspired by CLI-Anything's split between executable operation surface and downstream skill guidance. The planner still defaults to the existing `guidance` track for documentation-heavy or workflow-only repos, but it can now promote a repo into `operation_backed` when it detects a stable CLI or backend operation surface.
+`auto-skills-loop` now has a second planning/generation track inspired by CLI-Anything's split between executable operation surface and downstream skill guidance. The planner still defaults to the existing `guidance` track for documentation-heavy or workflow-only repos, but it can now promote a repo into `operation_backed` when it detects a stable CLI or backend operation surface.
 
 For operation-backed plans, the generated package now carries a machine-readable `references/operations/contract.json`, an `evals/operation_validation.json` sidecar, and a contract-derived `SKILL.md`. Backend-only repos also get a thin `scripts/operation_helper.py` helper instead of a fake installable CLI. Validator, review, observer summaries, and the security audit all understand this contract and can fail the build when the generated surface drifts from declared JSON/session/mutability constraints.
 

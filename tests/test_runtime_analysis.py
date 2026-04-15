@@ -656,7 +656,7 @@ def test_runtime_helper_records_execution_analysis_and_aggregates(tmp_path: Path
                     ],
                 ).model_dump(mode='json'),
                 'db_path': str(tmp_path / 'runtime.db'),
-                'analyzed_by': 'skill-create-v6.runtime-analysis',
+                'analyzed_by': 'auto-skills-loop.runtime-analysis',
             },
             store_factory=lambda db_path=None: store,
             execution_analysis_cls=FakeExecutionAnalysis,
