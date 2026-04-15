@@ -250,10 +250,15 @@ def test_validator_emits_detailed_notes_for_reference_and_script_issues():
         note == "Validator script diagnostics: placeholder=['scripts/run.py']; non_code_like=['scripts/run.py']"
         for note in diagnostics.notes
     )
-    assert any(
-        note == "Validator repair candidates: ['reference_placeholder_heavy', 'reference_structure_incomplete', 'script_non_code_like', 'script_placeholder_heavy', 'unreferenced_reference']"
-        for note in diagnostics.notes
-    )
+    repair_note = next(note for note in diagnostics.notes if note.startswith('Validator repair candidates:'))
+    for issue_type in [
+        'reference_placeholder_heavy',
+        'reference_structure_incomplete',
+        'script_non_code_like',
+        'script_placeholder_heavy',
+        'unreferenced_reference',
+    ]:
+        assert issue_type in repair_note
 
 
 def test_validator_consumes_extracted_patterns_for_description_and_reference_checks():

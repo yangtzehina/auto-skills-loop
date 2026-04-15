@@ -12,7 +12,7 @@ Rules:
 - Follow the SkillPlan strictly. Do not expand scope.
 - Output Markdown body content only; the caller controls artifact wrapping.
 - Frontmatter must contain only: name, description.
-- Keep SKILL.md concise and route detailed material into references/*.
+- Keep SKILL.md concise and route detailed material into references/* unless skill_archetype is methodology_guidance, where the reusable workflow/template/pitfalls must live in SKILL.md.
 - Do not invent commands, tools, workflows, or capabilities not grounded in findings/plan.
 - Do not generate README-style repository documentation.
 """
@@ -34,6 +34,15 @@ def build_skill_md_messages(
     findings_payload = repo_findings.model_dump(mode='json') if hasattr(repo_findings, 'model_dump') else str(repo_findings)
     plan_payload = skill_plan.model_dump(mode='json') if hasattr(skill_plan, 'model_dump') else str(skill_plan)
 
+    skill_archetype = str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower()
+    methodology_note = ''
+    if skill_archetype == 'methodology_guidance':
+        methodology_note = """
+For methodology_guidance skills, produce a complete method body. Include Overview, When to Use,
+When Not to Use, Inputs, Workflow, Output Format, Quality Checks, and Common Pitfalls. Do not
+stuff the task into frontmatter description; transform it into reusable workflow and template guidance.
+""".strip()
+
     user_prompt = f"""
 Generate the full SKILL.md markdown for this skill.
 
@@ -52,9 +61,10 @@ Generate the full SKILL.md markdown for this skill.
 Requirements:
 1. Include YAML frontmatter with only name and description.
 2. Explain when to use the skill.
-3. Give only top-level workflow guidance.
+3. Give usable workflow guidance.
 4. Reference references/* and scripts/* when they exist in the plan.
 5. Keep it concise and skill-oriented.
+{methodology_note}
 
 Return markdown only.
 """.strip()

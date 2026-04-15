@@ -14,7 +14,7 @@ def test_build_simulation_suite_report_quick_matches_checked_in_fixtures():
         fixture_root=SIMULATION_FIXTURE_ROOT,
     )
 
-    assert report.matched_count == 7
+    assert report.matched_count == 10
     assert report.drifted_count == 0
     assert report.invalid_fixture_count == 0
     assert 'Simulation suite complete' in report.summary
@@ -26,7 +26,7 @@ def test_build_simulation_suite_report_full_includes_smoke_chain():
         fixture_root=SIMULATION_FIXTURE_ROOT,
     )
 
-    assert report.matched_count == 21
+    assert report.matched_count == 24
     assert report.drifted_count == 0
     assert report.invalid_fixture_count == 0
     assert any(
@@ -35,6 +35,10 @@ def test_build_simulation_suite_report_full_includes_smoke_chain():
     )
     assert any(
         item.family == 'operation_backed' and item.scenario_id == 'read_only_contract_mutates'
+        for item in report.scenario_results
+    )
+    assert any(
+        item.family == 'methodology_guidance' and item.scenario_id == 'concept_to_mvp_pack'
         for item in report.scenario_results
     )
 

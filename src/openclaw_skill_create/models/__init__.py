@@ -1,4 +1,6 @@
 from .artifacts import ArtifactFile, Artifacts
+from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
+from .comparison import SkillCreateComparisonCaseResult, SkillCreateComparisonMetrics, SkillCreateComparisonReport
 from .diagnostics import Diagnostics, ValidationResult
 from .findings import CandidateResources, RepoFinding, RepoFindings
 from .lineage import SkillLineageHistoryEntry, SkillLineageManifest
@@ -110,6 +112,11 @@ __all__ = [
     'ArtifactFile',
     'Artifacts',
     'Diagnostics',
+    'SkillBodyQualityReport',
+    'SkillSelfReviewReport',
+    'SkillCreateComparisonCaseResult',
+    'SkillCreateComparisonMetrics',
+    'SkillCreateComparisonReport',
     'ValidationResult',
     'CandidateResources',
     'RepoFinding',

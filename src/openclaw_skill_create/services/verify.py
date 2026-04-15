@@ -14,6 +14,7 @@ from ..models.runtime_governance import (
 from ..models.verify import OpsRoundbookReport, VerifyCommandResult, VerifyReport
 from .operation_backed_ops import build_operation_backed_backlog_report, build_operation_backed_status_report
 from .ops_approval import summarize_decision_statuses
+from .skill_create_comparison import build_skill_create_comparison_report
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -47,6 +48,9 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- operation_backed_status_counts={report.operation_backed_status_counts}',
         f'- operation_backed_actionable_count={report.operation_backed_actionable_count}',
         f'- operation_backed_hold_count={report.operation_backed_hold_count}',
+        f'- methodology_body_quality_status={report.methodology_body_quality_status}',
+        f'- self_review_fail_count={report.self_review_fail_count}',
+        f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}',
         '',
         '## Commands',
     ]
@@ -72,6 +76,7 @@ def build_verify_report(
     decision_statuses: dict[str, list[str]] | None = None,
 ) -> VerifyReport:
     operation_backed_status_report = build_operation_backed_status_report()
+    comparison_report = build_skill_create_comparison_report(include_hermes=False)
     commands = [
         _run_command(
             'run_tests',
@@ -95,6 +100,8 @@ def build_verify_report(
             overall_status = 'warn'
         else:
             overall_status = 'fail'
+    elif comparison_report.gap_count:
+        overall_status = 'fail'
     else:
         overall_status = 'pass'
     report = VerifyReport(
@@ -109,12 +116,22 @@ def build_verify_report(
         operation_backed_status_counts=dict(operation_backed_status_report.recommended_followup_counts),
         operation_backed_actionable_count=int(operation_backed_status_report.actionable_count or 0),
         operation_backed_hold_count=int(operation_backed_status_report.hold_count or 0),
+        methodology_body_quality_status=comparison_report.overall_status,
+        self_review_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.self_review_status != 'pass'
+        ),
+        hermes_comparison_gap_count=int(comparison_report.gap_count or 0),
+        skill_create_comparison_report=comparison_report,
         overall_status=overall_status,
         summary=(
             f'Verify report complete: commands={len(commands)} '
             f'failed={len(failed)} overall_status={overall_status} '
             f'operation_backed_actionable={operation_backed_status_report.actionable_count} '
-            f'operation_backed_hold={operation_backed_status_report.hold_count}'
+            f'operation_backed_hold={operation_backed_status_report.hold_count} '
+            f'methodology_body_quality={comparison_report.overall_status} '
+            f'hermes_comparison_gaps={comparison_report.gap_count}'
         ),
     )
     report.markdown_summary = render_verify_report_markdown(report)
@@ -194,6 +211,10 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
             lines.append(f'- derive_child:{item}')
         for item in report.operation_backed_hold_candidates:
             lines.append(f'- hold:{item}')
+    lines.extend(['', '## Methodology Guidance Readiness'])
+    lines.append(f'- methodology_body_quality_status={report.methodology_body_quality_status}')
+    lines.append(f'- self_review_fail_count={report.self_review_fail_count}')
+    lines.append(f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}')
     return '\n'.join(lines).strip()
 
 
@@ -343,6 +364,9 @@ def build_ops_roundbook_report(
         operation_backed_patch_current_candidates=list(operation_backed_backlog_report.patch_current_candidates or []),
         operation_backed_derive_child_candidates=list(operation_backed_backlog_report.derive_child_candidates or []),
         operation_backed_hold_candidates=list(operation_backed_backlog_report.hold_candidates or []),
+        methodology_body_quality_status=verify_report.methodology_body_quality_status,
+        self_review_fail_count=verify_report.self_review_fail_count,
+        hermes_comparison_gap_count=verify_report.hermes_comparison_gap_count,
         overall_readiness=overall_readiness,
         summary=(
             f'Ops roundbook complete: verification={verify_report.overall_status} '

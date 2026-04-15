@@ -51,4 +51,7 @@ class SkillQualityReview(BaseModel):
     operation_validation_status: str = "not_applicable"
     coverage_gap_summary: list[str] = Field(default_factory=list)
     recommended_followup: str = "no_change"
+    body_quality_status: str = "not_applicable"
+    body_quality_issues: list[str] = Field(default_factory=list)
+    self_review_status: str = "not_applicable"
     summary: list[str] = Field(default_factory=list)

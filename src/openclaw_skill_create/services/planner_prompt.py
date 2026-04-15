@@ -13,6 +13,7 @@ Rules:
 - Stay within the planning boundary. Do not generate file content.
 - Prefer fewer, stronger files over bloated file sets.
 - Keep SKILL.md concise and push detail into references/* when needed.
+- Use skill_archetype="methodology_guidance" for framework, decision-loop, game-design, simulation, or output-template skills that need a real workflow body.
 - Only plan files that are grounded in repo findings or existing skill structure.
 - Preserve merge safety for rewrite/update scenarios.
 """
@@ -54,6 +55,7 @@ Expected shape:
 {{
   "skill_name": "...",
   "skill_type": "mixed",
+  "skill_archetype": "guidance|operation_backed|methodology_guidance",
   "objective": "...",
   "why_this_shape": "...",
   "files_to_create": [{{"path": "...", "purpose": "...", "source_basis": ["..."]}}],

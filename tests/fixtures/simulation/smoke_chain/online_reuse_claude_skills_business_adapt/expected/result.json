@@ -9,10 +9,12 @@
     "_meta.json",
     "agents/openai.yaml",
     "evals/benchmark.json",
+    "evals/body_quality.json",
     "evals/output_eval.json",
     "evals/report.json",
     "evals/review.json",
     "evals/security_audit.json",
+    "evals/self_review.json",
     "evals/trigger_eval.json",
     "references/workflow_checklist.md",
     "scripts/review_workflow.py"

@@ -1,0 +1,6 @@
+{
+  "task": "Create a game design methodology skill that turns a rough game concept into a scoped MVP pack with workflow, output template, quality checks, and common pitfalls.",
+  "skill_name_hint": "concept-to-mvp-pack",
+  "skill_archetype": "methodology_guidance",
+  "enable_eval_scaffold": true
+}

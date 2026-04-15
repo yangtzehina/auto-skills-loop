@@ -113,7 +113,7 @@ def _iter_text_samples(repo_context: Any) -> list[tuple[str, str]]:
 
 def detect_skill_archetype(*, request: Any, repo_context: Any, repo_findings: Any) -> str:
     explicit = str(getattr(request, "skill_archetype", "auto") or "auto").strip().lower()
-    if explicit in {"guidance", "operation_backed"}:
+    if explicit in {"guidance", "operation_backed", "methodology_guidance"}:
         return explicit
 
     text_samples = _iter_text_samples(repo_context)

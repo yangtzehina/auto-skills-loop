@@ -1,0 +1,10 @@
+{
+  "severity": "pass",
+  "skill_archetype": "methodology_guidance",
+  "fully_correct": true,
+  "body_quality_status": "pass",
+  "self_review_status": "pass",
+  "body_lines_min_met": true,
+  "required_sections_missing": [],
+  "generated_files_contains_sidecars": true
+}

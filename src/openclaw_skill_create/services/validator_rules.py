@@ -7,6 +7,7 @@ from typing import Any, Optional
 from ..models.artifacts import Artifacts
 from ..models.diagnostics import Diagnostics, ValidationResult
 from ..models.plan import SkillPlan
+from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 
 
 REFERENCE_REQUIRED_SECTIONS = ('## Overview', '## Key points')
@@ -511,6 +512,26 @@ def classify_validation_issues(validation: ValidationResult) -> tuple[list[str],
             repairable.append('operation_coverage_invalid')
         if item.startswith('Operation coverage follow-up mismatch:'):
             repairable.append('operation_coverage_followup_mismatch')
+        if item.startswith('Body quality failed:'):
+            if 'body_too_thin' in item:
+                repairable.append('body_too_thin')
+            if 'missing_workflow' in item:
+                repairable.append('missing_workflow')
+            if 'missing_output_template' in item:
+                repairable.append('missing_output_template')
+            if 'missing_pitfalls' in item:
+                repairable.append('missing_pitfalls')
+            if 'prompt_echo' in item:
+                repairable.append('prompt_echo')
+            if 'description_stuffing' in item:
+                repairable.append('description_stuffing')
+            if 'missing_' in item and not any(
+                known in item
+                for known in ('missing_workflow', 'missing_output_template', 'missing_pitfalls')
+            ):
+                repairable.append('methodology_section_missing')
+        if item.startswith('Self review failed:'):
+            repairable.append('self_review_failed')
     if validation.unsupported_claims_found:
         non_repairable.append('unsupported_claims')
 
@@ -629,6 +650,22 @@ def run_rule_validation(
         validation=validation,
     )
 
+    body_quality = build_skill_body_quality_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+    )
+    self_review = build_skill_self_review_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+        body_quality=body_quality,
+    )
+    for issue in list(body_quality.blocking_issues or []):
+        validation.summary.append(f'Body quality failed: {issue}')
+    for issue in list(self_review.blocking_issues or []):
+        validation.summary.append(f'Self review failed: {issue}')
+
     pattern_summary, pattern_notes = run_pattern_validator_checks(
         extracted_patterns=extracted_patterns,
         skill_md_content=skill_md,
@@ -667,11 +704,15 @@ def run_rule_validation(
     if validation.repair_recommended:
         notes.append(f'Validator repair candidates: {validation.repairable_issue_types}')
     notes.extend(operation_notes)
+    notes.extend(list(body_quality.summary or []))
+    notes.extend(list(self_review.summary or []))
 
     return Diagnostics(
         warnings=list(validation.summary),
         errors=[],
         validation=validation,
+        body_quality=body_quality,
+        self_review=self_review,
         notes=notes,
     )
 

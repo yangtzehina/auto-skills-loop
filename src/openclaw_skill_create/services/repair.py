@@ -3,7 +3,11 @@ from __future__ import annotations
 from ..models.artifacts import ArtifactFile, Artifacts
 from ..models.plan import SkillPlan
 from ..models.repair import RepairResult
-from .generator_fallback import fallback_generate_operation_skill_md_artifact
+from .generator_fallback import (
+    fallback_generate_methodology_skill_md_artifact,
+    fallback_generate_operation_skill_md_artifact,
+    fallback_generate_skill_md_artifact,
+)
 from .operation_contract import contract_to_artifact, operation_helper_artifact, operation_validation_artifact
 from .operation_coverage import build_operation_coverage_report, operation_coverage_artifact
 from .repair_rules import (
@@ -174,6 +178,53 @@ def _repair_operation_backed_sync(
     return changed
 
 
+def _repair_methodology_body(
+    repaired: Artifacts,
+    *,
+    skill_plan: SkillPlan,
+    request=None,
+) -> bool:
+    if str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower() != 'methodology_guidance':
+        return False
+    references = sorted(file.path for file in repaired.files if file.path.startswith('references/'))
+    scripts = sorted(file.path for file in repaired.files if file.path.startswith('scripts/'))
+    skill_md = fallback_generate_methodology_skill_md_artifact(
+        skill_name=getattr(skill_plan, 'skill_name', 'generated-skill'),
+        description=f'Create structured methodology guidance for {getattr(skill_plan, "skill_name", "generated-skill")}. Use when Codex needs workflow, output template, and pitfalls for this decision task.',
+        task=str(getattr(request, 'task', '') or getattr(skill_plan, 'objective', '') or ''),
+        references=references,
+        scripts=scripts,
+    )
+    existing = find_artifact(repaired, 'SKILL.md')
+    if existing is not None and existing.content == skill_md.content:
+        return False
+    replace_artifact(repaired, skill_md)
+    return True
+
+
+def _repair_guidance_body(
+    repaired: Artifacts,
+    *,
+    skill_plan: SkillPlan,
+    description: str,
+) -> bool:
+    if str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower() != 'guidance':
+        return False
+    references = sorted(file.path for file in repaired.files if file.path.startswith('references/'))
+    scripts = sorted(file.path for file in repaired.files if file.path.startswith('scripts/'))
+    skill_md = fallback_generate_skill_md_artifact(
+        skill_name=getattr(skill_plan, 'skill_name', 'generated-skill'),
+        description=description,
+        references=references,
+        scripts=scripts,
+    )
+    existing = find_artifact(repaired, 'SKILL.md')
+    if existing is not None and existing.content == skill_md.content:
+        return False
+    replace_artifact(repaired, skill_md)
+    return True
+
+
 def _repair_reference_quality_issues(repaired: Artifacts, repairable_issue_types: list[str]) -> bool:
     should_repair = (
         'reference_structure_incomplete' in repairable_issue_types
@@ -296,6 +347,27 @@ def run_repair(
             skill_plan=skill_plan,
             diagnostics=diagnostics,
         ) or changed
+        body_issue_types = {
+            'body_too_thin',
+            'missing_workflow',
+            'missing_output_template',
+            'missing_pitfalls',
+            'methodology_section_missing',
+            'prompt_echo',
+            'description_stuffing',
+            'self_review_failed',
+        }
+        if body_issue_types & set(repairable_issue_types):
+            changed = _repair_methodology_body(
+                repaired,
+                skill_plan=skill_plan,
+                request=request,
+            ) or changed
+            changed = _repair_guidance_body(
+                repaired,
+                skill_plan=skill_plan,
+                description=description,
+            ) or changed
         repair_missing_planned_files(
             artifacts=repaired,
             skill_plan=skill_plan,

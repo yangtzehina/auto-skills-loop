@@ -513,10 +513,9 @@ def test_orchestrator_repairs_invalid_eval_scaffolds(monkeypatch):
     trigger_eval = next(file for file in response.artifacts.files if file.path == "evals/trigger_eval.json")
     assert '"cases"' in trigger_eval.content
     assert response.diagnostics is not None
-    assert any(
-        "resolved=['empty_eval_scaffold', 'invalid_eval_scaffold']" in note
-        for note in response.diagnostics.notes
-    )
+    resolved_note = next(note for note in response.diagnostics.notes if note.startswith('Repair attempt 1:'))
+    assert 'empty_eval_scaffold' in resolved_note
+    assert 'invalid_eval_scaffold' in resolved_note
     assert any(
         note.startswith('Evaluation runner: overall_score=0.89; task_alignment=0.88; adaptation_quality=0.91')
         for note in response.diagnostics.notes

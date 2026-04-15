@@ -1,0 +1,6 @@
+{
+  "task": "Create a game design methodology skill for designing a simulation resource loop, with structured inputs, workflow, output template, quality checks, and pitfalls.",
+  "skill_name_hint": "simulation-resource-loop-design",
+  "skill_archetype": "methodology_guidance",
+  "enable_eval_scaffold": true
+}

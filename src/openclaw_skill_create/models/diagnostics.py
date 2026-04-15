@@ -3,6 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from .security import SecurityAuditReport
 
 
@@ -25,4 +26,6 @@ class Diagnostics(BaseModel):
     errors: list[str] = Field(default_factory=list)
     validation: ValidationResult = Field(default_factory=ValidationResult)
     security_audit: Optional[SecurityAuditReport] = None
+    body_quality: Optional[SkillBodyQualityReport] = None
+    self_review: Optional[SkillSelfReviewReport] = None
     notes: list[str] = Field(default_factory=list)

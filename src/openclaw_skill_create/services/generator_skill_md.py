@@ -7,6 +7,7 @@ from ..models.request import SkillCreateRequestV6
 from ..utils.errors import SkillCreateError
 from .generator_fallback import (
     fallback_generate_operation_skill_md_artifact,
+    fallback_generate_methodology_skill_md_artifact,
     fallback_generate_skill_md_artifact,
 )
 from .generator_prompt import build_skill_md_messages
@@ -57,6 +58,14 @@ def generate_skill_md_artifact(
             references=references,
             scripts=scripts,
         )
+    if skill_archetype == 'methodology_guidance':
+        return fallback_generate_methodology_skill_md_artifact(
+            skill_name=skill_name,
+            description=description,
+            task=getattr(request, 'task', '') or '',
+            references=references,
+            scripts=scripts,
+        )
 
     use_llm = getattr(request, 'enable_llm_skill_md', False)
     if not use_llm or llm_runner is None:
@@ -77,6 +86,14 @@ def generate_skill_md_artifact(
     try:
         content = llm_runner(messages, model)
     except Exception:
+        if skill_archetype == 'methodology_guidance':
+            return fallback_generate_methodology_skill_md_artifact(
+                skill_name=skill_name,
+                description=description,
+                task=getattr(request, 'task', '') or '',
+                references=references,
+                scripts=scripts,
+            )
         return fallback_generate_skill_md_artifact(
             skill_name=skill_name,
             description=description,

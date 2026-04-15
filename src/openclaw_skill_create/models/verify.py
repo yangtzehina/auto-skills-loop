@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .comparison import SkillCreateComparisonReport
 from .operation_backed_ops import OperationBackedBacklogReport
 from .public_source_verification import PublicSourcePromotionPack
 from .runtime_governance import RuntimeOpsDecisionPack, RuntimePriorPilotExerciseReport
@@ -23,6 +24,10 @@ class VerifyReport(BaseModel):
     operation_backed_status_counts: dict[str, int] = Field(default_factory=dict)
     operation_backed_actionable_count: int = 0
     operation_backed_hold_count: int = 0
+    methodology_body_quality_status: str = 'pass'
+    self_review_fail_count: int = 0
+    hermes_comparison_gap_count: int = 0
+    skill_create_comparison_report: SkillCreateComparisonReport | None = None
     overall_status: str = 'pass'
     summary: str = ''
     markdown_summary: str = ''
@@ -50,6 +55,9 @@ class OpsRoundbookReport(BaseModel):
     operation_backed_patch_current_candidates: list[str] = Field(default_factory=list)
     operation_backed_derive_child_candidates: list[str] = Field(default_factory=list)
     operation_backed_hold_candidates: list[str] = Field(default_factory=list)
+    methodology_body_quality_status: str = 'pass'
+    self_review_fail_count: int = 0
+    hermes_comparison_gap_count: int = 0
     overall_readiness: str = 'ready'
     summary: str = ''
     markdown_summary: str = ''

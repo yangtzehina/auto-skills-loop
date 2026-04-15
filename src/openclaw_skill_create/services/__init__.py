@@ -1,5 +1,6 @@
 from .extractor import run_extractor
 from .generator import run_generator
+from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 from .orchestrator import run_skill_create
 from .ops_approval import (
     apply_ops_approval_state,
@@ -100,11 +101,14 @@ from .runtime_replay_change import build_runtime_replay_change_pack, render_runt
 from .runtime_replay_judge import build_runtime_replay_judge_pack
 from .runtime_replay_review import build_runtime_replay_review, render_runtime_replay_review_markdown
 from .security_audit import run_security_audit
+from .skill_create_comparison import build_skill_create_comparison_report, render_skill_create_comparison_markdown
 from .validator import run_validator
 
 __all__ = [
     'run_extractor',
     'run_generator',
+    'build_skill_body_quality_report',
+    'build_skill_self_review_report',
     'run_skill_create',
     'detect_skill_archetype',
     'build_operation_contract',
@@ -193,5 +197,7 @@ __all__ = [
     'build_runtime_replay_review',
     'render_runtime_replay_review_markdown',
     'run_security_audit',
+    'build_skill_create_comparison_report',
+    'render_skill_create_comparison_markdown',
     'run_validator',
 ]

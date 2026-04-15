@@ -1,0 +1,6 @@
+{
+  "task": "Create a game design methodology skill for stress-testing a decision loop, including when to use it, workflow, output format, guardrails, and failure modes.",
+  "skill_name_hint": "decision-loop-stress-test",
+  "skill_archetype": "methodology_guidance",
+  "enable_eval_scaffold": true
+}

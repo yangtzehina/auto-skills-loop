@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from ..models.artifacts import ArtifactFile, Artifacts
+from ..models.body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from ..models.evaluation import EvaluationRunReport
 from ..models.persistence import PersistencePolicy
 from ..models.plan import SkillPlan
@@ -24,6 +25,8 @@ _OUTPUT_ROOT_ENV = (
 DEFAULT_OUTPUT_ROOT = Path(_OUTPUT_ROOT_ENV).expanduser() if _OUTPUT_ROOT_ENV else ROOT / '.generated-skills'
 EVALUATION_REPORT_PATH = 'evals/report.json'
 QUALITY_REVIEW_PATH = 'evals/review.json'
+BODY_QUALITY_REPORT_PATH = 'evals/body_quality.json'
+SELF_REVIEW_REPORT_PATH = 'evals/self_review.json'
 SECURITY_AUDIT_REPORT_PATH = 'evals/security_audit.json'
 OPERATION_COVERAGE_REPORT_PATH = 'evals/operation_coverage.json'
 
@@ -119,6 +122,58 @@ def artifacts_with_quality_review(
 
     files = [file for file in artifacts.files if file.path != QUALITY_REVIEW_PATH]
     files.append(review_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_body_quality(
+    *,
+    artifacts: Artifacts,
+    body_quality: Optional[SkillBodyQualityReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if body_quality is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=BODY_QUALITY_REPORT_PATH,
+        content=json.dumps(body_quality.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['body_quality'],
+        status='new',
+    )
+
+    files = [file for file in artifacts.files if file.path != BODY_QUALITY_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_self_review(
+    *,
+    artifacts: Artifacts,
+    self_review: Optional[SkillSelfReviewReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if self_review is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=SELF_REVIEW_REPORT_PATH,
+        content=json.dumps(self_review.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['self_review'],
+        status='new',
+    )
+
+    files = [file for file in artifacts.files if file.path != SELF_REVIEW_REPORT_PATH]
+    files.append(report_file)
     return Artifacts(files=files)
 
 
@@ -240,6 +295,16 @@ def persist_artifacts(
         'quality_review_path': (
             str(target_dir / QUALITY_REVIEW_PATH)
             if QUALITY_REVIEW_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'body_quality_path': (
+            str(target_dir / BODY_QUALITY_REPORT_PATH)
+            if BODY_QUALITY_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'self_review_path': (
+            str(target_dir / SELF_REVIEW_REPORT_PATH)
+            if SELF_REVIEW_REPORT_PATH in artifact_paths(artifacts)
             else None
         ),
         'security_audit_path': (

@@ -105,7 +105,20 @@ def test_run_skill_quality_review_passes_when_requirements_and_eval_are_strong()
             files=[
                 ArtifactFile(
                     path='SKILL.md',
-                    content='---\nname: demo-skill\ndescription: Capture repo guidance. Use when Codex needs repo-grounded instructions.\n---\n\n# Demo\n\nSee `references/README.md`.\n',
+                    content=(
+                        '---\nname: demo-skill\ndescription: Capture repo guidance. Use when Codex needs repo-grounded instructions.\n---\n\n'
+                        '# Demo\n\n'
+                        'Use this skill when the repo guidance applies to the current task.\n\n'
+                        '## When to Use\n\n'
+                        '- The task needs repo-grounded instructions.\n\n'
+                        '## Workflow\n\n'
+                        '1. Read `references/README.md` before making repo-specific claims.\n'
+                        '2. Apply the relevant workflow in small steps.\n'
+                        '3. Report the files or assumptions used.\n\n'
+                        '## Output Format\n\n'
+                        '- State the workflow path.\n'
+                        '- Summarize verification status.\n'
+                    ),
                     content_type='text/markdown',
                 ),
                 ArtifactFile(

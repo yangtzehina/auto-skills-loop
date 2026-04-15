@@ -44,6 +44,7 @@ FAMILY_TO_MODE = {
     'public_source_curation': 'source-curation',
     'smoke_chain': 'smoke-chain',
     'operation_backed': 'operation-backed',
+    'methodology_guidance': 'methodology-guidance',
 }
 MODE_TO_FAMILY = {value: key for key, value in FAMILY_TO_MODE.items()}
 FAMILY_ORDER = [
@@ -54,6 +55,7 @@ FAMILY_ORDER = [
     'public_source_curation',
     'smoke_chain',
     'operation_backed',
+    'methodology_guidance',
 ]
 QUICK_SCENARIOS = [
     ('runtime_intake', 'partial_trace_no_change'),
@@ -63,6 +65,9 @@ QUICK_SCENARIOS = [
     ('public_source_curation', 'high_overlap_reject'),
     ('public_source_curation', 'acceptable_accept'),
     ('operation_backed', 'native_cli_guided_safe'),
+    ('methodology_guidance', 'concept_to_mvp_pack'),
+    ('methodology_guidance', 'decision_loop_stress_test'),
+    ('methodology_guidance', 'simulation_resource_loop_design'),
 ]
 
 
@@ -258,6 +263,26 @@ def _validate_operation_backed_projection(payload: Any) -> dict[str, Any]:
     return payload
 
 
+def _validate_methodology_guidance_projection(payload: Any) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        raise ValueError('Invalid expected projection for methodology_guidance: must be an object')
+    _ensure_keys(
+        payload,
+        [
+            'severity',
+            'skill_archetype',
+            'fully_correct',
+            'body_quality_status',
+            'self_review_status',
+            'body_lines_min_met',
+            'required_sections_missing',
+            'generated_files_contains_sidecars',
+        ],
+        context='methodology_guidance',
+    )
+    return payload
+
+
 PROJECTION_VALIDATORS: dict[str, Callable[[Any], dict[str, Any]]] = {
     'runtime_intake': _validate_runtime_intake_projection,
     'runtime_batch': _validate_runtime_batch_projection,
@@ -266,6 +291,7 @@ PROJECTION_VALIDATORS: dict[str, Callable[[Any], dict[str, Any]]] = {
     'public_source_curation': _validate_source_curation_projection,
     'smoke_chain': _validate_smoke_chain_projection,
     'operation_backed': _validate_operation_backed_projection,
+    'methodology_guidance': _validate_methodology_guidance_projection,
 }
 
 
@@ -656,6 +682,37 @@ def _run_operation_backed_scenario(scenario_root: Path) -> dict[str, Any]:
     raise ValueError(f'Unsupported operation_backed scenario_kind: {scenario_kind}')
 
 
+def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
+    payload = _load_json(scenario_root / 'input' / 'request.json')
+    if not isinstance(payload, dict):
+        raise ValueError(f'Invalid methodology fixture: {scenario_root / "input" / "request.json"} must be an object')
+    request = SkillCreateRequestV6.model_validate(_resolve_request_paths(payload, scenario_root=scenario_root / 'input'))
+    with tempfile.TemporaryDirectory(prefix='simulation-methodology-guidance-') as tmpdir:
+        output_root = Path(tmpdir) / 'generated'
+        response = run_skill_create(
+            request,
+            output_root=str(output_root),
+            persistence_policy=PersistencePolicy(dry_run=False, overwrite=True, persist_evaluation_report=True),
+            fail_fast_on_validation_fail=False,
+        )
+        body_quality = getattr(response.diagnostics, 'body_quality', None) if response.diagnostics is not None else None
+        self_review = getattr(response.diagnostics, 'self_review', None) if response.diagnostics is not None else None
+        generated_files = sorted(item.path for item in list(response.artifacts.files or [])) if response.artifacts is not None else []
+        return {
+            'severity': response.severity,
+            'skill_archetype': str(getattr(response.skill_plan, 'skill_archetype', '') or ''),
+            'fully_correct': bool(getattr(response.quality_review, 'fully_correct', False)),
+            'body_quality_status': str(getattr(body_quality, 'status', '') or ''),
+            'self_review_status': str(getattr(self_review, 'status', '') or ''),
+            'body_lines_min_met': int(getattr(body_quality, 'body_lines', 0) or 0) >= 35,
+            'required_sections_missing': list(getattr(body_quality, 'missing_required_sections', []) or []),
+            'generated_files_contains_sidecars': (
+                'evals/body_quality.json' in generated_files
+                and 'evals/self_review.json' in generated_files
+            ),
+        }
+
+
 FAMILY_RUNNERS: dict[str, Callable[[Path], dict[str, Any]]] = {
     'runtime_intake': _run_runtime_intake_scenario,
     'runtime_batch': _run_runtime_batch_scenario,
@@ -664,6 +721,7 @@ FAMILY_RUNNERS: dict[str, Callable[[Path], dict[str, Any]]] = {
     'public_source_curation': _run_source_curation_scenario,
     'smoke_chain': _run_smoke_chain_scenario,
     'operation_backed': _run_operation_backed_scenario,
+    'methodology_guidance': _run_methodology_guidance_scenario,
 }
 
 

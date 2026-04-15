@@ -12,6 +12,29 @@ MAX_PATTERN_ACTIONS = 6
 MAX_PATTERN_REQUIRED_FILES = 12
 MAX_PATTERN_OPTIONAL_FILES = 12
 
+METHODOLOGY_TASK_MARKERS = (
+    'methodology',
+    'framework',
+    'decision loop',
+    'decision framework',
+    'stress test',
+    'simulation',
+    'output template',
+    'workflow',
+    'pitfall',
+    'common pitfalls',
+    'game design',
+    'game designer',
+    'concept-to-mvp',
+    'mvp pack',
+    '思维流程',
+    '判断框架',
+    '推演',
+    '决策',
+    '模板',
+    '误区',
+)
+
 
 def _iter_repo_findings(repo_findings: Any) -> list[Any]:
     repos = getattr(repo_findings, 'repos', None)
@@ -351,7 +374,19 @@ def build_planning_seed(
         repo_findings=repo_findings,
         skill_name=skill_name,
     )
-    skill_archetype = 'operation_backed' if operation_contract is not None else 'guidance'
+    explicit_archetype = str(getattr(request, 'skill_archetype', 'auto') or 'auto').strip().lower()
+    if explicit_archetype == 'methodology_guidance':
+        operation_contract = None
+        skill_archetype = 'methodology_guidance'
+    elif operation_contract is not None:
+        skill_archetype = 'operation_backed'
+    else:
+        task_text = str(getattr(request, 'task', '') or '').lower()
+        skill_archetype = (
+            'methodology_guidance'
+            if any(marker in task_text for marker in METHODOLOGY_TASK_MARKERS)
+            else 'guidance'
+        )
     candidate_files: list[PlannedFile] = [
         PlannedFile(
             path='SKILL.md',
@@ -360,6 +395,8 @@ def build_planning_seed(
         )
     ]
     rationale = ['Deterministic planning seed from repo findings']
+    if skill_archetype == 'methodology_guidance':
+        rationale.append('Methodology-guidance planning selected from task shape')
     rationale.extend(_collect_pattern_rationale(extracted_patterns))
     rationale.extend(_collect_blueprint_rationale(online_skill_blueprints, reuse_decision))
     generation_order = ['SKILL.md']

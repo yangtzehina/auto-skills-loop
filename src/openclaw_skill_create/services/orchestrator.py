@@ -22,10 +22,12 @@ from .online_discovery import (
 )
 from .operation_coverage import build_operation_coverage_report
 from .persistence import (
+    artifacts_with_body_quality,
     artifacts_with_evaluation_report,
     artifacts_with_operation_coverage,
     artifacts_with_quality_review,
     artifacts_with_security_audit,
+    artifacts_with_self_review,
     persist_artifacts,
 )
 from .planner import run_planner
@@ -78,6 +80,14 @@ BLOCKING_REPAIRABLE_ISSUES = {
     "operation_coverage_missing",
     "operation_coverage_invalid",
     "operation_coverage_followup_mismatch",
+    "body_too_thin",
+    "missing_workflow",
+    "missing_output_template",
+    "missing_pitfalls",
+    "methodology_section_missing",
+    "prompt_echo",
+    "description_stuffing",
+    "self_review_failed",
 }
 
 
@@ -518,8 +528,28 @@ def run_skill_create(
             quality_review=quality_review,
             policy=effective_persistence_policy,
         )
+        artifacts = artifacts_with_body_quality(
+            artifacts=artifacts,
+            body_quality=getattr(diagnostics, "body_quality", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_self_review(
+            artifacts=artifacts,
+            self_review=getattr(diagnostics, "self_review", None),
+            policy=effective_persistence_policy,
+        )
 
     if artifacts is not None and diagnostics is not None:
+        artifacts = artifacts_with_body_quality(
+            artifacts=artifacts,
+            body_quality=getattr(diagnostics, "body_quality", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_self_review(
+            artifacts=artifacts,
+            self_review=getattr(diagnostics, "self_review", None),
+            policy=effective_persistence_policy,
+        )
         operation_coverage = None
         if str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower() == 'operation_backed':
             operation_coverage = build_operation_coverage_report(
