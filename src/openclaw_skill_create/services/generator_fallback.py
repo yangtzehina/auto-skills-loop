@@ -17,6 +17,15 @@ class DomainSkillBlueprint:
     output_schema: list[tuple[str, list[str]]] = field(default_factory=list)
     quality_check_matrix: list[str] = field(default_factory=list)
     pitfall_taxonomy: list[str] = field(default_factory=list)
+    decision_probes: list[str] = field(default_factory=list)
+    workflow_output_fragments: list[str] = field(default_factory=list)
+    workflow_failure_signals: list[str] = field(default_factory=list)
+    boundary_rules: list[str] = field(default_factory=list)
+    worked_micro_examples: list[tuple[str, list[str]]] = field(default_factory=list)
+    failure_patterns: list[tuple[str, list[str]]] = field(default_factory=list)
+    revision_moves: list[str] = field(default_factory=list)
+    output_field_guidance: list[tuple[str, list[str]]] = field(default_factory=list)
+    quality_check_rubric: list[tuple[str, list[str]]] = field(default_factory=list)
 
 
 def _display_subject(*, skill_name: str, task: str) -> str:
@@ -255,6 +264,72 @@ def _expert_game_design_blueprint(*, skill_name: str, task: str) -> DomainSkillB
                 'Content hiding uncertainty: adding more levels, enemies, or modes instead of testing the risky promise.',
                 'Invisible defer list: leaving out-of-scope work vague enough that it sneaks back in.',
             ],
+            decision_probes=[
+                'What exactly is the MVP trying to validate, and what result would prove it wrong?',
+                'Can the smallest honest loop be played without promising future systems?',
+                'Which attractive feature would be painful to cut but does not prove the central design hypothesis?',
+                'How much content is enough to expose the loop before scope becomes camouflage?',
+                'What would count as validated, and what would force a redesign?',
+            ],
+            workflow_output_fragments=[
+                'Validation Goal with the risky promise, expected evidence, and failure condition.',
+                'Minimum Honest Loop with player input, system response, visible feedback, and repeat trigger.',
+                'Feature Cut table with Core, Supportive, Later, and Cut buckets.',
+                'Minimum Content Scope with events, levels, enemies, cards, scenes, or runs needed for a credible first test.',
+                'Explicitly Out of Scope kill list with why each tempting idea stays out.',
+                'Build Recommendation naming what to prototype first and what to test with players.',
+            ],
+            workflow_failure_signals=[
+                'The validation question sounds like a slogan and cannot fail in a playtest.',
+                'The loop depends on invisible future depth or scripted presentation.',
+                'Too many systems are called core, so the MVP stops being a test.',
+                'Content volume is being used to hide uncertainty.',
+                'Deferred features have no re-entry condition and will creep back in.',
+                'The pack cannot tell a builder what to implement first.',
+            ],
+            boundary_rules=[
+                'This is a scope-cutting skill, not a dream-expanding skill.',
+                'Do not fake the entire game with a polished vertical slice that misses the repeatable loop.',
+                'Use a kill list; name what not to build as clearly as what to build.',
+                'Cut aggressively when a feature does not answer the validation question.',
+            ],
+            worked_micro_examples=[
+                (
+                    'Compact MVP scope example',
+                    [
+                        'Premise: a cozy courier game about choosing routes through weather and social obligations.',
+                        'Validation question: will route tradeoffs stay interesting when the map is tiny?',
+                        'Smallest honest loop: accept delivery, choose route, absorb weather/social cost, see reputation and stamina feedback, repeat.',
+                        'Cut: cosmetics, meta progression, large city map, branching story; keep only route choice, weather pressure, and one reputation consequence.',
+                    ],
+                )
+            ],
+            failure_patterns=[
+                ('Fake MVP', ['Symptom: the build is polished but does not test the repeatable loop.', 'Cause: presentation replaced validation.', 'Correction: reduce content and expose input, response, feedback, and repeat trigger.']),
+                ('Scope Creep Through One More Core Feature', ['Symptom: every attractive idea becomes mandatory.', 'Cause: core/support/cut buckets are not enforced.', 'Correction: keep only features that answer the validation question.']),
+                ('Content-Heavy Validation', ['Symptom: the concept needs dozens of units before it can be judged.', 'Cause: content volume hides a weak loop.', 'Correction: define the minimum content package that can reveal the truth.']),
+                ('Success Criteria Missing', ['Symptom: the team keeps building after the first test.', 'Cause: no pass/fail signal was written.', 'Correction: state what result would count as success or redesign.']),
+            ],
+            revision_moves=[
+                'If the MVP pack is still too large, remove supportive systems before touching the core loop.',
+                'If the validation question cannot fail, rewrite it as a playtest observation.',
+                'If the out-of-scope list feels vague, name specific features and their re-entry condition.',
+            ],
+            output_field_guidance=[
+                ('Validation Goal', ['Write the core question, why it matters, and what evidence would count.', 'Good output can fail; weak output is a slogan.']),
+                ('Minimum Honest Loop', ['Write input, system response, feedback, and repeat trigger.', 'Good output is playable; weak output depends on future content.']),
+                ('Core Features', ['Separate must-have, supportive, and cut items.', 'Good output removes desirable work; weak output keeps everything.']),
+                ('Minimum Content Scope', ['Write the smallest events, levels, enemies, cards, scenes, or runs needed.', 'Good output proves enough without padding; weak output hides uncertainty with volume.']),
+                ('Required Systems', ['Write each system purpose, minimum behavior, and simplification path.', 'Good output supports the MVP goal; weak output imports full production scope.']),
+                ('Explicitly Out of Scope', ['List tempting exclusions and why they stay out.', 'Good output blocks creep; weak output says later without conditions.']),
+                ('Main Production Risks', ['Write the scope, loop, content, and system risks that could invalidate the build.', 'Good output names risk signals before production expands.']),
+                ('Build Recommendation', ['Write what to prototype first, what to test with players, and what result counts as success.', 'Good output becomes the next work order.']),
+            ],
+            quality_check_rubric=[
+                ('Testability', ['The MVP has a success signal and a failure signal.']),
+                ('Scope Discipline', ['The feature cut removes work that feels attractive but is not necessary evidence.']),
+                ('Execution Readiness', ['A builder can start the first playable without rereading the original prompt.']),
+            ],
         )
     if profile.skill_name == 'decision-loop-stress-test':
         return DomainSkillBlueprint(
@@ -362,6 +437,70 @@ def _expert_game_design_blueprint(*, skill_name: str, task: str) -> DomainSkillB
                 'Dominant strategy denial: noticing a solved state but calling it player preference.',
                 'Rewarding autopilot: claiming expressive decisions while the reward optimizes one rote behavior.',
                 'First-hour tunnel vision: testing the hook while missing midgame or lategame collapse.',
+            ],
+            decision_probes=[
+                'Does this loop hold up beyond the pitch and first novelty burst?',
+                'Why would the player still care after the first hour?',
+                'What prevents midgame from becoming autopilot once the basics are learned?',
+                'Does lategame mastery create new decisions or erase pressure?',
+                'What dominant strategy would make the loop stale?',
+            ],
+            workflow_output_fragments=[
+                'Loop Under Test with observe, decide, act, resolve, reward, and next-choice trigger.',
+                'First-Hour Performance with readability, agency, and hook risks.',
+                'Midgame Performance with new constraints, compounding tradeoffs, and dominant-option risks.',
+                'Late-Game Performance with expansion, mutation, or collapse point.',
+                'Solved-State Risks with dominant strategy, cause, and counterpressure.',
+                'Reinforcement Recommendations with urgent fix, secondary fix, and next prototype test.',
+            ],
+            workflow_failure_signals=[
+                'The loop description lists actions but not the repeated decision.',
+                'The first hour works only because novelty is carrying the experience.',
+                'Midgame variation changes content labels but not decisions.',
+                'Lategame mastery removes the game instead of revealing deeper problems.',
+                'The dominant strategy is noticed but not designed against.',
+                'Rewards teach efficient autopilot while the design claims expressive play.',
+            ],
+            boundary_rules=[
+                'This is not about greenlighting theme; it tests whether the loop survives time.',
+                'Do not treat more options as better variation unless they change decisions.',
+                'Prefer structural counterpressure over content padding.',
+                'Do not use this for detailed numeric balancing when the structural loop is still unclear.',
+            ],
+            worked_micro_examples=[
+                (
+                    'Compact loop stress example',
+                    [
+                        'Loop: choose a combat card, spend stamina, resolve enemy intent, earn upgrade currency, repeat.',
+                        'First-hour risk: cards are readable but enemy intent is too abstract to feel causal.',
+                        'Midgame risk: one stamina-efficient build dominates because penalties are too weak.',
+                        'Reinforcement fix: add enemies that punish repeated low-risk choices and reward adapting to state.',
+                    ],
+                )
+            ],
+            failure_patterns=[
+                ('Novelty-Only Start', ['Symptom: the first session feels fine but repetition arrives fast.', 'Cause: premise is carrying weak decisions.', 'Correction: expose meaningful tradeoffs within the first hour.']),
+                ('Midgame Autopilot', ['Symptom: players learn a stable routine and stop thinking.', 'Cause: constraints scale numbers but not decisions.', 'Correction: add state changes that force adaptation.']),
+                ('Progression Without New Problems', ['Symptom: upgrades make the loop easier but not deeper.', 'Cause: progression removes pressure.', 'Correction: make mastery reveal new constraints or costs.']),
+                ('Variety Without Strategic Consequence', ['Symptom: content changes but decisions stay identical.', 'Cause: variation is cosmetic or statistical.', 'Correction: require variation to change read, tradeoff, consequence, or adaptation.']),
+                ('Mastery Removes the Game', ['Symptom: skillful play eliminates tension too early.', 'Cause: no counterpressure meets mastery.', 'Correction: introduce risk, uncertainty, or asymmetric options.']),
+            ],
+            revision_moves=[
+                'If the loop is too easy to solve, add counterpressure before adding more content.',
+                'If variation is cosmetic, rewrite it as a decision-changing state difference.',
+                'If reinforcement rewards the wrong behavior, change the reward before changing player instructions.',
+            ],
+            output_field_guidance=[
+                ('Loop Under Test', ['Write the repeated choice and feedback chain.', 'Good output names a loop; weak output lists disconnected actions.']),
+                ('First-Hour Performance', ['Write what works, what is weak, and the main hook risk.', 'Good output names a readable cause-effect chain.']),
+                ('Midgame Performance', ['Write what sustains interest and where repetition starts.', 'Good output distinguishes new decisions from larger numbers.']),
+                ('Solved-State Risks', ['Write the dominant strategy and why it appears.', 'Good output names counterpressure; weak output says add variety.']),
+                ('Reinforcement Recommendations', ['Write the most urgent fix and the next prototype test.', 'Good output changes the next test plan.']),
+            ],
+            quality_check_rubric=[
+                ('Time Horizon', ['First hour, midgame, and lategame each have distinct stress signals.']),
+                ('Decision Variation', ['Variation changes player decisions, not just presentation.']),
+                ('Reinforcement Fit', ['Rewards train the intended behavior and player fantasy.']),
             ],
         )
     if profile.skill_name == 'simulation-resource-loop-design':
@@ -474,6 +613,78 @@ def _expert_game_design_blueprint(*, skill_name: str, task: str) -> DomainSkillB
                 'Hidden pressure relationships: letting variables punish the player without readable warning.',
                 'Emotionless resource loop: producing stable balance math that does not support the emotional fantasy.',
             ],
+            decision_probes=[
+                'What choices hurt in an interesting way?',
+                'What can the player never maximize all at once?',
+                'Which pressure relationship is visible early enough for planning?',
+                'How does the player notice failure before the death spiral is complete?',
+                'What emotional fantasy should the resource loop make legible?',
+            ],
+            workflow_output_fragments=[
+                'Variable Web with resources, sinks, converters, buffers, caps, and player-visible signals.',
+                'Variable Role table with source, sink, converter, buffer, cap, signal, cost, or pressure.',
+                'Pressure Relationships with cause, effect, timing, and player-visible warning.',
+                'Primary Decision Tensions with tradeoff, pressure, and viable responses.',
+                'Positive and Negative Loops with compounding force and counterpressure.',
+                'Failure Recovery with early warning, recovery action, and lasting consequence.',
+                'Emotional Fantasy Alignment with intended feeling and loop mismatch to fix.',
+            ],
+            workflow_failure_signals=[
+                'The variable web is a list of meters with no player-facing decision.',
+                'Variables have labels but no behavioral role.',
+                'Pressure relationships punish the player without readable warning.',
+                'The loop creates bookkeeping instead of painful tradeoffs.',
+                'Only positive loops exist, causing runaway snowballing.',
+                'Recovery either erases consequences or creates an unrecoverable death spiral.',
+                'The spreadsheet balances while the emotional fantasy disappears.',
+            ],
+            boundary_rules=[
+                'Use this when the game depends on interacting pressures, not one simple currency.',
+                'Only include a variable if it changes player behavior.',
+                'Think in relationships, not isolated meters.',
+                'Prefer a few strong tensions over many decorative subsystems.',
+            ],
+            worked_micro_examples=[
+                (
+                    'Compact pressure-web example',
+                    [
+                        'Fantasy: running a tiny frontier clinic under public scrutiny.',
+                        'Variable web: money funds supplies, trust increases patients, fatigue raises mistake risk, reputation attracts donors and scrutiny.',
+                        'Positive loop: trust brings more patients and funding; negative loop: more patients increase fatigue and public risk.',
+                        'Failure recovery: close early to reduce fatigue, losing trust but preserving long-term stability.',
+                    ],
+                )
+            ],
+            failure_patterns=[
+                ('Decorative Resources', ['Symptom: bars exist but do not change choices.', 'Cause: variables lack player-facing roles.', 'Correction: cut or connect each variable to a decision tension.']),
+                ('No Real Tradeoff', ['Symptom: the player can optimize everything at once.', 'Cause: pressure relationships do not conflict.', 'Correction: add opportunity cost or mutually exclusive responses.']),
+                ('One Dominant Currency', ['Symptom: every variable collapses into the same best resource.', 'Cause: conversion rates erase multidimensional tension.', 'Correction: make at least one pressure non-convertible or costly to convert.']),
+                ('Positive-Loop Runaway', ['Symptom: success removes all hardship.', 'Cause: positive loops lack counterpressure.', 'Correction: add scrutiny, maintenance, decay, or risk.']),
+                ('Punishment Without Agency', ['Symptom: players suffer penalties without recovery choices.', 'Cause: failure is hidden or irreversible.', 'Correction: add early warning and costly recovery tools.']),
+                ('Fantasy-System Mismatch', ['Symptom: math is stable but feels emotionally wrong.', 'Cause: resource pressure contradicts fantasy.', 'Correction: align variables with the intended feeling.']),
+            ],
+            revision_moves=[
+                'If the resource list is bloated, cut variables without player-facing roles.',
+                'If the loop snowballs, add counterpressure tied to success.',
+                'If pressure feels arbitrary, add visible warning before consequences land.',
+            ],
+            output_field_guidance=[
+                ('Variable Web', ['Write resources, sinks, converters, buffers, and signals.', 'Good output names decisions; weak output lists meters.']),
+                ('Core Resources / Pressures', ['Write the player-facing resources and pressures that actually change behavior.', 'Good output filters decorative variables.']),
+                ('Pressure Relationships', ['Write cause, effect, and player-visible signal.', 'Good output shows how variables push against each other.']),
+                ('Primary Decision Tensions', ['Write the recurring sacrifices the player cannot avoid.', 'Good output has at least two viable responses.']),
+                ('Positive Loop', ['Write what compounds and the snowball risk.', 'Good output names how success accelerates.']),
+                ('Negative / Counter Loops', ['Write the brake, cost, decay, or counterpressure that prevents runaway success.', 'Good output creates rhythm without static punishment.']),
+                ('Negative Loop', ['Write the brake, cost, decay, or counterpressure.', 'Good output creates rhythm rather than static punishment.']),
+                ('Failure Recovery', ['Write early warning, recovery action, and lasting consequence.', 'Good output avoids both death spiral and free reset.']),
+                ('Emotional Fantasy', ['Write intended feeling and mismatch to fix.', 'Good output connects math to fantasy.']),
+                ('Design Recommendations', ['Write what to strengthen, simplify, and prototype next.', 'Good output turns the pressure web into a next design move.']),
+            ],
+            quality_check_rubric=[
+                ('Player-Facing Roles', ['Every variable changes a visible choice or signal.']),
+                ('Feedback Balance', ['Positive and negative loops both shape rhythm.']),
+                ('Fantasy Alignment', ['Resource pressure produces the intended feeling, not just balanced numbers.']),
+            ],
         )
     return None
 
@@ -515,17 +726,70 @@ def _render_expert_blueprint_skill_md(
     lines.extend(['', '## Default Workflow', ''])
     for index, (heading, bullets) in enumerate(blueprint.section_plan, start=1):
         lines.extend([f'### {index}. {heading}', ''])
-        for bullet in bullets:
-            lines.append(f'- {bullet}')
+        probe = blueprint.decision_probes[(index - 1) % len(blueprint.decision_probes)] if blueprint.decision_probes else ''
+        output_fragment = (
+            blueprint.workflow_output_fragments[(index - 1) % len(blueprint.workflow_output_fragments)]
+            if blueprint.workflow_output_fragments
+            else ''
+        )
+        failure_signal = (
+            blueprint.workflow_failure_signals[(index - 1) % len(blueprint.workflow_failure_signals)]
+            if blueprint.workflow_failure_signals
+            else ''
+        )
+        if bullets:
+            lines.append(f'- Purpose: {bullets[0]}')
+            lines.append('- Actions:')
+            for bullet in bullets[1:] or bullets[:1]:
+                lines.append(f'  - {bullet}')
+        if probe:
+            lines.append(f'- Decision probe: {probe}')
+        if output_fragment:
+            lines.append(f'- Output fragment: {output_fragment}')
+        if failure_signal:
+            lines.append(f'- Failure signal: {failure_signal}')
         lines.append('')
+
+    if blueprint.boundary_rules:
+        lines.extend(['## Boundary Rules', ''])
+        lines.extend(f'- {item}' for item in blueprint.boundary_rules)
+        lines.append('')
+
+    if blueprint.worked_micro_examples:
+        lines.extend(['## Worked Micro-Examples', ''])
+        for heading, bullets in blueprint.worked_micro_examples:
+            lines.extend([f'### {heading}', ''])
+            for bullet in bullets:
+                lines.append(f'- {bullet}')
+            lines.append('')
+
     lines.extend(['## Output Format', '', '```markdown'])
     for heading, fields in blueprint.output_schema:
         lines.extend([f'## {heading}'])
         for field in fields:
             lines.append(f'- {field}: <fill in>')
         lines.append('')
-    lines.extend(['```', '', '## Quality Checks', ''])
+    lines.extend(['```'])
+
+    if blueprint.output_field_guidance:
+        lines.extend(['', '## Output Field Guidance', ''])
+        for heading, bullets in blueprint.output_field_guidance:
+            lines.extend([f'### {heading}', ''])
+            for bullet in bullets:
+                lines.append(f'- {bullet}')
+            lines.append('')
+
+    lines.extend(['## Quality Checks', ''])
     lines.extend(f'- {item}' for item in blueprint.quality_check_matrix)
+    if blueprint.quality_check_rubric:
+        lines.append('')
+        lines.append('### Quality Check Rubric')
+        lines.append('')
+        for heading, bullets in blueprint.quality_check_rubric:
+            lines.extend([f'#### {heading}', ''])
+            for bullet in bullets:
+                lines.append(f'- {bullet}')
+            lines.append('')
     lines.extend([
         '- The output must use domain-specific section titles and decisions, not only generic planning language.',
         '- Another agent should be able to apply the result without rereading the original prompt.',
@@ -534,7 +798,20 @@ def _render_expert_blueprint_skill_md(
         '',
     ])
     lines.extend(f'- {item}' for item in blueprint.pitfall_taxonomy)
+    if blueprint.failure_patterns:
+        lines.extend(['', '## Common Failure Patterns to Catch', ''])
+        for heading, bullets in blueprint.failure_patterns:
+            lines.extend([f'### {heading}', ''])
+            for bullet in bullets:
+                lines.append(f'- {bullet}')
+            lines.append('')
+    if blueprint.revision_moves:
+        lines.extend(['## Revision Moves', ''])
+        lines.extend(f'- {item}' for item in blueprint.revision_moves)
     lines.extend([
+        '',
+        '## Quality Failure Guardrails',
+        '',
         '- Prompt echo: repeating the request instead of turning it into domain actions.',
         '- False completion: passing shape checks while the expert workflow is still missing.',
     ])

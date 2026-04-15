@@ -23,7 +23,10 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     assert all(item.auto_metrics.self_review_status == 'pass' for item in report.cases)
     assert all(item.auto_metrics.domain_specificity_status == 'pass' for item in report.cases)
     assert all(item.auto_metrics.domain_expertise_status == 'pass' for item in report.cases)
+    assert all(item.auto_metrics.depth_quality_status == 'pass' for item in report.cases)
     assert all(item.auto_metrics.domain_move_coverage >= 0.55 for item in report.cases)
+    assert all(item.auto_metrics.expert_depth_recall >= 0.70 for item in report.cases)
+    assert all(item.auto_metrics.section_depth_score >= 0.65 for item in report.cases)
 
 
 def test_skill_create_comparison_cli_writes_sidecar(tmp_path: Path):
@@ -44,3 +47,4 @@ def test_skill_create_comparison_cli_writes_sidecar(tmp_path: Path):
     payload = json.loads(sidecar.read_text(encoding='utf-8'))
     assert payload['overall_status'] == 'pass'
     assert payload['comparison_independence_status'] == 'golden_only'
+    assert payload['depth_quality_gap_count'] == 0

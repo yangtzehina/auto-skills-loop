@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from .domain_expertise import SkillDomainExpertiseReport
 from .domain_specificity import SkillDomainSpecificityReport
+from .depth_quality import SkillDepthQualityReport
 from .expert_structure import SkillExpertStructureReport
 
 
@@ -38,6 +39,15 @@ class SkillCreateComparisonMetrics(BaseModel):
     generated_vs_generated_heading_overlap: float = 0.0
     generated_vs_generated_line_jaccard: float = 0.0
     generic_skeleton_ratio: float = 0.0
+    depth_quality_status: str = "unknown"
+    expert_depth_recall: float = 0.0
+    section_depth_score: float = 0.0
+    decision_probe_count: int = 0
+    worked_example_count: int = 0
+    failure_pattern_density: int = 0
+    output_field_guidance_coverage: float = 0.0
+    boundary_rule_coverage: float = 0.0
+    depth_gap_count: int = 0
     fully_correct: bool = False
     severity: str = ""
 
@@ -53,6 +63,7 @@ class SkillCreateComparisonCaseResult(BaseModel):
     domain_specificity: SkillDomainSpecificityReport | None = None
     domain_expertise: SkillDomainExpertiseReport | None = None
     expert_structure: SkillExpertStructureReport | None = None
+    depth_quality: SkillDepthQualityReport | None = None
     gap_issues: list[str] = Field(default_factory=list)
     status: str = "matched"
     summary: str = ""
@@ -73,6 +84,7 @@ class SkillCreateComparisonReport(BaseModel):
     anthropic_reference_metrics: SkillCreateComparisonMetrics | None = None
     anthropic_reference_summary: list[str] = Field(default_factory=list)
     expert_structure_gap_count: int = 0
+    depth_quality_gap_count: int = 0
     generic_shell_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
     gap_count: int = 0

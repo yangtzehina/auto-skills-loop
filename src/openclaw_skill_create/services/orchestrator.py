@@ -23,6 +23,7 @@ from .online_discovery import (
 from .operation_coverage import build_operation_coverage_report
 from .persistence import (
     artifacts_with_body_quality,
+    artifacts_with_depth_quality,
     artifacts_with_domain_expertise,
     artifacts_with_domain_specificity,
     artifacts_with_evaluation_report,
@@ -110,6 +111,12 @@ BLOCKING_REPAIRABLE_ISSUES = {
     "generic_expert_skeleton",
     "high_generated_heading_overlap",
     "high_generated_line_jaccard",
+    "shallow_workflow_steps",
+    "missing_decision_probes",
+    "weak_output_field_guidance",
+    "thin_failure_patterns",
+    "missing_worked_examples",
+    "low_expert_depth_recall",
 }
 
 
@@ -575,6 +582,11 @@ def run_skill_create(
             expert_structure=getattr(diagnostics, "expert_structure", None),
             policy=effective_persistence_policy,
         )
+        artifacts = artifacts_with_depth_quality(
+            artifacts=artifacts,
+            depth_quality=getattr(diagnostics, "depth_quality", None),
+            policy=effective_persistence_policy,
+        )
 
     if artifacts is not None and diagnostics is not None:
         artifacts = artifacts_with_body_quality(
@@ -600,6 +612,11 @@ def run_skill_create(
         artifacts = artifacts_with_expert_structure(
             artifacts=artifacts,
             expert_structure=getattr(diagnostics, "expert_structure", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_depth_quality(
+            artifacts=artifacts,
+            depth_quality=getattr(diagnostics, "depth_quality", None),
             policy=effective_persistence_policy,
         )
         operation_coverage = None

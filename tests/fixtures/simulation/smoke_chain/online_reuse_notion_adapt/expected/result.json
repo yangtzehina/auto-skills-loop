@@ -10,6 +10,7 @@
     "agents/openai.yaml",
     "evals/benchmark.json",
     "evals/body_quality.json",
+    "evals/depth_quality.json",
     "evals/domain_expertise.json",
     "evals/domain_specificity.json",
     "evals/expert_structure.json",

@@ -375,6 +375,12 @@ def run_repair(
             'generic_expert_skeleton',
             'high_generated_heading_overlap',
             'high_generated_line_jaccard',
+            'shallow_workflow_steps',
+            'missing_decision_probes',
+            'weak_output_field_guidance',
+            'thin_failure_patterns',
+            'missing_worked_examples',
+            'low_expert_depth_recall',
         }
         if body_issue_types & set(repairable_issue_types):
             changed = _repair_methodology_body(

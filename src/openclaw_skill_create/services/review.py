@@ -6,6 +6,7 @@ from ..models.artifacts import ArtifactFile, Artifacts
 from ..models.requirements import SkillRequirement
 from ..models.review import RepairSuggestion, RequirementResult, SkillQualityReview
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
+from .depth_quality import build_skill_depth_quality_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
 from .expert_structure import build_skill_expert_structure_report
@@ -271,6 +272,34 @@ def _expert_structure_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
     return suggestions
 
 
+def _depth_quality_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
+    if diagnostics is None:
+        return []
+    depth_quality = getattr(diagnostics, 'depth_quality', None)
+    suggestions: list[RepairSuggestion] = []
+    for issue in list(getattr(depth_quality, 'blocking_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Rewrite SKILL.md so workflow steps include probes, output guidance, failure signals, examples, and expert depth: {issue}',
+                target_paths=['SKILL.md'],
+                priority=101,
+                repair_scope='body_patch',
+            )
+        )
+    for issue in list(getattr(depth_quality, 'warning_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Strengthen methodology depth before treating this skill as release-ready: {issue}',
+                target_paths=['SKILL.md'],
+                priority=86,
+                repair_scope='body_patch',
+            )
+        )
+    return suggestions
+
+
 def _security_summary(diagnostics: Any) -> tuple[str | None, int, list[str]]:
     security_audit = getattr(diagnostics, 'security_audit', None) if diagnostics is not None else None
     if security_audit is None:
@@ -329,6 +358,7 @@ def run_skill_quality_review(
         + _domain_specificity_suggestions(diagnostics)
         + _domain_expertise_suggestions(diagnostics)
         + _expert_structure_suggestions(diagnostics)
+        + _depth_quality_suggestions(diagnostics)
     )
 
     missing_evidence = sorted(
@@ -352,6 +382,7 @@ def run_skill_quality_review(
     domain_specificity = getattr(diagnostics, 'domain_specificity', None) if diagnostics is not None else None
     domain_expertise = getattr(diagnostics, 'domain_expertise', None) if diagnostics is not None else None
     expert_structure = getattr(diagnostics, 'expert_structure', None) if diagnostics is not None else None
+    depth_quality = getattr(diagnostics, 'depth_quality', None) if diagnostics is not None else None
     if body_quality is None:
         request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
         body_quality = build_skill_body_quality_report(
@@ -388,6 +419,13 @@ def run_skill_quality_review(
             skill_plan=skill_plan,
             artifacts=artifacts,
         )
+    if depth_quality is None:
+        request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
+        depth_quality = build_skill_depth_quality_report(
+            request=request_proxy,
+            skill_plan=skill_plan,
+            artifacts=artifacts,
+        )
     body_quality_status = str(getattr(body_quality, 'status', 'not_applicable') or 'not_applicable')
     body_quality_passed = bool(getattr(body_quality, 'passed', True)) if body_quality is not None else True
     body_quality_issues = list(getattr(body_quality, 'issues', []) or []) if body_quality is not None else []
@@ -415,6 +453,14 @@ def run_skill_quality_review(
         list(getattr(expert_structure, 'blocking_issues', []) or [])
         + list(getattr(expert_structure, 'warning_issues', []) or [])
         if expert_structure is not None
+        else []
+    )
+    depth_quality_status = str(getattr(depth_quality, 'status', 'not_applicable') or 'not_applicable')
+    depth_quality_passed = depth_quality_status in {'not_applicable', 'pass'}
+    depth_quality_issues = (
+        list(getattr(depth_quality, 'blocking_issues', []) or [])
+        + list(getattr(depth_quality, 'warning_issues', []) or [])
+        if depth_quality is not None
         else []
     )
     skill_archetype = str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower()
@@ -448,6 +494,7 @@ def run_skill_quality_review(
         and domain_specificity_passed
         and domain_expertise_passed
         and expert_structure_passed
+        and depth_quality_passed
         and requirement_score >= 0.99
         and (evaluation_score >= 0.75 if evaluation_report is not None else True)
     )
@@ -480,6 +527,9 @@ def run_skill_quality_review(
     if expert_structure is not None:
         summary.append(f"expert_structure_status={expert_structure_status}")
         summary.append(f"expert_structure_issues={','.join(expert_structure_issues[:6]) or 'none'}")
+    if depth_quality is not None:
+        summary.append(f"depth_quality_status={depth_quality_status}")
+        summary.append(f"depth_quality_issues={','.join(depth_quality_issues[:6]) or 'none'}")
     if skill_archetype == 'operation_backed':
         summary.append(f"skill_archetype={skill_archetype}")
         summary.append(f"operation_count={operation_count}")
@@ -512,5 +562,7 @@ def run_skill_quality_review(
         domain_expertise_issues=domain_expertise_issues,
         expert_structure_status=expert_structure_status,
         expert_structure_issues=expert_structure_issues,
+        depth_quality_status=depth_quality_status,
+        depth_quality_issues=depth_quality_issues,
         summary=summary,
     )

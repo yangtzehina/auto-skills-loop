@@ -36,6 +36,10 @@ class VerifyReport(BaseModel):
     expert_structure_fail_count: int = 0
     expert_structure_warn_count: int = 0
     expert_structure_gap_count: int = 0
+    depth_quality_status: str = 'pass'
+    depth_quality_fail_count: int = 0
+    depth_quality_warn_count: int = 0
+    depth_quality_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
     hermes_comparison_gap_count: int = 0
     skill_create_comparison_report: SkillCreateComparisonReport | None = None
@@ -78,6 +82,10 @@ class OpsRoundbookReport(BaseModel):
     expert_structure_fail_count: int = 0
     expert_structure_warn_count: int = 0
     expert_structure_gap_count: int = 0
+    depth_quality_status: str = 'pass'
+    depth_quality_fail_count: int = 0
+    depth_quality_warn_count: int = 0
+    depth_quality_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
     hermes_comparison_gap_count: int = 0
     overall_readiness: str = 'ready'

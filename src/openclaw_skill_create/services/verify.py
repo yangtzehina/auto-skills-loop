@@ -59,6 +59,10 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- expert_structure_fail_count={report.expert_structure_fail_count}',
         f'- expert_structure_warn_count={report.expert_structure_warn_count}',
         f'- expert_structure_gap_count={report.expert_structure_gap_count}',
+        f'- depth_quality_status={report.depth_quality_status}',
+        f'- depth_quality_fail_count={report.depth_quality_fail_count}',
+        f'- depth_quality_warn_count={report.depth_quality_warn_count}',
+        f'- depth_quality_gap_count={report.depth_quality_gap_count}',
         f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
         f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}',
@@ -142,6 +146,15 @@ def build_verify_report(
             else 'pass'
         )
     )
+    depth_quality_status = (
+        'fail'
+        if any(item.auto_metrics.depth_quality_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.depth_quality_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
     report = VerifyReport(
         mode=mode,
         include_live_curation=include_live_curation,
@@ -189,6 +202,18 @@ def build_verify_report(
             if item.auto_metrics.expert_structure_status == 'warn'
         ),
         expert_structure_gap_count=int(comparison_report.expert_structure_gap_count or 0),
+        depth_quality_status=depth_quality_status,
+        depth_quality_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.depth_quality_status == 'fail'
+        ),
+        depth_quality_warn_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.depth_quality_status == 'warn'
+        ),
+        depth_quality_gap_count=int(comparison_report.depth_quality_gap_count or 0),
         pairwise_similarity_gap_count=int(comparison_report.pairwise_similarity_gap_count or 0),
         generic_shell_gap_count=sum(
             1
@@ -207,6 +232,7 @@ def build_verify_report(
             f'domain_specificity={domain_specificity_status} '
             f'domain_expertise={domain_expertise_status} '
             f'expert_structure={expert_structure_status} '
+            f'depth_quality={depth_quality_status} '
             f'hermes_comparison_gaps={comparison_report.gap_count}'
         ),
     )
@@ -299,6 +325,10 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- expert_structure_fail_count={report.expert_structure_fail_count}')
     lines.append(f'- expert_structure_warn_count={report.expert_structure_warn_count}')
     lines.append(f'- expert_structure_gap_count={report.expert_structure_gap_count}')
+    lines.append(f'- depth_quality_status={report.depth_quality_status}')
+    lines.append(f'- depth_quality_fail_count={report.depth_quality_fail_count}')
+    lines.append(f'- depth_quality_warn_count={report.depth_quality_warn_count}')
+    lines.append(f'- depth_quality_gap_count={report.depth_quality_gap_count}')
     lines.append(f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}')
     lines.append(f'- generic_shell_gap_count={report.generic_shell_gap_count}')
     lines.append(f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}')
@@ -462,6 +492,10 @@ def build_ops_roundbook_report(
         expert_structure_fail_count=verify_report.expert_structure_fail_count,
         expert_structure_warn_count=verify_report.expert_structure_warn_count,
         expert_structure_gap_count=verify_report.expert_structure_gap_count,
+        depth_quality_status=verify_report.depth_quality_status,
+        depth_quality_fail_count=verify_report.depth_quality_fail_count,
+        depth_quality_warn_count=verify_report.depth_quality_warn_count,
+        depth_quality_gap_count=verify_report.depth_quality_gap_count,
         pairwise_similarity_gap_count=verify_report.pairwise_similarity_gap_count,
         generic_shell_gap_count=verify_report.generic_shell_gap_count,
         hermes_comparison_gap_count=verify_report.hermes_comparison_gap_count,
@@ -477,6 +511,7 @@ def build_ops_roundbook_report(
             f'operation_backed_hold={len(operation_backed_backlog_report.hold_candidates)} '
             f'domain_expertise={verify_report.domain_expertise_status} '
             f'expert_structure={verify_report.expert_structure_status} '
+            f'depth_quality={verify_report.depth_quality_status} '
             f'overall_readiness={overall_readiness} '
             f'next_create_seed={next_create_seed_candidate or "none"} '
             f'next_prior_hold={next_prior_family_on_hold or "none"}'

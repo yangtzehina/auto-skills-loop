@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 from ..models.artifacts import ArtifactFile, Artifacts
 from ..models.body_quality import SkillBodyQualityReport, SkillSelfReviewReport
+from ..models.depth_quality import SkillDepthQualityReport
 from ..models.domain_expertise import SkillDomainExpertiseReport
 from ..models.domain_specificity import SkillDomainSpecificityReport
 from ..models.expert_structure import SkillExpertStructureReport
@@ -33,6 +34,7 @@ SELF_REVIEW_REPORT_PATH = 'evals/self_review.json'
 DOMAIN_SPECIFICITY_REPORT_PATH = 'evals/domain_specificity.json'
 DOMAIN_EXPERTISE_REPORT_PATH = 'evals/domain_expertise.json'
 EXPERT_STRUCTURE_REPORT_PATH = 'evals/expert_structure.json'
+DEPTH_QUALITY_REPORT_PATH = 'evals/depth_quality.json'
 SECURITY_AUDIT_REPORT_PATH = 'evals/security_audit.json'
 OPERATION_COVERAGE_REPORT_PATH = 'evals/operation_coverage.json'
 
@@ -261,6 +263,32 @@ def artifacts_with_expert_structure(
     return Artifacts(files=files)
 
 
+def artifacts_with_depth_quality(
+    *,
+    artifacts: Artifacts,
+    depth_quality: Optional[SkillDepthQualityReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if depth_quality is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=DEPTH_QUALITY_REPORT_PATH,
+        content=json.dumps(depth_quality.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['depth_quality'],
+        status='new',
+    )
+
+    files = [file for file in artifacts.files if file.path != DEPTH_QUALITY_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
 def artifacts_with_security_audit(
     *,
     artifacts: Artifacts,
@@ -404,6 +432,11 @@ def persist_artifacts(
         'expert_structure_path': (
             str(target_dir / EXPERT_STRUCTURE_REPORT_PATH)
             if EXPERT_STRUCTURE_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'depth_quality_path': (
+            str(target_dir / DEPTH_QUALITY_REPORT_PATH)
+            if DEPTH_QUALITY_REPORT_PATH in artifact_paths(artifacts)
             else None
         ),
         'security_audit_path': (

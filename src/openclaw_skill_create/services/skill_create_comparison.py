@@ -18,6 +18,7 @@ from ..models.persistence import PersistencePolicy
 from ..models.plan import PlannedFile, SkillPlan
 from ..models.request import SkillCreateRequestV6
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
+from .depth_quality import build_skill_depth_quality_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
 from .expert_structure import build_skill_expert_structure_report
@@ -26,6 +27,7 @@ from .orchestrator import run_skill_create
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_COMPARISON_GOLDEN_ROOT = ROOT / 'tests' / 'fixtures' / 'methodology_guidance' / 'golden'
+DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT = ROOT / 'tests' / 'fixtures' / 'methodology_guidance' / 'expert_depth_golden'
 
 
 def _default_hermes_wrappers() -> list[Path]:
@@ -107,9 +109,11 @@ def _metrics_from_reports(
     domain_specificity=None,
     domain_expertise=None,
     expert_structure=None,
+    depth_quality=None,
     severity: str = '',
     fully_correct: bool = False,
 ) -> SkillCreateComparisonMetrics:
+    depth_blocking_count = len(list(getattr(depth_quality, 'blocking_issues', []) or []))
     return SkillCreateComparisonMetrics(
         body_lines=int(getattr(body_quality, 'body_lines', 0) or 0),
         body_chars=int(getattr(body_quality, 'body_chars', 0) or 0),
@@ -140,12 +144,21 @@ def _metrics_from_reports(
         generated_vs_generated_heading_overlap=float(getattr(expert_structure, 'generated_vs_generated_heading_overlap', 0.0) or 0.0),
         generated_vs_generated_line_jaccard=float(getattr(expert_structure, 'generated_vs_generated_line_jaccard', 0.0) or 0.0),
         generic_skeleton_ratio=float(getattr(expert_structure, 'generic_skeleton_ratio', 0.0) or 0.0),
+        depth_quality_status=str(getattr(depth_quality, 'status', 'unknown') or 'unknown'),
+        expert_depth_recall=float(getattr(depth_quality, 'expert_depth_recall', 0.0) or 0.0),
+        section_depth_score=float(getattr(depth_quality, 'section_depth_score', 0.0) or 0.0),
+        decision_probe_count=int(getattr(depth_quality, 'decision_probe_count', 0) or 0),
+        worked_example_count=int(getattr(depth_quality, 'worked_example_count', 0) or 0),
+        failure_pattern_density=int(getattr(depth_quality, 'failure_pattern_density', 0) or 0),
+        output_field_guidance_coverage=float(getattr(depth_quality, 'output_field_guidance_coverage', 0.0) or 0.0),
+        boundary_rule_coverage=float(getattr(depth_quality, 'boundary_rule_coverage', 0.0) or 0.0),
+        depth_gap_count=depth_blocking_count,
         fully_correct=bool(fully_correct),
         severity=str(severity or ''),
     )
 
 
-def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any]:
+def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any]:
     request = _request(case)
     plan = _plan(case)
     artifacts = _artifact_skill_md(content)
@@ -171,6 +184,11 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         skill_plan=plan,
         artifacts=artifacts,
     )
+    depth_quality = build_skill_depth_quality_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+    )
     return (
         _metrics_from_reports(
             body_quality=body_quality,
@@ -178,6 +196,7 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
             domain_specificity=domain_specificity,
             domain_expertise=domain_expertise,
             expert_structure=expert_structure,
+            depth_quality=depth_quality,
             severity='reference',
             fully_correct=(
                 body_quality.passed
@@ -185,6 +204,7 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
                 and domain_specificity.status == 'pass'
                 and domain_expertise.status == 'pass'
                 and expert_structure.status == 'pass'
+                and depth_quality.status == 'pass'
             ),
         ),
         body_quality,
@@ -192,10 +212,11 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         domain_specificity,
         domain_expertise,
         expert_structure,
+        depth_quality,
     )
 
 
-def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, str]:
+def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, str]:
     with tempfile.TemporaryDirectory(prefix='auto-skills-loop-comparison-') as tmpdir:
         response = run_skill_create(
             _request(case),
@@ -212,6 +233,7 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
     domain_specificity = getattr(response.diagnostics, 'domain_specificity', None) if response.diagnostics is not None else None
     domain_expertise = getattr(response.diagnostics, 'domain_expertise', None) if response.diagnostics is not None else None
     expert_structure = getattr(response.diagnostics, 'expert_structure', None) if response.diagnostics is not None else None
+    depth_quality = getattr(response.diagnostics, 'depth_quality', None) if response.diagnostics is not None else None
     return (
         _metrics_from_reports(
             body_quality=body_quality,
@@ -219,6 +241,7 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
             domain_specificity=domain_specificity,
             domain_expertise=domain_expertise,
             expert_structure=expert_structure,
+            depth_quality=depth_quality,
             severity=response.severity,
             fully_correct=bool(getattr(response.quality_review, 'fully_correct', False)),
         ),
@@ -227,6 +250,7 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
         domain_specificity,
         domain_expertise,
         expert_structure,
+        depth_quality,
         _skill_md_content(response.artifacts),
     )
 
@@ -287,7 +311,7 @@ def _run_hermes_case(case: dict[str, str], wrapper: Path) -> tuple[SkillCreateCo
         skill_md = generated_root / 'SKILL.md'
         if not skill_md.exists():
             return None, f'Hermes wrapper did not write SKILL.md under {generated_root}'
-        metrics, _, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
+        metrics, _, _, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
         metrics.severity = str(payload.get('severity') or '')
         return metrics, None
 
@@ -403,6 +427,8 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_domain_expertise_not_pass')
     if auto.expert_structure_status != 'pass':
         issues.append('auto_expert_structure_not_pass')
+    if auto.depth_quality_status != 'pass':
+        issues.append('auto_depth_quality_not_pass')
     if auto.expert_action_cluster_recall < 0.75 and reference.expert_action_cluster_recall >= 0.75:
         issues.append('auto_expert_action_clusters_missing')
     if auto.expert_output_field_recall < 0.70 and reference.expert_output_field_recall >= 0.70:
@@ -411,6 +437,16 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_expert_headings_missing')
     if auto.expert_quality_check_recall < 0.70 and reference.expert_quality_check_recall >= 0.70:
         issues.append('auto_expert_quality_checks_missing')
+    if auto.expert_depth_recall < 0.70 and reference.expert_depth_recall >= 0.70:
+        issues.append('auto_expert_depth_recall_low')
+    if auto.section_depth_score < 0.65 and reference.section_depth_score >= 0.65:
+        issues.append('auto_section_depth_score_low')
+    if auto.output_field_guidance_coverage < 0.70 and reference.output_field_guidance_coverage >= 0.70:
+        issues.append('auto_output_field_guidance_weak')
+    if auto.worked_example_count < 1 and reference.worked_example_count >= 1:
+        issues.append('auto_worked_examples_missing')
+    if auto.failure_pattern_density < 4 and reference.failure_pattern_density >= 4:
+        issues.append('auto_failure_patterns_thin')
     if auto.generated_vs_generated_heading_overlap >= 0.80:
         issues.append('auto_generated_heading_overlap_high')
     if auto.generated_vs_generated_line_jaccard >= 0.42:
@@ -434,7 +470,7 @@ def _anthropic_reference_metrics() -> tuple[SkillCreateComparisonMetrics | None,
             'skill_name': 'skill-creator',
             'task': 'Create and iteratively improve skills with evals, baseline comparisons, qualitative review, and quantitative benchmarks.',
         }
-        metrics, _, _, _, _, _ = _metrics_from_markdown(case, content)
+        metrics, _, _, _, _, _, _ = _metrics_from_markdown(case, content)
         summary = [
             'Anthropic skill-creator reference available',
             f'body_lines={metrics.body_lines}',
@@ -459,6 +495,7 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         f'- reference_role={report.reference_role}',
         f'- anthropic_reference_available={report.anthropic_reference_available}',
         f'- expert_structure_gap_count={report.expert_structure_gap_count}',
+        f'- depth_quality_gap_count={report.depth_quality_gap_count}',
         f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
         f'- Summary: {report.summary}',
@@ -480,6 +517,13 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_expert_output_field_recall={case.auto_metrics.expert_output_field_recall:.2f}')
         lines.append(f'- auto_expert_pitfall_cluster_recall={case.auto_metrics.expert_pitfall_cluster_recall:.2f}')
         lines.append(f'- auto_expert_quality_check_recall={case.auto_metrics.expert_quality_check_recall:.2f}')
+        lines.append(f'- auto_depth_quality={case.auto_metrics.depth_quality_status}')
+        lines.append(f'- auto_expert_depth_recall={case.auto_metrics.expert_depth_recall:.2f}')
+        lines.append(f'- auto_section_depth_score={case.auto_metrics.section_depth_score:.2f}')
+        lines.append(f'- auto_decision_probe_count={case.auto_metrics.decision_probe_count}')
+        lines.append(f'- auto_worked_example_count={case.auto_metrics.worked_example_count}')
+        lines.append(f'- auto_failure_pattern_density={case.auto_metrics.failure_pattern_density}')
+        lines.append(f'- auto_output_field_guidance_coverage={case.auto_metrics.output_field_guidance_coverage:.2f}')
         lines.append(f'- auto_generated_heading_overlap={case.auto_metrics.generated_vs_generated_heading_overlap:.2f}')
         lines.append(f'- auto_generated_line_jaccard={case.auto_metrics.generated_vs_generated_line_jaccard:.2f}')
         lines.append(f'- auto_generic_skeleton_ratio={case.auto_metrics.generic_skeleton_ratio:.2f}')
@@ -517,8 +561,9 @@ def build_skill_create_comparison_report(
     hermes_errors: list[str] = []
     case_payloads: list[dict[str, Any]] = []
     for case in COMPARISON_CASES:
-        auto_metrics, body_quality, self_review, domain_specificity, domain_expertise, expert_structure, auto_content = _run_auto_case(case)
-        golden_metrics, _, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, root))
+        auto_metrics, body_quality, self_review, domain_specificity, domain_expertise, expert_structure, depth_quality, auto_content = _run_auto_case(case)
+        reference_root = DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT if DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT.exists() else root
+        golden_metrics, _, _, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, reference_root))
         hermes_metrics = None
         if hermes_wrapper is not None:
             hermes_metrics, error = _run_hermes_case(case, hermes_wrapper)
@@ -535,6 +580,7 @@ def build_skill_create_comparison_report(
                 'domain_specificity': domain_specificity,
                 'domain_expertise': domain_expertise,
                 'expert_structure': expert_structure,
+                'depth_quality': depth_quality,
                 'auto_content': auto_content,
             }
         )
@@ -625,6 +671,7 @@ def build_skill_create_comparison_report(
                 domain_specificity=payload['domain_specificity'],
                 domain_expertise=payload['domain_expertise'],
                 expert_structure=payload['expert_structure'],
+                depth_quality=payload['depth_quality'],
                 gap_issues=gap_issues,
                 status=status,
                 summary=f'{case["case_id"]}: {status}',
@@ -636,6 +683,23 @@ def build_skill_create_comparison_report(
         for item in cases
         if any(issue.startswith('auto_expert_') for issue in list(item.gap_issues or []))
         or item.auto_metrics.expert_structure_status != 'pass'
+    )
+    depth_quality_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue
+            in {
+                'auto_depth_quality_not_pass',
+                'auto_expert_depth_recall_low',
+                'auto_section_depth_score_low',
+                'auto_output_field_guidance_weak',
+                'auto_worked_examples_missing',
+                'auto_failure_patterns_thin',
+            }
+            for issue in list(item.gap_issues or [])
+        )
+        or item.auto_metrics.depth_quality_status != 'pass'
     )
     generic_shell_gap_count = sum(
         1
@@ -665,6 +729,7 @@ def build_skill_create_comparison_report(
         anthropic_reference_metrics=anthropic_metrics,
         anthropic_reference_summary=anthropic_summary,
         expert_structure_gap_count=expert_structure_gap_count,
+        depth_quality_gap_count=depth_quality_gap_count,
         generic_shell_gap_count=generic_shell_gap_count,
         pairwise_similarity_gap_count=pairwise_similarity_gap_count,
         gap_count=gap_count,

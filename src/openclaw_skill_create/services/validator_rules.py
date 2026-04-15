@@ -10,6 +10,7 @@ from ..models.plan import SkillPlan
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
+from .depth_quality import build_skill_depth_quality_report
 from .expert_structure import build_skill_expert_structure_report
 
 
@@ -569,6 +570,17 @@ def classify_validation_issues(validation: ValidationResult) -> tuple[list[str],
             ):
                 if issue_type in item:
                     repairable.append(issue_type)
+        if item.startswith('Depth quality failed:'):
+            for issue_type in (
+                'shallow_workflow_steps',
+                'missing_decision_probes',
+                'weak_output_field_guidance',
+                'thin_failure_patterns',
+                'missing_worked_examples',
+                'low_expert_depth_recall',
+            ):
+                if issue_type in item:
+                    repairable.append(issue_type)
     if validation.unsupported_claims_found:
         non_repairable.append('unsupported_claims')
 
@@ -713,6 +725,11 @@ def run_rule_validation(
         skill_plan=skill_plan,
         artifacts=artifacts,
     )
+    depth_quality = build_skill_depth_quality_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+    )
     for issue in list(body_quality.blocking_issues or []):
         validation.summary.append(f'Body quality failed: {issue}')
     for issue in list(self_review.blocking_issues or []):
@@ -729,6 +746,10 @@ def run_rule_validation(
         validation.summary.append(f'Expert structure failed: {issue}')
     for issue in list(expert_structure.warning_issues or []):
         validation.summary.append(f'Expert structure warning: {issue}')
+    for issue in list(depth_quality.blocking_issues or []):
+        validation.summary.append(f'Depth quality failed: {issue}')
+    for issue in list(depth_quality.warning_issues or []):
+        validation.summary.append(f'Depth quality warning: {issue}')
 
     pattern_summary, pattern_notes = run_pattern_validator_checks(
         extracted_patterns=extracted_patterns,
@@ -773,6 +794,7 @@ def run_rule_validation(
     notes.extend(list(domain_specificity.summary or []))
     notes.extend(list(domain_expertise.summary or []))
     notes.extend(list(expert_structure.summary or []))
+    notes.extend(list(depth_quality.summary or []))
 
     return Diagnostics(
         warnings=list(validation.summary),
@@ -783,6 +805,7 @@ def run_rule_validation(
         domain_specificity=domain_specificity,
         domain_expertise=domain_expertise,
         expert_structure=expert_structure,
+        depth_quality=depth_quality,
         notes=notes,
     )
 

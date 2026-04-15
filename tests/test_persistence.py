@@ -4,15 +4,18 @@ from pathlib import Path
 
 from openclaw_skill_create.models.artifacts import ArtifactFile, Artifacts
 from openclaw_skill_create.models.evaluation import EvaluationRunReport
+from openclaw_skill_create.models.depth_quality import SkillDepthQualityReport
 from openclaw_skill_create.models.persistence import PersistencePolicy
 from openclaw_skill_create.models.plan import PlannedFile, SkillPlan
 from openclaw_skill_create.models.review import SkillQualityReview
 from openclaw_skill_create.models.security import SecurityAuditFinding, SecurityAuditReport
 from openclaw_skill_create.services.persistence import (
     EVALUATION_REPORT_PATH,
+    DEPTH_QUALITY_REPORT_PATH,
     QUALITY_REVIEW_PATH,
     SECURITY_AUDIT_REPORT_PATH,
     artifacts_with_evaluation_report,
+    artifacts_with_depth_quality,
     artifacts_with_quality_review,
     artifacts_with_security_audit,
     persist_artifacts,
@@ -168,3 +171,22 @@ def test_artifacts_with_security_audit_adds_security_report_file():
     assert security_audit.content_type == 'application/json'
     assert '"rating": "HIGH"' in security_audit.content
     assert '"trust_tier": 5' in security_audit.content
+
+
+def test_artifacts_with_depth_quality_adds_depth_report_file():
+    artifacts = artifacts_with_depth_quality(
+        artifacts=make_artifacts(),
+        depth_quality=SkillDepthQualityReport(
+            skill_name='demo-skill',
+            skill_archetype='methodology_guidance',
+            status='pass',
+            expert_depth_recall=0.84,
+            section_depth_score=0.76,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    depth_quality = next(file for file in artifacts.files if file.path == DEPTH_QUALITY_REPORT_PATH)
+    assert depth_quality.content_type == 'application/json'
+    assert '"skill_name": "demo-skill"' in depth_quality.content
+    assert '"expert_depth_recall": 0.84' in depth_quality.content

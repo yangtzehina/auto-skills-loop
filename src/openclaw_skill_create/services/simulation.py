@@ -283,6 +283,9 @@ def _validate_methodology_guidance_projection(payload: Any) -> dict[str, Any]:
             'expert_structure_status',
             'expert_structure_min_met',
             'expert_structure_warn_count',
+            'depth_quality_status',
+            'depth_quality_min_met',
+            'depth_quality_warn_count',
             'body_lines_min_met',
             'required_sections_missing',
             'generated_files_contains_sidecars',
@@ -709,6 +712,7 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
         domain_specificity = getattr(response.diagnostics, 'domain_specificity', None) if response.diagnostics is not None else None
         domain_expertise = getattr(response.diagnostics, 'domain_expertise', None) if response.diagnostics is not None else None
         expert_structure = getattr(response.diagnostics, 'expert_structure', None) if response.diagnostics is not None else None
+        depth_quality = getattr(response.diagnostics, 'depth_quality', None) if response.diagnostics is not None else None
         generated_files = sorted(item.path for item in list(response.artifacts.files or [])) if response.artifacts is not None else []
         return {
             'severity': response.severity,
@@ -728,6 +732,12 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
                 or str(getattr(expert_structure, 'status', '') or '') == 'warn'
             ),
             'expert_structure_warn_count': len(list(getattr(expert_structure, 'warning_issues', []) or [])),
+            'depth_quality_status': str(getattr(depth_quality, 'status', '') or ''),
+            'depth_quality_min_met': (
+                str(getattr(depth_quality, 'status', '') or '') == 'pass'
+                or str(getattr(depth_quality, 'status', '') or '') == 'warn'
+            ),
+            'depth_quality_warn_count': len(list(getattr(depth_quality, 'warning_issues', []) or [])),
             'body_lines_min_met': int(getattr(body_quality, 'body_lines', 0) or 0) >= 35,
             'required_sections_missing': list(getattr(body_quality, 'missing_required_sections', []) or []),
             'generated_files_contains_sidecars': (
@@ -736,6 +746,7 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
                 and 'evals/domain_specificity.json' in generated_files
                 and 'evals/domain_expertise.json' in generated_files
                 and 'evals/expert_structure.json' in generated_files
+                and 'evals/depth_quality.json' in generated_files
             ),
         }
 

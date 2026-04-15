@@ -13,6 +13,9 @@
   "expert_structure_status": "pass",
   "expert_structure_min_met": true,
   "expert_structure_warn_count": 0,
+  "depth_quality_status": "pass",
+  "depth_quality_min_met": true,
+  "depth_quality_warn_count": 0,
   "body_lines_min_met": true,
   "required_sections_missing": [],
   "generated_files_contains_sidecars": true
