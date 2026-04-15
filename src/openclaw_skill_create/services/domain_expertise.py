@@ -18,6 +18,7 @@ from .domain_specificity import (
 
 ACTION_MARKERS = (
     "audit",
+    "align",
     "choose",
     "check",
     "compare",
@@ -28,6 +29,7 @@ ACTION_MARKERS = (
     "explain",
     "frame",
     "identify",
+    "include",
     "list",
     "make",
     "map",

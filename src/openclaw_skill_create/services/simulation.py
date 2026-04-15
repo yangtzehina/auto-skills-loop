@@ -286,6 +286,15 @@ def _validate_methodology_guidance_projection(payload: Any) -> dict[str, Any]:
             'depth_quality_status',
             'depth_quality_min_met',
             'depth_quality_warn_count',
+            'editorial_quality_status',
+            'editorial_quality_min_met',
+            'editorial_quality_warn_count',
+            'style_diversity_status',
+            'style_diversity_min_met',
+            'style_diversity_warn_count',
+            'move_quality_status',
+            'move_quality_min_met',
+            'move_quality_warn_count',
             'body_lines_min_met',
             'required_sections_missing',
             'generated_files_contains_sidecars',
@@ -713,6 +722,9 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
         domain_expertise = getattr(response.diagnostics, 'domain_expertise', None) if response.diagnostics is not None else None
         expert_structure = getattr(response.diagnostics, 'expert_structure', None) if response.diagnostics is not None else None
         depth_quality = getattr(response.diagnostics, 'depth_quality', None) if response.diagnostics is not None else None
+        editorial_quality = getattr(response.diagnostics, 'editorial_quality', None) if response.diagnostics is not None else None
+        style_diversity = getattr(response.diagnostics, 'style_diversity', None) if response.diagnostics is not None else None
+        move_quality = getattr(response.diagnostics, 'move_quality', None) if response.diagnostics is not None else None
         generated_files = sorted(item.path for item in list(response.artifacts.files or [])) if response.artifacts is not None else []
         return {
             'severity': response.severity,
@@ -738,6 +750,24 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
                 or str(getattr(depth_quality, 'status', '') or '') == 'warn'
             ),
             'depth_quality_warn_count': len(list(getattr(depth_quality, 'warning_issues', []) or [])),
+            'editorial_quality_status': str(getattr(editorial_quality, 'status', '') or ''),
+            'editorial_quality_min_met': (
+                str(getattr(editorial_quality, 'status', '') or '') == 'pass'
+                or str(getattr(editorial_quality, 'status', '') or '') == 'warn'
+            ),
+            'editorial_quality_warn_count': len(list(getattr(editorial_quality, 'warning_issues', []) or [])),
+            'style_diversity_status': str(getattr(style_diversity, 'status', '') or ''),
+            'style_diversity_min_met': (
+                str(getattr(style_diversity, 'status', '') or '') == 'pass'
+                or str(getattr(style_diversity, 'status', '') or '') == 'warn'
+            ),
+            'style_diversity_warn_count': len(list(getattr(style_diversity, 'warning_issues', []) or [])),
+            'move_quality_status': str(getattr(move_quality, 'status', '') or ''),
+            'move_quality_min_met': (
+                str(getattr(move_quality, 'status', '') or '') == 'pass'
+                or str(getattr(move_quality, 'status', '') or '') == 'warn'
+            ),
+            'move_quality_warn_count': len(list(getattr(move_quality, 'warning_issues', []) or [])),
             'body_lines_min_met': int(getattr(body_quality, 'body_lines', 0) or 0) >= 35,
             'required_sections_missing': list(getattr(body_quality, 'missing_required_sections', []) or []),
             'generated_files_contains_sidecars': (
@@ -747,6 +777,9 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
                 and 'evals/domain_expertise.json' in generated_files
                 and 'evals/expert_structure.json' in generated_files
                 and 'evals/depth_quality.json' in generated_files
+                and 'evals/editorial_quality.json' in generated_files
+                and 'evals/style_diversity.json' in generated_files
+                and 'evals/move_quality.json' in generated_files
             ),
         }
 

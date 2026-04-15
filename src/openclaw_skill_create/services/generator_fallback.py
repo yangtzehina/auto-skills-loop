@@ -4,7 +4,9 @@ from dataclasses import dataclass, field
 
 from ..models.artifacts import ArtifactFile
 from .domain_specificity import extract_task_domain_anchors, profile_for_skill
+from .expert_dna import render_expert_dna_skill_md
 from .expert_structure import expert_profile_for_skill
+from .style_diversity import expert_style_profile_for_skill
 
 
 @dataclass(frozen=True)
@@ -243,11 +245,11 @@ def _expert_game_design_blueprint(*, skill_name: str, task: str) -> DomainSkillB
             ],
             output_schema=[
                 ('Core Validation Question', ['What must be proven', 'How it could fail', 'What evidence would count']),
-                ('Smallest Honest Loop', ['Player verbs', 'Feedback moment', 'Why it exposes the fantasy']),
-                ('Feature Cut', ['Core', 'Support', 'Defer', 'Cut']),
+                ('Smallest Honest Loop', ['Input', 'System response', 'Feedback', 'Repeat trigger']),
+                ('Feature Cut', ['Must have', 'Supportive but optional', 'Defer', 'Cut for now']),
                 ('Minimum Content Package', ['Test space', 'Encounter or toy set', 'Session length', 'Success and fail condition']),
                 ('Out of Scope', ['Deferred ideas', 'Why excluded', 'Re-entry condition']),
-                ('MVP Pack', ['Build target', 'Playtest signal', 'Open assumptions']),
+                ('MVP Pack', ['Build recommendation', 'Playtest signal', 'Open assumptions']),
             ],
             quality_check_matrix=[
                 'The validation question can fail; it is not a slogan.',
@@ -305,9 +307,10 @@ def _expert_game_design_blueprint(*, skill_name: str, task: str) -> DomainSkillB
                 )
             ],
             failure_patterns=[
-                ('Fake MVP', ['Symptom: the build is polished but does not test the repeatable loop.', 'Cause: presentation replaced validation.', 'Correction: reduce content and expose input, response, feedback, and repeat trigger.']),
+                ('Fake MVP / Vertical Slice Trap', ['Symptom: the build is polished but does not test the repeatable loop.', 'Cause: presentation replaced validation.', 'Correction: reduce content and expose input, response, feedback, and repeat trigger.']),
                 ('Scope Creep Through One More Core Feature', ['Symptom: every attractive idea becomes mandatory.', 'Cause: core/support/cut buckets are not enforced.', 'Correction: keep only features that answer the validation question.']),
-                ('Content-Heavy Validation', ['Symptom: the concept needs dozens of units before it can be judged.', 'Cause: content volume hides a weak loop.', 'Correction: define the minimum content package that can reveal the truth.']),
+                ('Content Hiding Uncertainty', ['Symptom: the concept needs dozens of units before it can be judged.', 'Cause: content-heavy validation hides a weak loop.', 'Correction: define the minimum content package that can reveal the truth.']),
+                ('Mood Instead of Loop', ['Symptom: the pack sells tone but not repeatable play.', 'Cause: fantasy language replaced player input, system response, and feedback.', 'Correction: rewrite the smallest honest loop before adding mood or lore.']),
                 ('Success Criteria Missing', ['Symptom: the team keeps building after the first test.', 'Cause: no pass/fail signal was written.', 'Correction: state what result would count as success or redesign.']),
             ],
             revision_moves=[
@@ -415,7 +418,7 @@ def _expert_game_design_blueprint(*, skill_name: str, task: str) -> DomainSkillB
                 ),
             ],
             output_schema=[
-                ('Current Loop Shape', ['Observe', 'Decide', 'Act', 'Resolve', 'Reward', 'Next-choice trigger']),
+                ('Current Loop Shape', ['Core decision', 'Feedback structure', 'Observe', 'Decide', 'Act', 'Resolve', 'Reward', 'Next-choice trigger']),
                 ('First-Hour Hook', ['Readability', 'Reason to repeat', 'Confusion or boredom risk']),
                 ('Midgame Sustainability', ['New constraint', 'Tradeoff change', 'Variation quality']),
                 ('Late-Game Evolution', ['Expansion', 'Mutation', 'Collapse point']),
@@ -482,7 +485,9 @@ def _expert_game_design_blueprint(*, skill_name: str, task: str) -> DomainSkillB
                 ('Novelty-Only Start', ['Symptom: the first session feels fine but repetition arrives fast.', 'Cause: premise is carrying weak decisions.', 'Correction: expose meaningful tradeoffs within the first hour.']),
                 ('Midgame Autopilot', ['Symptom: players learn a stable routine and stop thinking.', 'Cause: constraints scale numbers but not decisions.', 'Correction: add state changes that force adaptation.']),
                 ('Progression Without New Problems', ['Symptom: upgrades make the loop easier but not deeper.', 'Cause: progression removes pressure.', 'Correction: make mastery reveal new constraints or costs.']),
-                ('Variety Without Strategic Consequence', ['Symptom: content changes but decisions stay identical.', 'Cause: variation is cosmetic or statistical.', 'Correction: require variation to change read, tradeoff, consequence, or adaptation.']),
+                ('Cosmetic Options / Surface Variation', ['Symptom: content changes but decisions stay identical.', 'Cause: variation is cosmetic or statistical.', 'Correction: require variation to change read, tradeoff, consequence, or adaptation.']),
+                ('Dominant Strategy', ['Symptom: one option becomes correct in most states.', 'Cause: rewards and penalties do not create enough counterpressure.', 'Correction: add structural risk, asymmetry, or delayed consequence.']),
+                ('Rewarding Autopilot', ['Symptom: rewards train the player to repeat a safe routine.', 'Cause: reinforcement points at efficiency instead of decisions.', 'Correction: reward adaptation, timing, or state-aware choices.']),
                 ('Mastery Removes the Game', ['Symptom: skillful play eliminates tension too early.', 'Cause: no counterpressure meets mastery.', 'Correction: introduce risk, uncertainty, or asymmetric options.']),
             ],
             revision_moves=[
@@ -656,12 +661,13 @@ def _expert_game_design_blueprint(*, skill_name: str, task: str) -> DomainSkillB
                 )
             ],
             failure_patterns=[
-                ('Decorative Resources', ['Symptom: bars exist but do not change choices.', 'Cause: variables lack player-facing roles.', 'Correction: cut or connect each variable to a decision tension.']),
+                ('Decorative Resources / Variable Web Sprawl', ['Symptom: bars exist but do not change choices.', 'Cause: variables lack player-facing roles.', 'Correction: cut or connect each variable to a decision tension.']),
                 ('No Real Tradeoff', ['Symptom: the player can optimize everything at once.', 'Cause: pressure relationships do not conflict.', 'Correction: add opportunity cost or mutually exclusive responses.']),
                 ('One Dominant Currency', ['Symptom: every variable collapses into the same best resource.', 'Cause: conversion rates erase multidimensional tension.', 'Correction: make at least one pressure non-convertible or costly to convert.']),
                 ('Positive-Loop Runaway', ['Symptom: success removes all hardship.', 'Cause: positive loops lack counterpressure.', 'Correction: add scrutiny, maintenance, decay, or risk.']),
-                ('Punishment Without Agency', ['Symptom: players suffer penalties without recovery choices.', 'Cause: failure is hidden or irreversible.', 'Correction: add early warning and costly recovery tools.']),
-                ('Fantasy-System Mismatch', ['Symptom: math is stable but feels emotionally wrong.', 'Cause: resource pressure contradicts fantasy.', 'Correction: align variables with the intended feeling.']),
+                ('Death Spiral / Punishment Without Agency', ['Symptom: players suffer penalties without recovery choices.', 'Cause: failure is hidden or irreversible.', 'Correction: add early warning and costly recovery tools.']),
+                ('Hidden Pressure Relationships', ['Symptom: outcomes change but players cannot tell why.', 'Cause: pressure links are invisible or too delayed.', 'Correction: expose cause and effect through readable signals.']),
+                ('Emotionless Resource Loop / Fantasy-System Mismatch', ['Symptom: math is stable but feels emotionally wrong.', 'Cause: resource pressure contradicts fantasy.', 'Correction: align variables with the intended feeling.']),
             ],
             revision_moves=[
                 'If the resource list is bloated, cut variables without player-facing roles.',
@@ -693,10 +699,37 @@ def _render_expert_blueprint_skill_md(
     *,
     skill_name: str,
     description: str,
+    task: str,
     blueprint: DomainSkillBlueprint,
     references: list[str],
     scripts: list[str],
 ) -> str:
+    output_guidance = {heading: bullets for heading, bullets in blueprint.output_field_guidance}
+    output_guidance_items = list(blueprint.output_field_guidance)
+    style_profile = expert_style_profile_for_skill(skill_name=skill_name, task=task)
+    opening = (
+        style_profile.opening_frame
+        if style_profile is not None and style_profile.opening_frame
+        else 'Use this skill to turn the requested methodology into a concrete, task-facing decision artifact.'
+    )
+    labels = list(getattr(style_profile, 'workflow_label_set', []) or [])
+    if skill_name == 'concept-to-mvp-pack':
+        workflow_labels = ('Test', 'Keep / Cut', 'Package', 'Watch scope')
+        overview = 'Turn the concept into a falsifiable MVP proof: the loop to test, the work to keep, the cuts to make, and the package that can start now.'
+    elif skill_name == 'decision-loop-stress-test':
+        workflow_labels = ('Stress', 'Watch', 'Break / Reinforce', 'Fix structurally')
+        overview = 'Pressure-test the loop by phase, expose where novelty collapses, and turn the failure point into a structural fix rather than content padding.'
+    elif skill_name == 'simulation-resource-loop-design':
+        workflow_labels = ('Map', 'Tension', 'Loop output', 'Correct')
+        overview = 'Map variables into visible player pressure, then shape loops, recovery, and fantasy alignment so the system creates real decisions.'
+    else:
+        workflow_labels = (
+            labels[0].title() if len(labels) > 0 else 'Act',
+            labels[1].title() if len(labels) > 1 else 'Question',
+            labels[2].title() if len(labels) > 2 else 'Deliver',
+            labels[3].title() if len(labels) > 3 else 'Guard',
+        )
+        overview = 'Convert the request into concrete decisions, outputs, and guardrails without widening the skill beyond its task.'
     lines = [
         '---',
         f'name: {skill_name}',
@@ -705,11 +738,11 @@ def _render_expert_blueprint_skill_md(
         '',
         f'# {skill_name}',
         '',
-        'Use this skill when the user needs a domain-specific game-design method, not a generic methodology shell.',
+        opening,
         '',
         '## Overview',
         '',
-        'Read the user request as raw design material, then convert it into expert game-design decisions, templates, checks, and failure modes.',
+        overview,
         '',
         '## Core Principle',
         '',
@@ -738,16 +771,16 @@ def _render_expert_blueprint_skill_md(
             else ''
         )
         if bullets:
-            lines.append(f'- Purpose: {bullets[0]}')
-            lines.append('- Actions:')
-            for bullet in bullets[1:] or bullets[:1]:
-                lines.append(f'  - {bullet}')
+            action = bullets[0]
+            if len(bullets) > 1:
+                action = f'{action} {bullets[1]}'
+            lines.append(f'- {workflow_labels[0]}: {action}')
         if probe:
-            lines.append(f'- Decision probe: {probe}')
+            lines.append(f'- {workflow_labels[1]}: {probe}')
         if output_fragment:
-            lines.append(f'- Output fragment: {output_fragment}')
+            lines.append(f'- {workflow_labels[2]}: {output_fragment}')
         if failure_signal:
-            lines.append(f'- Failure signal: {failure_signal}')
+            lines.append(f'- {workflow_labels[3]}: {failure_signal}')
         lines.append('')
 
     if blueprint.boundary_rules:
@@ -757,27 +790,27 @@ def _render_expert_blueprint_skill_md(
 
     if blueprint.worked_micro_examples:
         lines.extend(['## Worked Micro-Examples', ''])
-        for heading, bullets in blueprint.worked_micro_examples:
-            lines.extend([f'### {heading}', ''])
-            for bullet in bullets:
-                lines.append(f'- {bullet}')
-            lines.append('')
+        heading, bullets = blueprint.worked_micro_examples[0]
+        lines.extend([f'### {heading}', ''])
+        for bullet in bullets[:4]:
+            lines.append(f'- {bullet}')
+        lines.append('')
 
     lines.extend(['## Output Format', '', '```markdown'])
-    for heading, fields in blueprint.output_schema:
+    for index, (heading, fields) in enumerate(blueprint.output_schema):
         lines.extend([f'## {heading}'])
+        guidance_heading, guidance = output_guidance_items[index] if index < len(output_guidance_items) else (heading, [])
+        guidance = output_guidance.get(heading, guidance)
+        lines.append(f'- Field use: {guidance_heading}')
         for field in fields:
             lines.append(f'- {field}: <fill in>')
+        if guidance:
+            good = guidance[1] if len(guidance) > 1 else guidance[0]
+            weak = guidance[2] if len(guidance) > 2 else 'Weak output stays abstract or leaves the field unactionable.'
+            lines.append(f'- Good: {good}')
+            lines.append(f'- Weak: {weak}')
         lines.append('')
     lines.extend(['```'])
-
-    if blueprint.output_field_guidance:
-        lines.extend(['', '## Output Field Guidance', ''])
-        for heading, bullets in blueprint.output_field_guidance:
-            lines.extend([f'### {heading}', ''])
-            for bullet in bullets:
-                lines.append(f'- {bullet}')
-            lines.append('')
 
     lines.extend(['## Quality Checks', ''])
     lines.extend(f'- {item}' for item in blueprint.quality_check_matrix)
@@ -791,30 +824,25 @@ def _render_expert_blueprint_skill_md(
                 lines.append(f'- {bullet}')
             lines.append('')
     lines.extend([
-        '- The output must use domain-specific section titles and decisions, not only generic planning language.',
-        '- Another agent should be able to apply the result without rereading the original prompt.',
         '',
-        '## Common Pitfalls',
+        '## Common Pitfalls: Failure Patterns and Fixes',
         '',
     ])
-    lines.extend(f'- {item}' for item in blueprint.pitfall_taxonomy)
     if blueprint.failure_patterns:
-        lines.extend(['', '## Common Failure Patterns to Catch', ''])
         for heading, bullets in blueprint.failure_patterns:
             lines.extend([f'### {heading}', ''])
-            for bullet in bullets:
-                lines.append(f'- {bullet}')
+            symptom = bullets[0] if bullets else heading
+            cause = bullets[1] if len(bullets) > 1 else 'The workflow skipped the hard design judgment.'
+            correction = bullets[2] if len(bullets) > 2 else 'Return to the relevant workflow step and make the cut explicit.'
+            lines.append(f'- Symptom: {symptom}')
+            lines.append(f'- Cause: {cause}')
+            lines.append(f'- Correction: {correction}')
             lines.append('')
+    else:
+        lines.extend(f'- {item}' for item in blueprint.pitfall_taxonomy)
     if blueprint.revision_moves:
         lines.extend(['## Revision Moves', ''])
         lines.extend(f'- {item}' for item in blueprint.revision_moves)
-    lines.extend([
-        '',
-        '## Quality Failure Guardrails',
-        '',
-        '- Prompt echo: repeating the request instead of turning it into domain actions.',
-        '- False completion: passing shape checks while the expert workflow is still missing.',
-    ])
     if references:
         lines.extend(['', '## References', ''])
         lines.extend(f'- See `{path}` for supporting material.' for path in references)
@@ -873,11 +901,22 @@ def fallback_generate_methodology_skill_md(
     references: list[str],
     scripts: list[str],
 ) -> str:
+    expert_dna_content = render_expert_dna_skill_md(
+        skill_name=skill_name,
+        description=description,
+        task=task,
+        references=references,
+        scripts=scripts,
+    )
+    if expert_dna_content is not None:
+        return expert_dna_content
+
     expert_blueprint = _expert_game_design_blueprint(skill_name=skill_name, task=task)
     if expert_blueprint is not None:
         return _render_expert_blueprint_skill_md(
             skill_name=skill_name,
             description=description,
+            task=task,
             blueprint=expert_blueprint,
             references=references,
             scripts=scripts,

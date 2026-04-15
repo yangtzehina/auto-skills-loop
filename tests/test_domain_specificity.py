@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from openclaw_skill_create.models.artifacts import ArtifactFile, Artifacts
 from openclaw_skill_create.models.plan import PlannedFile, SkillPlan
 from openclaw_skill_create.models.request import SkillCreateRequestV6
 from openclaw_skill_create.services.depth_quality import build_skill_depth_quality_report
+from openclaw_skill_create.services.editorial_quality import build_skill_editorial_quality_report
 from openclaw_skill_create.services.domain_expertise import build_skill_domain_expertise_report
 from openclaw_skill_create.services.domain_specificity import build_skill_domain_specificity_report
 from openclaw_skill_create.services.expert_structure import build_skill_expert_structure_report
@@ -557,7 +560,15 @@ def test_depth_quality_rejects_output_fields_without_guidance():
         references=[],
         scripts=[],
     )
-    content = content.split('## Output Field Guidance')[0] + '\n## Quality Checks\n- The variable web has player-facing roles.\n'
+    output_start = content.index('## Output Format')
+    output_end = content.index('## Quality Checks')
+    output_section = content[output_start:output_end]
+    weak_output = """## Output Format
+- Field A:
+- Field B:
+- Field C:
+"""
+    content = content[:output_start] + weak_output + '\n' + content[output_end:]
 
     report = build_skill_depth_quality_report(request=request, skill_plan=plan, artifacts=_artifacts(content))
 
@@ -586,3 +597,112 @@ def test_depth_quality_failure_blocks_fully_correct():
     assert diagnostics.depth_quality.status == 'fail'
     assert review.fully_correct is False
     assert review.depth_quality_status == 'fail'
+
+
+def test_editorial_quality_passes_expert_depth_golden():
+    root = Path(__file__).resolve().parent / 'fixtures' / 'methodology_guidance' / 'expert_depth_golden'
+    for skill_name in [
+        'concept-to-mvp-pack',
+        'decision-loop-stress-test',
+        'simulation-resource-loop-design',
+    ]:
+        request = SkillCreateRequestV6(
+            task=f'Create a game design methodology skill for {skill_name}.',
+            skill_name_hint=skill_name,
+            skill_archetype='methodology_guidance',
+        )
+        plan = _methodology_plan(skill_name)
+        report = build_skill_editorial_quality_report(
+            request=request,
+            skill_plan=plan,
+            artifacts=_artifacts((root / f'{skill_name}.md').read_text(encoding='utf-8')),
+        )
+
+        assert report.status == 'pass'
+        assert report.decision_pressure_score >= 0.70
+        assert report.output_executability_score >= 0.70
+        assert report.failure_correction_score >= 0.70
+
+
+def test_editorial_quality_rejects_long_bulky_depth_shell():
+    request = SkillCreateRequestV6(
+        task='Create a concept-to-mvp-pack skill with validation question and MVP decisions.',
+        skill_name_hint='concept-to-mvp-pack',
+        skill_archetype='methodology_guidance',
+    )
+    plan = _methodology_plan('concept-to-mvp-pack')
+    repeated = '\n'.join(f'- Explain the context carefully and comprehensively for item {i}.' for i in range(35))
+    content = _methodology_shell(
+        name='concept-to-mvp-pack',
+        overview='This discusses validation question, smallest honest loop, feature cut, content scope, out-of-scope, and mvp pack.',
+        workflow=repeated,
+        output='\n'.join(
+            [
+                '- Validation Question: explain the situation',
+                '- Smallest Honest Loop: explain the situation',
+                '- Feature Cut: explain the situation',
+                '- Content Scope: explain the situation',
+                '- Out of Scope: explain the situation',
+            ]
+        ),
+    )
+
+    report = build_skill_editorial_quality_report(request=request, skill_plan=plan, artifacts=_artifacts(content))
+
+    assert report.status == 'fail'
+    assert {'low_decision_pressure', 'excessive_explanatory_bulk'} & set(report.blocking_issues)
+
+
+def test_editorial_quality_rejects_weak_output_executability():
+    request = SkillCreateRequestV6(
+        task='Create a decision-loop-stress-test skill.',
+        skill_name_hint='decision-loop-stress-test',
+        skill_archetype='methodology_guidance',
+    )
+    plan = _methodology_plan('decision-loop-stress-test')
+    content = _methodology_shell(
+        name='decision-loop-stress-test',
+        overview='Test first-hour, midgame, late-game, solved state, variation quality, and reinforcement.',
+        workflow='\n'.join(
+            [
+                '- Do: define the current loop shape and first-hour hook.',
+                '- Ask: what collapses in the midgame and late-game?',
+                '- Cut / Watch for: solved state, dominant strategy, and content padding.',
+                '- Do: recommend structural fixes for reinforcement.',
+            ]
+        ),
+        output='- A thoughtful narrative summary of the decision loop.',
+    )
+
+    report = build_skill_editorial_quality_report(request=request, skill_plan=plan, artifacts=_artifacts(content))
+
+    assert report.status == 'fail'
+    assert 'weak_output_executability' in report.blocking_issues
+
+
+def test_editorial_quality_failure_blocks_fully_correct():
+    request = SkillCreateRequestV6(
+        task='Create a simulation-resource-loop-design skill.',
+        skill_name_hint='simulation-resource-loop-design',
+        skill_archetype='methodology_guidance',
+    )
+    plan = _methodology_plan('simulation-resource-loop-design')
+    content = _methodology_shell(
+        name='simulation-resource-loop-design',
+        overview='Simulation resource loop with variable web, pressure relationships, positive loop, negative loop, failure recovery, resource loop, and emotional fantasy.',
+        workflow='- Do: explain the variable web in broad terms.\n' * 35,
+        output='- Resource loop summary: explain the loop.',
+    )
+
+    diagnostics = run_validator(request=request, repo_findings={}, skill_plan=plan, artifacts=_artifacts(content))
+    review = run_skill_quality_review(
+        repo_findings={},
+        skill_plan=plan,
+        artifacts=_artifacts(content),
+        diagnostics=diagnostics,
+    )
+
+    assert diagnostics.editorial_quality is not None
+    assert diagnostics.editorial_quality.status == 'fail'
+    assert review.fully_correct is False
+    assert review.editorial_quality_status == 'fail'

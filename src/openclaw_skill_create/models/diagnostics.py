@@ -7,8 +7,11 @@ from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from .domain_expertise import SkillDomainExpertiseReport
 from .domain_specificity import SkillDomainSpecificityReport
 from .depth_quality import SkillDepthQualityReport
+from .editorial_quality import SkillEditorialQualityReport
+from .expert_dna import SkillMoveQualityReport
 from .expert_structure import SkillExpertStructureReport
 from .security import SecurityAuditReport
+from .style_diversity import SkillStyleDiversityReport
 
 
 class ValidationResult(BaseModel):
@@ -36,4 +39,7 @@ class Diagnostics(BaseModel):
     domain_expertise: Optional[SkillDomainExpertiseReport] = None
     expert_structure: Optional[SkillExpertStructureReport] = None
     depth_quality: Optional[SkillDepthQualityReport] = None
+    editorial_quality: Optional[SkillEditorialQualityReport] = None
+    style_diversity: Optional[SkillStyleDiversityReport] = None
+    move_quality: Optional[SkillMoveQualityReport] = None
     notes: list[str] = Field(default_factory=list)

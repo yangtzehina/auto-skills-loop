@@ -9,6 +9,8 @@ from typing import Any, Optional
 from ..models.artifacts import ArtifactFile, Artifacts
 from ..models.body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from ..models.depth_quality import SkillDepthQualityReport
+from ..models.editorial_quality import SkillEditorialQualityReport
+from ..models.expert_dna import SkillMoveQualityReport
 from ..models.domain_expertise import SkillDomainExpertiseReport
 from ..models.domain_specificity import SkillDomainSpecificityReport
 from ..models.expert_structure import SkillExpertStructureReport
@@ -17,6 +19,7 @@ from ..models.persistence import PersistencePolicy
 from ..models.plan import SkillPlan
 from ..models.review import SkillQualityReview
 from ..models.security import SecurityAuditReport
+from ..models.style_diversity import SkillStyleDiversityReport
 from ..models.operation_coverage import OperationCoverageReport
 
 
@@ -35,6 +38,9 @@ DOMAIN_SPECIFICITY_REPORT_PATH = 'evals/domain_specificity.json'
 DOMAIN_EXPERTISE_REPORT_PATH = 'evals/domain_expertise.json'
 EXPERT_STRUCTURE_REPORT_PATH = 'evals/expert_structure.json'
 DEPTH_QUALITY_REPORT_PATH = 'evals/depth_quality.json'
+EDITORIAL_QUALITY_REPORT_PATH = 'evals/editorial_quality.json'
+STYLE_DIVERSITY_REPORT_PATH = 'evals/style_diversity.json'
+MOVE_QUALITY_REPORT_PATH = 'evals/move_quality.json'
 SECURITY_AUDIT_REPORT_PATH = 'evals/security_audit.json'
 OPERATION_COVERAGE_REPORT_PATH = 'evals/operation_coverage.json'
 
@@ -289,6 +295,84 @@ def artifacts_with_depth_quality(
     return Artifacts(files=files)
 
 
+def artifacts_with_editorial_quality(
+    *,
+    artifacts: Artifacts,
+    editorial_quality: Optional[SkillEditorialQualityReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if editorial_quality is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=EDITORIAL_QUALITY_REPORT_PATH,
+        content=json.dumps(editorial_quality.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['editorial_quality'],
+        status='new',
+    )
+
+    files = [file for file in artifacts.files if file.path != EDITORIAL_QUALITY_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_style_diversity(
+    *,
+    artifacts: Artifacts,
+    style_diversity: Optional[SkillStyleDiversityReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if style_diversity is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=STYLE_DIVERSITY_REPORT_PATH,
+        content=json.dumps(style_diversity.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['style_diversity'],
+        status='new',
+    )
+
+    files = [file for file in artifacts.files if file.path != STYLE_DIVERSITY_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_move_quality(
+    *,
+    artifacts: Artifacts,
+    move_quality: Optional[SkillMoveQualityReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if move_quality is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=MOVE_QUALITY_REPORT_PATH,
+        content=json.dumps(move_quality.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['move_quality'],
+        status='new',
+    )
+
+    files = [file for file in artifacts.files if file.path != MOVE_QUALITY_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
 def artifacts_with_security_audit(
     *,
     artifacts: Artifacts,
@@ -437,6 +521,21 @@ def persist_artifacts(
         'depth_quality_path': (
             str(target_dir / DEPTH_QUALITY_REPORT_PATH)
             if DEPTH_QUALITY_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'editorial_quality_path': (
+            str(target_dir / EDITORIAL_QUALITY_REPORT_PATH)
+            if EDITORIAL_QUALITY_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'style_diversity_path': (
+            str(target_dir / STYLE_DIVERSITY_REPORT_PATH)
+            if STYLE_DIVERSITY_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'move_quality_path': (
+            str(target_dir / MOVE_QUALITY_REPORT_PATH)
+            if MOVE_QUALITY_REPORT_PATH in artifact_paths(artifacts)
             else None
         ),
         'security_audit_path': (

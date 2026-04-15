@@ -62,4 +62,10 @@ class SkillQualityReview(BaseModel):
     expert_structure_issues: list[str] = Field(default_factory=list)
     depth_quality_status: str = "not_applicable"
     depth_quality_issues: list[str] = Field(default_factory=list)
+    editorial_quality_status: str = "not_applicable"
+    editorial_quality_issues: list[str] = Field(default_factory=list)
+    style_diversity_status: str = "not_applicable"
+    style_diversity_issues: list[str] = Field(default_factory=list)
+    move_quality_status: str = "not_applicable"
+    move_quality_issues: list[str] = Field(default_factory=list)
     summary: list[str] = Field(default_factory=list)

@@ -7,10 +7,13 @@ from ..models.requirements import SkillRequirement
 from ..models.review import RepairSuggestion, RequirementResult, SkillQualityReview
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 from .depth_quality import build_skill_depth_quality_report
+from .editorial_quality import build_skill_editorial_quality_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
 from .expert_structure import build_skill_expert_structure_report
+from .move_quality import build_skill_move_quality_report
 from .operation_coverage import load_operation_coverage_report
+from .style_diversity import build_skill_style_diversity_report
 
 
 SCRIPT_PLACEHOLDER_MARKERS = (
@@ -300,6 +303,90 @@ def _depth_quality_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
     return suggestions
 
 
+def _editorial_quality_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
+    if diagnostics is None:
+        return []
+    editorial_quality = getattr(diagnostics, 'editorial_quality', None)
+    suggestions: list[RepairSuggestion] = []
+    for issue in list(getattr(editorial_quality, 'blocking_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Edit SKILL.md down to sharper decisions, executable fields, and failure corrections: {issue}',
+                target_paths=['SKILL.md'],
+                priority=102,
+                repair_scope='body_patch',
+            )
+        )
+    for issue in list(getattr(editorial_quality, 'warning_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Mark this methodology skill as not release-ready until editorial quality is stronger: {issue}',
+                target_paths=['SKILL.md'],
+                priority=85,
+                repair_scope='body_patch',
+            )
+        )
+    return suggestions
+
+
+def _style_diversity_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
+    if diagnostics is None:
+        return []
+    style_diversity = getattr(diagnostics, 'style_diversity', None)
+    suggestions: list[RepairSuggestion] = []
+    for issue in list(getattr(style_diversity, 'blocking_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Rewrite SKILL.md so methodology style, opening, and workflow labels are shaped by the specific domain: {issue}',
+                target_paths=['SKILL.md'],
+                priority=103,
+                repair_scope='body_patch',
+            )
+        )
+    for issue in list(getattr(style_diversity, 'warning_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Mark this methodology skill as not release-ready until style diversity is stronger: {issue}',
+                target_paths=['SKILL.md'],
+                priority=84,
+                repair_scope='body_patch',
+            )
+        )
+    return suggestions
+
+
+def _move_quality_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
+    if diagnostics is None:
+        return []
+    move_quality = getattr(diagnostics, 'move_quality', None)
+    suggestions: list[RepairSuggestion] = []
+    for issue in list(getattr(move_quality, 'blocking_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Regenerate the methodology skill from Expert Skill DNA so workflow moves, outputs, and repair moves are preserved: {issue}',
+                target_paths=['SKILL.md'],
+                priority=106,
+                repair_scope='body_patch',
+            )
+        )
+    for issue in list(getattr(move_quality, 'warning_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Mark this methodology skill as not release-ready until Expert Skill DNA coverage is stronger: {issue}',
+                target_paths=['SKILL.md'],
+                priority=86,
+                repair_scope='body_patch',
+            )
+        )
+    return suggestions
+
+
 def _security_summary(diagnostics: Any) -> tuple[str | None, int, list[str]]:
     security_audit = getattr(diagnostics, 'security_audit', None) if diagnostics is not None else None
     if security_audit is None:
@@ -359,6 +446,9 @@ def run_skill_quality_review(
         + _domain_expertise_suggestions(diagnostics)
         + _expert_structure_suggestions(diagnostics)
         + _depth_quality_suggestions(diagnostics)
+        + _editorial_quality_suggestions(diagnostics)
+        + _style_diversity_suggestions(diagnostics)
+        + _move_quality_suggestions(diagnostics)
     )
 
     missing_evidence = sorted(
@@ -383,6 +473,9 @@ def run_skill_quality_review(
     domain_expertise = getattr(diagnostics, 'domain_expertise', None) if diagnostics is not None else None
     expert_structure = getattr(diagnostics, 'expert_structure', None) if diagnostics is not None else None
     depth_quality = getattr(diagnostics, 'depth_quality', None) if diagnostics is not None else None
+    editorial_quality = getattr(diagnostics, 'editorial_quality', None) if diagnostics is not None else None
+    style_diversity = getattr(diagnostics, 'style_diversity', None) if diagnostics is not None else None
+    move_quality = getattr(diagnostics, 'move_quality', None) if diagnostics is not None else None
     if body_quality is None:
         request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
         body_quality = build_skill_body_quality_report(
@@ -426,6 +519,27 @@ def run_skill_quality_review(
             skill_plan=skill_plan,
             artifacts=artifacts,
         )
+    if editorial_quality is None:
+        request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
+        editorial_quality = build_skill_editorial_quality_report(
+            request=request_proxy,
+            skill_plan=skill_plan,
+            artifacts=artifacts,
+        )
+    if style_diversity is None:
+        request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
+        style_diversity = build_skill_style_diversity_report(
+            request=request_proxy,
+            skill_plan=skill_plan,
+            artifacts=artifacts,
+        )
+    if move_quality is None:
+        request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
+        move_quality = build_skill_move_quality_report(
+            request=request_proxy,
+            skill_plan=skill_plan,
+            artifacts=artifacts,
+        )
     body_quality_status = str(getattr(body_quality, 'status', 'not_applicable') or 'not_applicable')
     body_quality_passed = bool(getattr(body_quality, 'passed', True)) if body_quality is not None else True
     body_quality_issues = list(getattr(body_quality, 'issues', []) or []) if body_quality is not None else []
@@ -463,6 +577,30 @@ def run_skill_quality_review(
         if depth_quality is not None
         else []
     )
+    editorial_quality_status = str(getattr(editorial_quality, 'status', 'not_applicable') or 'not_applicable')
+    editorial_quality_passed = editorial_quality_status in {'not_applicable', 'pass'}
+    editorial_quality_issues = (
+        list(getattr(editorial_quality, 'blocking_issues', []) or [])
+        + list(getattr(editorial_quality, 'warning_issues', []) or [])
+        if editorial_quality is not None
+        else []
+    )
+    style_diversity_status = str(getattr(style_diversity, 'status', 'not_applicable') or 'not_applicable')
+    style_diversity_passed = style_diversity_status in {'not_applicable', 'pass'}
+    style_diversity_issues = (
+        list(getattr(style_diversity, 'blocking_issues', []) or [])
+        + list(getattr(style_diversity, 'warning_issues', []) or [])
+        if style_diversity is not None
+        else []
+    )
+    move_quality_status = str(getattr(move_quality, 'status', 'not_applicable') or 'not_applicable')
+    move_quality_passed = move_quality_status in {'not_applicable', 'pass'}
+    move_quality_issues = (
+        list(getattr(move_quality, 'blocking_issues', []) or [])
+        + list(getattr(move_quality, 'warning_issues', []) or [])
+        if move_quality is not None
+        else []
+    )
     skill_archetype = str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower()
     operation_contract = getattr(skill_plan, 'operation_contract', None)
     operation_groups = [getattr(group, 'name', '') for group in list(getattr(operation_contract, 'operations', []) or []) if getattr(group, 'name', '')]
@@ -495,6 +633,9 @@ def run_skill_quality_review(
         and domain_expertise_passed
         and expert_structure_passed
         and depth_quality_passed
+        and editorial_quality_passed
+        and style_diversity_passed
+        and move_quality_passed
         and requirement_score >= 0.99
         and (evaluation_score >= 0.75 if evaluation_report is not None else True)
     )
@@ -530,6 +671,15 @@ def run_skill_quality_review(
     if depth_quality is not None:
         summary.append(f"depth_quality_status={depth_quality_status}")
         summary.append(f"depth_quality_issues={','.join(depth_quality_issues[:6]) or 'none'}")
+    if editorial_quality is not None:
+        summary.append(f"editorial_quality_status={editorial_quality_status}")
+        summary.append(f"editorial_quality_issues={','.join(editorial_quality_issues[:6]) or 'none'}")
+    if style_diversity is not None:
+        summary.append(f"style_diversity_status={style_diversity_status}")
+        summary.append(f"style_diversity_issues={','.join(style_diversity_issues[:6]) or 'none'}")
+    if move_quality is not None:
+        summary.append(f"move_quality_status={move_quality_status}")
+        summary.append(f"move_quality_issues={','.join(move_quality_issues[:6]) or 'none'}")
     if skill_archetype == 'operation_backed':
         summary.append(f"skill_archetype={skill_archetype}")
         summary.append(f"operation_count={operation_count}")
@@ -564,5 +714,11 @@ def run_skill_quality_review(
         expert_structure_issues=expert_structure_issues,
         depth_quality_status=depth_quality_status,
         depth_quality_issues=depth_quality_issues,
+        editorial_quality_status=editorial_quality_status,
+        editorial_quality_issues=editorial_quality_issues,
+        style_diversity_status=style_diversity_status,
+        style_diversity_issues=style_diversity_issues,
+        move_quality_status=move_quality_status,
+        move_quality_issues=move_quality_issues,
         summary=summary,
     )

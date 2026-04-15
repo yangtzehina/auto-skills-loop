@@ -63,6 +63,18 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- depth_quality_fail_count={report.depth_quality_fail_count}',
         f'- depth_quality_warn_count={report.depth_quality_warn_count}',
         f'- depth_quality_gap_count={report.depth_quality_gap_count}',
+        f'- editorial_quality_status={report.editorial_quality_status}',
+        f'- editorial_quality_fail_count={report.editorial_quality_fail_count}',
+        f'- editorial_quality_warn_count={report.editorial_quality_warn_count}',
+        f'- editorial_gap_count={report.editorial_gap_count}',
+        f'- style_diversity_status={report.style_diversity_status}',
+        f'- style_diversity_fail_count={report.style_diversity_fail_count}',
+        f'- style_diversity_warn_count={report.style_diversity_warn_count}',
+        f'- style_gap_count={report.style_gap_count}',
+        f'- move_quality_status={report.move_quality_status}',
+        f'- move_quality_fail_count={report.move_quality_fail_count}',
+        f'- move_quality_warn_count={report.move_quality_warn_count}',
+        f'- move_quality_gap_count={report.move_quality_gap_count}',
         f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
         f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}',
@@ -155,6 +167,33 @@ def build_verify_report(
             else 'pass'
         )
     )
+    editorial_quality_status = (
+        'fail'
+        if any(item.auto_metrics.editorial_quality_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.editorial_quality_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
+    style_diversity_status = (
+        'fail'
+        if any(item.auto_metrics.style_diversity_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.style_diversity_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
+    move_quality_status = (
+        'fail'
+        if any(item.auto_metrics.move_quality_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.move_quality_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
     report = VerifyReport(
         mode=mode,
         include_live_curation=include_live_curation,
@@ -214,6 +253,42 @@ def build_verify_report(
             if item.auto_metrics.depth_quality_status == 'warn'
         ),
         depth_quality_gap_count=int(comparison_report.depth_quality_gap_count or 0),
+        editorial_quality_status=editorial_quality_status,
+        editorial_quality_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.editorial_quality_status == 'fail'
+        ),
+        editorial_quality_warn_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.editorial_quality_status == 'warn'
+        ),
+        editorial_gap_count=int(comparison_report.editorial_gap_count or 0),
+        style_diversity_status=style_diversity_status,
+        style_diversity_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.style_diversity_status == 'fail'
+        ),
+        style_diversity_warn_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.style_diversity_status == 'warn'
+        ),
+        style_gap_count=int(comparison_report.style_gap_count or 0),
+        move_quality_status=move_quality_status,
+        move_quality_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.move_quality_status == 'fail'
+        ),
+        move_quality_warn_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.move_quality_status == 'warn'
+        ),
+        move_quality_gap_count=int(comparison_report.move_quality_gap_count or 0),
         pairwise_similarity_gap_count=int(comparison_report.pairwise_similarity_gap_count or 0),
         generic_shell_gap_count=sum(
             1
@@ -233,6 +308,9 @@ def build_verify_report(
             f'domain_expertise={domain_expertise_status} '
             f'expert_structure={expert_structure_status} '
             f'depth_quality={depth_quality_status} '
+            f'editorial_quality={editorial_quality_status} '
+            f'style_diversity={style_diversity_status} '
+            f'move_quality={move_quality_status} '
             f'hermes_comparison_gaps={comparison_report.gap_count}'
         ),
     )
@@ -329,6 +407,18 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- depth_quality_fail_count={report.depth_quality_fail_count}')
     lines.append(f'- depth_quality_warn_count={report.depth_quality_warn_count}')
     lines.append(f'- depth_quality_gap_count={report.depth_quality_gap_count}')
+    lines.append(f'- editorial_quality_status={report.editorial_quality_status}')
+    lines.append(f'- editorial_quality_fail_count={report.editorial_quality_fail_count}')
+    lines.append(f'- editorial_quality_warn_count={report.editorial_quality_warn_count}')
+    lines.append(f'- editorial_gap_count={report.editorial_gap_count}')
+    lines.append(f'- style_diversity_status={report.style_diversity_status}')
+    lines.append(f'- style_diversity_fail_count={report.style_diversity_fail_count}')
+    lines.append(f'- style_diversity_warn_count={report.style_diversity_warn_count}')
+    lines.append(f'- style_gap_count={report.style_gap_count}')
+    lines.append(f'- move_quality_status={report.move_quality_status}')
+    lines.append(f'- move_quality_fail_count={report.move_quality_fail_count}')
+    lines.append(f'- move_quality_warn_count={report.move_quality_warn_count}')
+    lines.append(f'- move_quality_gap_count={report.move_quality_gap_count}')
     lines.append(f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}')
     lines.append(f'- generic_shell_gap_count={report.generic_shell_gap_count}')
     lines.append(f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}')
@@ -496,6 +586,18 @@ def build_ops_roundbook_report(
         depth_quality_fail_count=verify_report.depth_quality_fail_count,
         depth_quality_warn_count=verify_report.depth_quality_warn_count,
         depth_quality_gap_count=verify_report.depth_quality_gap_count,
+        editorial_quality_status=verify_report.editorial_quality_status,
+        editorial_quality_fail_count=verify_report.editorial_quality_fail_count,
+        editorial_quality_warn_count=verify_report.editorial_quality_warn_count,
+        editorial_gap_count=verify_report.editorial_gap_count,
+        style_diversity_status=verify_report.style_diversity_status,
+        style_diversity_fail_count=verify_report.style_diversity_fail_count,
+        style_diversity_warn_count=verify_report.style_diversity_warn_count,
+        style_gap_count=verify_report.style_gap_count,
+        move_quality_status=verify_report.move_quality_status,
+        move_quality_fail_count=verify_report.move_quality_fail_count,
+        move_quality_warn_count=verify_report.move_quality_warn_count,
+        move_quality_gap_count=verify_report.move_quality_gap_count,
         pairwise_similarity_gap_count=verify_report.pairwise_similarity_gap_count,
         generic_shell_gap_count=verify_report.generic_shell_gap_count,
         hermes_comparison_gap_count=verify_report.hermes_comparison_gap_count,
@@ -512,6 +614,9 @@ def build_ops_roundbook_report(
             f'domain_expertise={verify_report.domain_expertise_status} '
             f'expert_structure={verify_report.expert_structure_status} '
             f'depth_quality={verify_report.depth_quality_status} '
+            f'editorial_quality={verify_report.editorial_quality_status} '
+            f'style_diversity={verify_report.style_diversity_status} '
+            f'move_quality={verify_report.move_quality_status} '
             f'overall_readiness={overall_readiness} '
             f'next_create_seed={next_create_seed_candidate or "none"} '
             f'next_prior_hold={next_prior_family_on_hold or "none"}'

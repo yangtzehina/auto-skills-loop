@@ -5,6 +5,9 @@ from pathlib import Path
 from openclaw_skill_create.models.artifacts import ArtifactFile, Artifacts
 from openclaw_skill_create.models.evaluation import EvaluationRunReport
 from openclaw_skill_create.models.depth_quality import SkillDepthQualityReport
+from openclaw_skill_create.models.editorial_quality import SkillEditorialQualityReport
+from openclaw_skill_create.models.expert_dna import SkillMoveQualityReport
+from openclaw_skill_create.models.style_diversity import SkillStyleDiversityReport
 from openclaw_skill_create.models.persistence import PersistencePolicy
 from openclaw_skill_create.models.plan import PlannedFile, SkillPlan
 from openclaw_skill_create.models.review import SkillQualityReview
@@ -12,10 +15,16 @@ from openclaw_skill_create.models.security import SecurityAuditFinding, Security
 from openclaw_skill_create.services.persistence import (
     EVALUATION_REPORT_PATH,
     DEPTH_QUALITY_REPORT_PATH,
+    EDITORIAL_QUALITY_REPORT_PATH,
+    MOVE_QUALITY_REPORT_PATH,
+    STYLE_DIVERSITY_REPORT_PATH,
     QUALITY_REVIEW_PATH,
     SECURITY_AUDIT_REPORT_PATH,
     artifacts_with_evaluation_report,
     artifacts_with_depth_quality,
+    artifacts_with_editorial_quality,
+    artifacts_with_move_quality,
+    artifacts_with_style_diversity,
     artifacts_with_quality_review,
     artifacts_with_security_audit,
     persist_artifacts,
@@ -190,3 +199,60 @@ def test_artifacts_with_depth_quality_adds_depth_report_file():
     assert depth_quality.content_type == 'application/json'
     assert '"skill_name": "demo-skill"' in depth_quality.content
     assert '"expert_depth_recall": 0.84' in depth_quality.content
+
+
+def test_artifacts_with_editorial_quality_adds_editorial_report_file():
+    artifacts = artifacts_with_editorial_quality(
+        artifacts=make_artifacts(),
+        editorial_quality=SkillEditorialQualityReport(
+            skill_name='demo-skill',
+            skill_archetype='methodology_guidance',
+            status='pass',
+            decision_pressure_score=0.84,
+            redundancy_ratio=0.08,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    editorial_quality = next(file for file in artifacts.files if file.path == EDITORIAL_QUALITY_REPORT_PATH)
+    assert editorial_quality.content_type == 'application/json'
+    assert '"skill_name": "demo-skill"' in editorial_quality.content
+    assert '"decision_pressure_score": 0.84' in editorial_quality.content
+
+
+def test_artifacts_with_style_diversity_adds_style_report_file():
+    artifacts = artifacts_with_style_diversity(
+        artifacts=make_artifacts(),
+        style_diversity=SkillStyleDiversityReport(
+            skill_name='demo-skill',
+            skill_archetype='methodology_guidance',
+            status='pass',
+            profile_specific_label_coverage=0.92,
+            fixed_renderer_phrase_count=0,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    style_diversity = next(file for file in artifacts.files if file.path == STYLE_DIVERSITY_REPORT_PATH)
+    assert style_diversity.content_type == 'application/json'
+    assert '"skill_name": "demo-skill"' in style_diversity.content
+    assert '"profile_specific_label_coverage": 0.92' in style_diversity.content
+
+
+def test_artifacts_with_move_quality_adds_move_report_file():
+    artifacts = artifacts_with_move_quality(
+        artifacts=make_artifacts(),
+        move_quality=SkillMoveQualityReport(
+            skill_name='demo-skill',
+            skill_archetype='methodology_guidance',
+            status='pass',
+            expert_move_recall=0.91,
+            numbered_workflow_spine_present=True,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    move_quality = next(file for file in artifacts.files if file.path == MOVE_QUALITY_REPORT_PATH)
+    assert move_quality.content_type == 'application/json'
+    assert '"skill_name": "demo-skill"' in move_quality.content
+    assert '"expert_move_recall": 0.91' in move_quality.content

@@ -24,14 +24,17 @@ from .operation_coverage import build_operation_coverage_report
 from .persistence import (
     artifacts_with_body_quality,
     artifacts_with_depth_quality,
+    artifacts_with_editorial_quality,
     artifacts_with_domain_expertise,
     artifacts_with_domain_specificity,
     artifacts_with_evaluation_report,
     artifacts_with_expert_structure,
+    artifacts_with_move_quality,
     artifacts_with_operation_coverage,
     artifacts_with_quality_review,
     artifacts_with_security_audit,
     artifacts_with_self_review,
+    artifacts_with_style_diversity,
     persist_artifacts,
 )
 from .planner import run_planner
@@ -117,6 +120,19 @@ BLOCKING_REPAIRABLE_ISSUES = {
     "thin_failure_patterns",
     "missing_worked_examples",
     "low_expert_depth_recall",
+    "low_decision_pressure",
+    "excessive_explanatory_bulk",
+    "weak_output_executability",
+    "thin_failure_corrections",
+    "high_redundancy",
+    "missing_expert_cut_moves",
+    "expert_move_recall_low",
+    "expert_move_precision_low",
+    "decision_rules_missing",
+    "output_field_semantics_missing",
+    "failure_repair_missing",
+    "numbered_workflow_spine_missing",
+    "high_cross_case_move_overlap",
 }
 
 
@@ -587,6 +603,21 @@ def run_skill_create(
             depth_quality=getattr(diagnostics, "depth_quality", None),
             policy=effective_persistence_policy,
         )
+        artifacts = artifacts_with_editorial_quality(
+            artifacts=artifacts,
+            editorial_quality=getattr(diagnostics, "editorial_quality", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_style_diversity(
+            artifacts=artifacts,
+            style_diversity=getattr(diagnostics, "style_diversity", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_move_quality(
+            artifacts=artifacts,
+            move_quality=getattr(diagnostics, "move_quality", None),
+            policy=effective_persistence_policy,
+        )
 
     if artifacts is not None and diagnostics is not None:
         artifacts = artifacts_with_body_quality(
@@ -617,6 +648,21 @@ def run_skill_create(
         artifacts = artifacts_with_depth_quality(
             artifacts=artifacts,
             depth_quality=getattr(diagnostics, "depth_quality", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_editorial_quality(
+            artifacts=artifacts,
+            editorial_quality=getattr(diagnostics, "editorial_quality", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_style_diversity(
+            artifacts=artifacts,
+            style_diversity=getattr(diagnostics, "style_diversity", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_move_quality(
+            artifacts=artifacts,
+            move_quality=getattr(diagnostics, "move_quality", None),
             policy=effective_persistence_policy,
         )
         operation_coverage = None

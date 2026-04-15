@@ -6,7 +6,10 @@ from .body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from .domain_expertise import SkillDomainExpertiseReport
 from .domain_specificity import SkillDomainSpecificityReport
 from .depth_quality import SkillDepthQualityReport
+from .editorial_quality import SkillEditorialQualityReport
+from .expert_dna import SkillMoveQualityReport
 from .expert_structure import SkillExpertStructureReport
+from .style_diversity import SkillStyleDiversityReport
 
 
 class SkillCreateComparisonMetrics(BaseModel):
@@ -48,6 +51,34 @@ class SkillCreateComparisonMetrics(BaseModel):
     output_field_guidance_coverage: float = 0.0
     boundary_rule_coverage: float = 0.0
     depth_gap_count: int = 0
+    editorial_quality_status: str = "unknown"
+    decision_pressure_score: float = 0.0
+    action_density_score: float = 0.0
+    redundancy_ratio: float = 0.0
+    output_executability_score: float = 0.0
+    failure_correction_score: float = 0.0
+    compression_score: float = 0.0
+    expert_cut_alignment: float = 0.0
+    editorial_gap_count: int = 0
+    style_diversity_status: str = "unknown"
+    shared_opening_phrase_ratio: float = 0.0
+    shared_step_label_ratio: float = 0.0
+    shared_boilerplate_sentence_ratio: float = 0.0
+    fixed_renderer_phrase_count: int = 0
+    profile_specific_label_coverage: float = 0.0
+    domain_rhythm_score: float = 0.0
+    style_gap_count: int = 0
+    move_quality_status: str = "unknown"
+    expert_move_recall: float = 0.0
+    expert_move_precision: float = 0.0
+    decision_rule_coverage: float = 0.0
+    cut_rule_coverage: float = 0.0
+    output_field_semantics_coverage: float = 0.0
+    failure_repair_coverage: float = 0.0
+    numbered_workflow_spine_present: bool = False
+    voice_rule_alignment: float = 0.0
+    cross_case_move_overlap: float = 0.0
+    move_quality_gap_count: int = 0
     fully_correct: bool = False
     severity: str = ""
 
@@ -64,6 +95,9 @@ class SkillCreateComparisonCaseResult(BaseModel):
     domain_expertise: SkillDomainExpertiseReport | None = None
     expert_structure: SkillExpertStructureReport | None = None
     depth_quality: SkillDepthQualityReport | None = None
+    editorial_quality: SkillEditorialQualityReport | None = None
+    style_diversity: SkillStyleDiversityReport | None = None
+    move_quality: SkillMoveQualityReport | None = None
     gap_issues: list[str] = Field(default_factory=list)
     status: str = "matched"
     summary: str = ""
@@ -85,6 +119,9 @@ class SkillCreateComparisonReport(BaseModel):
     anthropic_reference_summary: list[str] = Field(default_factory=list)
     expert_structure_gap_count: int = 0
     depth_quality_gap_count: int = 0
+    editorial_gap_count: int = 0
+    style_gap_count: int = 0
+    move_quality_gap_count: int = 0
     generic_shell_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
     gap_count: int = 0

@@ -185,6 +185,24 @@ def _headings(body: str) -> list[str]:
     return headings
 
 
+def _numbered_spine_labels(body: str) -> list[str]:
+    labels: list[str] = []
+    in_fence = False
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        match = re.match(r"\s*\d+\.\s+(?:\*\*)?([^*\n]+?)(?:\*\*)?\s*$", line)
+        if match:
+            label = match.group(1).strip()
+            if label:
+                labels.append(label)
+    return labels
+
+
 def _recall(items: list[str], text: str) -> tuple[float, list[str]]:
     missing = [item for item in items if not _contains_anchor(text, item)]
     return round((len(items) - len(missing)) / max(1, len(items)), 4), missing
@@ -228,6 +246,7 @@ def build_skill_expert_structure_report(
     task = str(getattr(request, "task", "") or "")
     profile = expert_profile_for_skill(skill_name=skill_name, task=task)
     headings = _headings(body)
+    structure_labels = headings + _numbered_spine_labels(body)
     normalized_headings = [_normalize(item) for item in headings]
     generic_count = sum(1 for heading in normalized_headings if heading in GENERIC_SKELETON_HEADINGS)
     generic_ratio = round(generic_count / max(1, len(headings)), 4)
@@ -255,7 +274,7 @@ def build_skill_expert_structure_report(
     pitfall_text = _extract_section(body, ("common pitfalls", "pitfalls", "failure modes", "anti-patterns"))
     quality_text = _extract_section(body, ("quality checks", "quality bar", "acceptance", "checks"))
 
-    heading_recall, missing_headings = _heading_recall(profile.required_headings, headings)
+    heading_recall, missing_headings = _heading_recall(profile.required_headings, structure_labels)
     action_recall, missing_actions = _recall(profile.domain_actions, workflow_text or body)
     output_recall, missing_outputs = _recall(profile.output_fields, output_text)
     pitfall_recall, missing_pitfalls = _recall(profile.pitfall_clusters, pitfall_text)

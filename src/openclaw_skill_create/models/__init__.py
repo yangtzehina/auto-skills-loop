@@ -5,6 +5,8 @@ from .diagnostics import Diagnostics, ValidationResult
 from .domain_specificity import SkillDomainSpecificityReport
 from .domain_expertise import SkillDomainExpertiseReport
 from .depth_quality import ExpertDepthProfile, SkillDepthQualityReport
+from .editorial_quality import ExpertEditorialProfile, SkillEditorialQualityReport
+from .expert_dna import DomainMovePlan, ExpertSkillDNA, ExpertWorkflowMove, SkillMoveQualityReport
 from .expert_structure import ExpertSkillProfile, SkillExpertStructureReport
 from .findings import CandidateResources, RepoFinding, RepoFindings
 from .lineage import SkillLineageHistoryEntry, SkillLineageManifest
@@ -55,6 +57,7 @@ from .repair import RepairResult
 from .request import SkillCreateRequestV6
 from .response import SkillCreateResponseV6
 from .security import SecurityAuditFinding, SecurityAuditReport
+from .style_diversity import ExpertStyleProfile, SkillStyleDiversityReport
 from .runtime import (
     EvolutionPlan,
     RuntimeCreateCandidate,
@@ -124,6 +127,12 @@ __all__ = [
     'SkillDepthQualityReport',
     'ExpertSkillProfile',
     'SkillExpertStructureReport',
+    'ExpertStyleProfile',
+    'SkillStyleDiversityReport',
+    'ExpertWorkflowMove',
+    'ExpertSkillDNA',
+    'DomainMovePlan',
+    'SkillMoveQualityReport',
     'SkillCreateComparisonCaseResult',
     'SkillCreateComparisonMetrics',
     'SkillCreateComparisonReport',

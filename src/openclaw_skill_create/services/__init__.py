@@ -4,6 +4,8 @@ from .body_quality import build_skill_body_quality_report, build_skill_self_revi
 from .domain_specificity import build_skill_domain_specificity_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .expert_structure import build_skill_expert_structure_report
+from .move_quality import build_skill_move_quality_report
+from .style_diversity import build_skill_style_diversity_report
 from .orchestrator import run_skill_create
 from .ops_approval import (
     apply_ops_approval_state,
@@ -115,6 +117,7 @@ __all__ = [
     'build_skill_domain_specificity_report',
     'build_skill_domain_expertise_report',
     'build_skill_expert_structure_report',
+    'build_skill_style_diversity_report',
     'run_skill_create',
     'detect_skill_archetype',
     'build_operation_contract',

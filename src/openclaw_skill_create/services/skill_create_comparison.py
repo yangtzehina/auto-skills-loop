@@ -19,10 +19,20 @@ from ..models.plan import PlannedFile, SkillPlan
 from ..models.request import SkillCreateRequestV6
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 from .depth_quality import build_skill_depth_quality_report
+from .editorial_quality import build_skill_editorial_quality_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
+from .expert_dna import move_signature_from_markdown
 from .expert_structure import build_skill_expert_structure_report
+from .move_quality import build_skill_move_quality_report
 from .orchestrator import run_skill_create
+from .style_diversity import (
+    build_skill_style_diversity_report,
+    shared_boilerplate_sentence_ratio,
+    shared_opening_ratio,
+    shared_step_label_ratio,
+    style_signature_from_markdown,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -110,10 +120,16 @@ def _metrics_from_reports(
     domain_expertise=None,
     expert_structure=None,
     depth_quality=None,
+    editorial_quality=None,
+    style_diversity=None,
+    move_quality=None,
     severity: str = '',
     fully_correct: bool = False,
 ) -> SkillCreateComparisonMetrics:
     depth_blocking_count = len(list(getattr(depth_quality, 'blocking_issues', []) or []))
+    editorial_blocking_count = len(list(getattr(editorial_quality, 'blocking_issues', []) or []))
+    style_blocking_count = len(list(getattr(style_diversity, 'blocking_issues', []) or []))
+    move_blocking_count = len(list(getattr(move_quality, 'blocking_issues', []) or []))
     return SkillCreateComparisonMetrics(
         body_lines=int(getattr(body_quality, 'body_lines', 0) or 0),
         body_chars=int(getattr(body_quality, 'body_chars', 0) or 0),
@@ -153,12 +169,40 @@ def _metrics_from_reports(
         output_field_guidance_coverage=float(getattr(depth_quality, 'output_field_guidance_coverage', 0.0) or 0.0),
         boundary_rule_coverage=float(getattr(depth_quality, 'boundary_rule_coverage', 0.0) or 0.0),
         depth_gap_count=depth_blocking_count,
+        editorial_quality_status=str(getattr(editorial_quality, 'status', 'unknown') or 'unknown'),
+        decision_pressure_score=float(getattr(editorial_quality, 'decision_pressure_score', 0.0) or 0.0),
+        action_density_score=float(getattr(editorial_quality, 'action_density_score', 0.0) or 0.0),
+        redundancy_ratio=float(getattr(editorial_quality, 'redundancy_ratio', 0.0) or 0.0),
+        output_executability_score=float(getattr(editorial_quality, 'output_executability_score', 0.0) or 0.0),
+        failure_correction_score=float(getattr(editorial_quality, 'failure_correction_score', 0.0) or 0.0),
+        compression_score=float(getattr(editorial_quality, 'compression_score', 0.0) or 0.0),
+        expert_cut_alignment=float(getattr(editorial_quality, 'expert_cut_alignment', 0.0) or 0.0),
+        editorial_gap_count=editorial_blocking_count,
+        style_diversity_status=str(getattr(style_diversity, 'status', 'unknown') or 'unknown'),
+        shared_opening_phrase_ratio=float(getattr(style_diversity, 'shared_opening_phrase_ratio', 0.0) or 0.0),
+        shared_step_label_ratio=float(getattr(style_diversity, 'shared_step_label_ratio', 0.0) or 0.0),
+        shared_boilerplate_sentence_ratio=float(getattr(style_diversity, 'shared_boilerplate_sentence_ratio', 0.0) or 0.0),
+        fixed_renderer_phrase_count=int(getattr(style_diversity, 'fixed_renderer_phrase_count', 0) or 0),
+        profile_specific_label_coverage=float(getattr(style_diversity, 'profile_specific_label_coverage', 0.0) or 0.0),
+        domain_rhythm_score=float(getattr(style_diversity, 'domain_rhythm_score', 0.0) or 0.0),
+        style_gap_count=style_blocking_count,
+        move_quality_status=str(getattr(move_quality, 'status', 'unknown') or 'unknown'),
+        expert_move_recall=float(getattr(move_quality, 'expert_move_recall', 0.0) or 0.0),
+        expert_move_precision=float(getattr(move_quality, 'expert_move_precision', 0.0) or 0.0),
+        decision_rule_coverage=float(getattr(move_quality, 'decision_rule_coverage', 0.0) or 0.0),
+        cut_rule_coverage=float(getattr(move_quality, 'cut_rule_coverage', 0.0) or 0.0),
+        output_field_semantics_coverage=float(getattr(move_quality, 'output_field_semantics_coverage', 0.0) or 0.0),
+        failure_repair_coverage=float(getattr(move_quality, 'failure_repair_coverage', 0.0) or 0.0),
+        numbered_workflow_spine_present=bool(getattr(move_quality, 'numbered_workflow_spine_present', False)),
+        voice_rule_alignment=float(getattr(move_quality, 'voice_rule_alignment', 0.0) or 0.0),
+        cross_case_move_overlap=float(getattr(move_quality, 'cross_case_move_overlap', 0.0) or 0.0),
+        move_quality_gap_count=move_blocking_count,
         fully_correct=bool(fully_correct),
         severity=str(severity or ''),
     )
 
 
-def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any]:
+def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any]:
     request = _request(case)
     plan = _plan(case)
     artifacts = _artifact_skill_md(content)
@@ -189,6 +233,21 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         skill_plan=plan,
         artifacts=artifacts,
     )
+    editorial_quality = build_skill_editorial_quality_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+    )
+    style_diversity = build_skill_style_diversity_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+    )
+    move_quality = build_skill_move_quality_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+    )
     return (
         _metrics_from_reports(
             body_quality=body_quality,
@@ -197,6 +256,9 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
             domain_expertise=domain_expertise,
             expert_structure=expert_structure,
             depth_quality=depth_quality,
+            editorial_quality=editorial_quality,
+            style_diversity=style_diversity,
+            move_quality=move_quality,
             severity='reference',
             fully_correct=(
                 body_quality.passed
@@ -205,6 +267,9 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
                 and domain_expertise.status == 'pass'
                 and expert_structure.status == 'pass'
                 and depth_quality.status == 'pass'
+                and editorial_quality.status == 'pass'
+                and style_diversity.status == 'pass'
+                and move_quality.status == 'pass'
             ),
         ),
         body_quality,
@@ -213,10 +278,13 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         domain_expertise,
         expert_structure,
         depth_quality,
+        editorial_quality,
+        style_diversity,
+        move_quality,
     )
 
 
-def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, str]:
+def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any, str]:
     with tempfile.TemporaryDirectory(prefix='auto-skills-loop-comparison-') as tmpdir:
         response = run_skill_create(
             _request(case),
@@ -234,6 +302,9 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
     domain_expertise = getattr(response.diagnostics, 'domain_expertise', None) if response.diagnostics is not None else None
     expert_structure = getattr(response.diagnostics, 'expert_structure', None) if response.diagnostics is not None else None
     depth_quality = getattr(response.diagnostics, 'depth_quality', None) if response.diagnostics is not None else None
+    editorial_quality = getattr(response.diagnostics, 'editorial_quality', None) if response.diagnostics is not None else None
+    style_diversity = getattr(response.diagnostics, 'style_diversity', None) if response.diagnostics is not None else None
+    move_quality = getattr(response.diagnostics, 'move_quality', None) if response.diagnostics is not None else None
     return (
         _metrics_from_reports(
             body_quality=body_quality,
@@ -242,6 +313,9 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
             domain_expertise=domain_expertise,
             expert_structure=expert_structure,
             depth_quality=depth_quality,
+            editorial_quality=editorial_quality,
+            style_diversity=style_diversity,
+            move_quality=move_quality,
             severity=response.severity,
             fully_correct=bool(getattr(response.quality_review, 'fully_correct', False)),
         ),
@@ -251,6 +325,9 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
         domain_expertise,
         expert_structure,
         depth_quality,
+        editorial_quality,
+        style_diversity,
+        move_quality,
         _skill_md_content(response.artifacts),
     )
 
@@ -311,7 +388,7 @@ def _run_hermes_case(case: dict[str, str], wrapper: Path) -> tuple[SkillCreateCo
         skill_md = generated_root / 'SKILL.md'
         if not skill_md.exists():
             return None, f'Hermes wrapper did not write SKILL.md under {generated_root}'
-        metrics, _, _, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
+        metrics, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
         metrics.severity = str(payload.get('severity') or '')
         return metrics, None
 
@@ -429,6 +506,12 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_expert_structure_not_pass')
     if auto.depth_quality_status != 'pass':
         issues.append('auto_depth_quality_not_pass')
+    if auto.editorial_quality_status != 'pass':
+        issues.append('auto_editorial_quality_not_pass')
+    if auto.style_diversity_status != 'pass':
+        issues.append('auto_style_diversity_not_pass')
+    if auto.move_quality_status != 'pass':
+        issues.append('auto_move_quality_not_pass')
     if auto.expert_action_cluster_recall < 0.75 and reference.expert_action_cluster_recall >= 0.75:
         issues.append('auto_expert_action_clusters_missing')
     if auto.expert_output_field_recall < 0.70 and reference.expert_output_field_recall >= 0.70:
@@ -447,6 +530,40 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_worked_examples_missing')
     if auto.failure_pattern_density < 4 and reference.failure_pattern_density >= 4:
         issues.append('auto_failure_patterns_thin')
+    if auto.decision_pressure_score < 0.70:
+        issues.append('auto_decision_pressure_low')
+    if auto.output_executability_score < 0.70:
+        issues.append('auto_output_executability_weak')
+    if auto.failure_correction_score < 0.70:
+        issues.append('auto_failure_corrections_thin')
+    if auto.redundancy_ratio > 0.25:
+        issues.append('auto_redundancy_high')
+    if auto.bullet_count > reference.bullet_count * 1.6 and auto.decision_pressure_score < 0.85:
+        issues.append('auto_explanatory_bulk_high')
+    if auto.shared_opening_phrase_ratio > 0.35:
+        issues.append('auto_shared_opening_phrase')
+    if auto.shared_step_label_ratio > 0.55:
+        issues.append('auto_shared_step_labels')
+    if auto.shared_boilerplate_sentence_ratio > 0.35:
+        issues.append('auto_shared_boilerplate_sentences')
+    if auto.profile_specific_label_coverage < 0.70:
+        issues.append('auto_profile_specific_labels_missing')
+    if auto.fixed_renderer_phrase_count >= 3:
+        issues.append('auto_fixed_renderer_boilerplate')
+    if auto.expert_move_recall < 0.85:
+        issues.append('auto_expert_move_recall_low')
+    if auto.expert_move_precision < 0.70:
+        issues.append('auto_expert_move_precision_low')
+    if auto.decision_rule_coverage < 0.75:
+        issues.append('auto_decision_rules_missing')
+    if auto.output_field_semantics_coverage < 0.75:
+        issues.append('auto_output_field_semantics_missing')
+    if auto.failure_repair_coverage < 0.75:
+        issues.append('auto_failure_repair_missing')
+    if not auto.numbered_workflow_spine_present:
+        issues.append('auto_numbered_workflow_spine_missing')
+    if auto.cross_case_move_overlap >= 0.35:
+        issues.append('auto_cross_case_move_overlap_high')
     if auto.generated_vs_generated_heading_overlap >= 0.80:
         issues.append('auto_generated_heading_overlap_high')
     if auto.generated_vs_generated_line_jaccard >= 0.42:
@@ -470,7 +587,7 @@ def _anthropic_reference_metrics() -> tuple[SkillCreateComparisonMetrics | None,
             'skill_name': 'skill-creator',
             'task': 'Create and iteratively improve skills with evals, baseline comparisons, qualitative review, and quantitative benchmarks.',
         }
-        metrics, _, _, _, _, _, _ = _metrics_from_markdown(case, content)
+        metrics, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, content)
         summary = [
             'Anthropic skill-creator reference available',
             f'body_lines={metrics.body_lines}',
@@ -496,6 +613,9 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         f'- anthropic_reference_available={report.anthropic_reference_available}',
         f'- expert_structure_gap_count={report.expert_structure_gap_count}',
         f'- depth_quality_gap_count={report.depth_quality_gap_count}',
+        f'- editorial_gap_count={report.editorial_gap_count}',
+        f'- style_gap_count={report.style_gap_count}',
+        f'- move_quality_gap_count={report.move_quality_gap_count}',
         f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
         f'- Summary: {report.summary}',
@@ -524,6 +644,31 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_worked_example_count={case.auto_metrics.worked_example_count}')
         lines.append(f'- auto_failure_pattern_density={case.auto_metrics.failure_pattern_density}')
         lines.append(f'- auto_output_field_guidance_coverage={case.auto_metrics.output_field_guidance_coverage:.2f}')
+        lines.append(f'- auto_editorial_quality={case.auto_metrics.editorial_quality_status}')
+        lines.append(f'- auto_decision_pressure_score={case.auto_metrics.decision_pressure_score:.2f}')
+        lines.append(f'- auto_action_density_score={case.auto_metrics.action_density_score:.2f}')
+        lines.append(f'- auto_redundancy_ratio={case.auto_metrics.redundancy_ratio:.2f}')
+        lines.append(f'- auto_output_executability_score={case.auto_metrics.output_executability_score:.2f}')
+        lines.append(f'- auto_failure_correction_score={case.auto_metrics.failure_correction_score:.2f}')
+        lines.append(f'- auto_compression_score={case.auto_metrics.compression_score:.2f}')
+        lines.append(f'- auto_expert_cut_alignment={case.auto_metrics.expert_cut_alignment:.2f}')
+        lines.append(f'- auto_style_diversity={case.auto_metrics.style_diversity_status}')
+        lines.append(f'- auto_shared_opening_phrase_ratio={case.auto_metrics.shared_opening_phrase_ratio:.2f}')
+        lines.append(f'- auto_shared_step_label_ratio={case.auto_metrics.shared_step_label_ratio:.2f}')
+        lines.append(f'- auto_shared_boilerplate_sentence_ratio={case.auto_metrics.shared_boilerplate_sentence_ratio:.2f}')
+        lines.append(f'- auto_fixed_renderer_phrase_count={case.auto_metrics.fixed_renderer_phrase_count}')
+        lines.append(f'- auto_profile_specific_label_coverage={case.auto_metrics.profile_specific_label_coverage:.2f}')
+        lines.append(f'- auto_domain_rhythm_score={case.auto_metrics.domain_rhythm_score:.2f}')
+        lines.append(f'- auto_move_quality={case.auto_metrics.move_quality_status}')
+        lines.append(f'- auto_expert_move_recall={case.auto_metrics.expert_move_recall:.2f}')
+        lines.append(f'- auto_expert_move_precision={case.auto_metrics.expert_move_precision:.2f}')
+        lines.append(f'- auto_decision_rule_coverage={case.auto_metrics.decision_rule_coverage:.2f}')
+        lines.append(f'- auto_cut_rule_coverage={case.auto_metrics.cut_rule_coverage:.2f}')
+        lines.append(f'- auto_output_field_semantics_coverage={case.auto_metrics.output_field_semantics_coverage:.2f}')
+        lines.append(f'- auto_failure_repair_coverage={case.auto_metrics.failure_repair_coverage:.2f}')
+        lines.append(f'- auto_numbered_workflow_spine_present={case.auto_metrics.numbered_workflow_spine_present}')
+        lines.append(f'- auto_voice_rule_alignment={case.auto_metrics.voice_rule_alignment:.2f}')
+        lines.append(f'- auto_cross_case_move_overlap={case.auto_metrics.cross_case_move_overlap:.2f}')
         lines.append(f'- auto_generated_heading_overlap={case.auto_metrics.generated_vs_generated_heading_overlap:.2f}')
         lines.append(f'- auto_generated_line_jaccard={case.auto_metrics.generated_vs_generated_line_jaccard:.2f}')
         lines.append(f'- auto_generic_skeleton_ratio={case.auto_metrics.generic_skeleton_ratio:.2f}')
@@ -561,9 +706,21 @@ def build_skill_create_comparison_report(
     hermes_errors: list[str] = []
     case_payloads: list[dict[str, Any]] = []
     for case in COMPARISON_CASES:
-        auto_metrics, body_quality, self_review, domain_specificity, domain_expertise, expert_structure, depth_quality, auto_content = _run_auto_case(case)
+        (
+            auto_metrics,
+            body_quality,
+            self_review,
+            domain_specificity,
+            domain_expertise,
+            expert_structure,
+            depth_quality,
+            editorial_quality,
+            style_diversity,
+            move_quality,
+            auto_content,
+        ) = _run_auto_case(case)
         reference_root = DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT if DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT.exists() else root
-        golden_metrics, _, _, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, reference_root))
+        golden_metrics, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, reference_root))
         hermes_metrics = None
         if hermes_wrapper is not None:
             hermes_metrics, error = _run_hermes_case(case, hermes_wrapper)
@@ -581,6 +738,9 @@ def build_skill_create_comparison_report(
                 'domain_expertise': domain_expertise,
                 'expert_structure': expert_structure,
                 'depth_quality': depth_quality,
+                'editorial_quality': editorial_quality,
+                'style_diversity': style_diversity,
+                'move_quality': move_quality,
                 'auto_content': auto_content,
             }
         )
@@ -604,9 +764,74 @@ def build_skill_create_comparison_report(
         ]
         max_heading_overlap = max(heading_overlaps or [0.0])
         max_line_jaccard = max(line_jaccards or [0.0])
+        signatures = [
+            style_signature_from_markdown(other['auto_content'])
+            for other in case_payloads
+            if other is not payload
+        ]
+        own_signature = style_signature_from_markdown(payload['auto_content'])
+        max_opening = max(
+            [shared_opening_ratio(own_signature['opening'], item['opening']) for item in signatures] or [0.0]
+        )
+        max_label_ratio = max(
+            [
+                shared_step_label_ratio(own_signature['workflow_labels'], item['workflow_labels'])
+                for item in signatures
+            ]
+            or [0.0]
+        )
+        max_boilerplate = max(
+            [
+                shared_boilerplate_sentence_ratio(own_signature['boilerplate_sentences'], item['boilerplate_sentences'])
+                for item in signatures
+            ]
+            or [0.0]
+        )
+        own_moves = move_signature_from_markdown(payload['auto_content'])
+        move_overlaps = []
+        for other in case_payloads:
+            if other is payload:
+                continue
+            other_moves = move_signature_from_markdown(other['auto_content'])
+            if own_moves and other_moves:
+                move_overlaps.append(len(own_moves & other_moves) / max(1, len(own_moves | other_moves)))
+        max_move_overlap = round(max(move_overlaps or [0.0]), 4)
         payload['auto_metrics'].cross_case_similarity = max_similarity
         payload['auto_metrics'].generated_vs_generated_heading_overlap = max_heading_overlap
         payload['auto_metrics'].generated_vs_generated_line_jaccard = max_line_jaccard
+        payload['style_diversity'] = build_skill_style_diversity_report(
+            request=_request(payload['case']),
+            skill_plan=_plan(payload['case']),
+            artifacts=_artifact_skill_md(payload['auto_content']),
+            shared_opening_phrase_ratio=max_opening,
+            shared_step_label_ratio_value=max_label_ratio,
+            shared_boilerplate_sentence_ratio_value=max_boilerplate,
+        )
+        payload['auto_metrics'].style_diversity_status = payload['style_diversity'].status
+        payload['auto_metrics'].shared_opening_phrase_ratio = payload['style_diversity'].shared_opening_phrase_ratio
+        payload['auto_metrics'].shared_step_label_ratio = payload['style_diversity'].shared_step_label_ratio
+        payload['auto_metrics'].shared_boilerplate_sentence_ratio = payload['style_diversity'].shared_boilerplate_sentence_ratio
+        payload['auto_metrics'].fixed_renderer_phrase_count = payload['style_diversity'].fixed_renderer_phrase_count
+        payload['auto_metrics'].profile_specific_label_coverage = payload['style_diversity'].profile_specific_label_coverage
+        payload['auto_metrics'].domain_rhythm_score = payload['style_diversity'].domain_rhythm_score
+        payload['auto_metrics'].style_gap_count = len(list(payload['style_diversity'].blocking_issues or []))
+        payload['move_quality'] = build_skill_move_quality_report(
+            request=_request(payload['case']),
+            skill_plan=_plan(payload['case']),
+            artifacts=_artifact_skill_md(payload['auto_content']),
+            cross_case_move_overlap=max_move_overlap,
+        )
+        payload['auto_metrics'].move_quality_status = payload['move_quality'].status
+        payload['auto_metrics'].expert_move_recall = payload['move_quality'].expert_move_recall
+        payload['auto_metrics'].expert_move_precision = payload['move_quality'].expert_move_precision
+        payload['auto_metrics'].decision_rule_coverage = payload['move_quality'].decision_rule_coverage
+        payload['auto_metrics'].cut_rule_coverage = payload['move_quality'].cut_rule_coverage
+        payload['auto_metrics'].output_field_semantics_coverage = payload['move_quality'].output_field_semantics_coverage
+        payload['auto_metrics'].failure_repair_coverage = payload['move_quality'].failure_repair_coverage
+        payload['auto_metrics'].numbered_workflow_spine_present = payload['move_quality'].numbered_workflow_spine_present
+        payload['auto_metrics'].voice_rule_alignment = payload['move_quality'].voice_rule_alignment
+        payload['auto_metrics'].cross_case_move_overlap = payload['move_quality'].cross_case_move_overlap
+        payload['auto_metrics'].move_quality_gap_count = len(list(payload['move_quality'].blocking_issues or []))
         if payload['domain_specificity'] is not None:
             payload['domain_specificity'].cross_case_similarity = max_similarity
             if max_similarity >= 0.82 and 'high_cross_case_similarity' not in payload['domain_specificity'].blocking_issues:
@@ -672,6 +897,9 @@ def build_skill_create_comparison_report(
                 domain_expertise=payload['domain_expertise'],
                 expert_structure=payload['expert_structure'],
                 depth_quality=payload['depth_quality'],
+                editorial_quality=payload['editorial_quality'],
+                style_diversity=payload['style_diversity'],
+                move_quality=payload['move_quality'],
                 gap_issues=gap_issues,
                 status=status,
                 summary=f'{case["case_id"]}: {status}',
@@ -700,6 +928,59 @@ def build_skill_create_comparison_report(
             for issue in list(item.gap_issues or [])
         )
         or item.auto_metrics.depth_quality_status != 'pass'
+    )
+    editorial_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue
+            in {
+                'auto_editorial_quality_not_pass',
+                'auto_decision_pressure_low',
+                'auto_output_executability_weak',
+                'auto_failure_corrections_thin',
+                'auto_redundancy_high',
+                'auto_explanatory_bulk_high',
+            }
+            for issue in list(item.gap_issues or [])
+        )
+        or item.auto_metrics.editorial_quality_status != 'pass'
+    )
+    style_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue
+            in {
+                'auto_style_diversity_not_pass',
+                'auto_shared_opening_phrase',
+                'auto_shared_step_labels',
+                'auto_shared_boilerplate_sentences',
+                'auto_profile_specific_labels_missing',
+                'auto_fixed_renderer_boilerplate',
+            }
+            for issue in list(item.gap_issues or [])
+        )
+        or item.auto_metrics.style_diversity_status != 'pass'
+    )
+    move_quality_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue
+            in {
+                'auto_move_quality_not_pass',
+                'auto_expert_move_recall_low',
+                'auto_expert_move_precision_low',
+                'auto_decision_rules_missing',
+                'auto_output_field_semantics_missing',
+                'auto_failure_repair_missing',
+                'auto_numbered_workflow_spine_missing',
+                'auto_cross_case_move_overlap_high',
+            }
+            for issue in list(item.gap_issues or [])
+        )
+        or item.auto_metrics.move_quality_status != 'pass'
     )
     generic_shell_gap_count = sum(
         1
@@ -730,6 +1011,9 @@ def build_skill_create_comparison_report(
         anthropic_reference_summary=anthropic_summary,
         expert_structure_gap_count=expert_structure_gap_count,
         depth_quality_gap_count=depth_quality_gap_count,
+        editorial_gap_count=editorial_gap_count,
+        style_gap_count=style_gap_count,
+        move_quality_gap_count=move_quality_gap_count,
         generic_shell_gap_count=generic_shell_gap_count,
         pairwise_similarity_gap_count=pairwise_similarity_gap_count,
         gap_count=gap_count,
@@ -739,7 +1023,8 @@ def build_skill_create_comparison_report(
             f'comparison_source={comparison_source} '
             f'independence={comparison_independence_status} '
             f'reference_role={reference_role} '
-            f'hermes_status={hermes_execution_status}'
+            f'hermes_status={hermes_execution_status} '
+            f'move_quality_gaps={move_quality_gap_count}'
         ),
     )
     report.markdown_summary = render_skill_create_comparison_markdown(report)
