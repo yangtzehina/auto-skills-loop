@@ -1,5 +1,9 @@
 {
-  "evaluation_report_present": true,
+  "severity": "pass",
+  "reuse_decision": "adapt_existing",
+  "selected_online_skill_names": [
+    "notion-governance-capture"
+  ],
   "generated_files": [
     "SKILL.md",
     "_meta.json",
@@ -9,11 +13,13 @@
     "evals/depth_quality.json",
     "evals/domain_expertise.json",
     "evals/domain_specificity.json",
+    "evals/editorial_force.json",
     "evals/editorial_quality.json",
     "evals/expert_structure.json",
     "evals/move_quality.json",
     "evals/output_eval.json",
     "evals/program_fidelity.json",
+    "evals/promotion_decision.json",
     "evals/report.json",
     "evals/review.json",
     "evals/security_audit.json",
@@ -25,10 +31,6 @@
     "references/notion_schema.md",
     "scripts/sync_notion.py"
   ],
-  "persisted_report_matches_memory": true,
-  "reuse_decision": "adapt_existing",
-  "selected_online_skill_names": [
-    "notion-governance-capture"
-  ],
-  "severity": "pass"
+  "evaluation_report_present": true,
+  "persisted_report_matches_memory": true
 }

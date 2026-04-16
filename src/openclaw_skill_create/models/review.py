@@ -70,6 +70,10 @@ class SkillQualityReview(BaseModel):
     move_quality_issues: list[str] = Field(default_factory=list)
     workflow_form_status: str = "not_applicable"
     workflow_form_issues: list[str] = Field(default_factory=list)
+    editorial_force_status: str = "not_applicable"
+    editorial_force_issues: list[str] = Field(default_factory=list)
+    pairwise_promotion_status: str = "not_applicable"
+    pairwise_promotion_reason: str = ""
     program_fidelity_status: str = "not_applicable"
     program_fidelity_issues: list[str] = Field(default_factory=list)
     task_outcome_status: str = "not_applicable"

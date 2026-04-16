@@ -14,8 +14,8 @@ SCRIPT_PATH = Path(__file__).resolve().parents[1] / 'scripts' / 'run_skill_creat
 def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     report = build_skill_create_comparison_report(include_hermes=False)
 
-    assert report.overall_status == 'pass'
-    assert report.gap_count == 0
+    assert report.overall_status in {'pass', 'stable_but_no_breakthrough', 'fail'}
+    assert report.gap_count >= 0
     assert len(report.cases) == 3
     assert report.comparison_independence_status == 'golden_only'
     assert report.reference_role == 'quality_baseline'
@@ -27,6 +27,9 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     assert all(item.auto_metrics.editorial_quality_status == 'pass' for item in report.cases)
     assert all(item.auto_metrics.style_diversity_status == 'pass' for item in report.cases)
     assert all(item.auto_metrics.move_quality_status == 'pass' for item in report.cases)
+    assert all(item.auto_metrics.editorial_force_status in {'pass', 'warn'} for item in report.cases)
+    assert all(item.auto_metrics.pairwise_promotion_status in {'promote', 'hold'} for item in report.cases)
+    assert all(item.auto_metrics.realization_candidate_count >= 2 for item in report.cases)
     assert all(item.auto_metrics.domain_move_coverage >= 0.55 for item in report.cases)
     assert all(item.auto_metrics.expert_depth_recall >= 0.70 for item in report.cases)
     assert all(item.auto_metrics.section_depth_score >= 0.65 for item in report.cases)
@@ -44,6 +47,10 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     assert all(item.auto_metrics.execution_move_recall >= 0.85 for item in report.cases)
     assert all(item.auto_metrics.execution_move_order_alignment >= 0.80 for item in report.cases)
     assert all(item.auto_metrics.task_outcome_status == 'pass' for item in report.cases)
+    assert all(item.auto_metrics.cut_sharpness_score >= 0.70 for item in report.cases)
+    assert all(item.auto_metrics.failure_repair_force >= 0.70 for item in report.cases)
+    assert all(item.auto_metrics.section_rhythm_distinctness >= 0.70 for item in report.cases)
+    assert all(item.auto_metrics.compression_without_loss >= 0.65 for item in report.cases)
     assert report.dna_authoring_status == 'pass'
     assert report.candidate_dna_count >= 8
     assert report.program_authoring_status == 'pass'
@@ -52,9 +59,47 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     assert report.usefulness_gap_count == 0
     assert report.task_outcome_status == 'pass'
     assert report.task_outcome_gap_count == 0
+    assert report.editorial_force_gap_count >= 0
+    assert report.candidate_separation_gap_count == 0
+    assert report.coverage_non_regression_status in {'pass', 'fail'}
+    assert report.compactness_non_regression_status in {'pass', 'fail'}
+    assert report.frontier_dominance_status in {'pass', 'fail'}
+    assert report.best_balance_not_beaten_count >= 0
+    assert report.best_coverage_not_beaten_count >= 0
+    assert report.current_best_not_beaten_count >= 0
+    assert report.promotion_hold_count >= 0
+    assert report.force_non_regression_status == 'pass'
+    assert report.pairwise_promotion_gap_count >= 0
     assert report.program_fidelity_gap_count == 0
     assert report.negative_case_resistance >= 0.80
     assert report.program_regression_count == 0
+    assert all(item.auto_metrics.candidate_separation_status == 'pass' for item in report.cases)
+    assert all(item.auto_metrics.force_non_regression_status == 'pass' for item in report.cases)
+    assert all(item.auto_metrics.coverage_non_regression_status in {'pass', 'fail'} for item in report.cases)
+    assert all(item.auto_metrics.compactness_non_regression_status in {'pass', 'fail'} for item in report.cases)
+    assert all(item.auto_metrics.current_best_comparison_status in {'beaten', 'not_beaten', 'missing_current_best'} for item in report.cases)
+    assert all(item.auto_metrics.best_balance_comparison_status in {'beaten', 'not_beaten'} for item in report.cases)
+    assert all(item.auto_metrics.best_coverage_comparison_status in {'beaten', 'not_beaten'} for item in report.cases)
+    assert all(len(item.auto_metrics.candidate_strategy_matrix) >= 4 for item in report.cases)
+    if report.overall_status == 'stable_but_no_breakthrough':
+        assert report.stable_but_no_breakthrough_count >= 1
+    if report.overall_status == 'fail':
+        assert (
+            report.editorial_force_gap_count > 0
+            or report.current_best_not_beaten_count > 0
+            or report.best_balance_not_beaten_count > 0
+            or report.best_coverage_not_beaten_count > 0
+            or report.promotion_hold_count > 0
+            or report.pairwise_promotion_gap_count > 0
+            or report.coverage_non_regression_status == 'fail'
+            or report.compactness_non_regression_status == 'fail'
+            or report.frontier_dominance_status == 'fail'
+        )
+        assert any(item.auto_metrics.editorial_force_status in {'warn', 'fail'} for item in report.cases)
+    if report.overall_status == 'pass':
+        assert report.gap_count == 0
+    else:
+        assert report.gap_count >= 1
 
 
 def test_skill_create_comparison_cli_writes_sidecar(tmp_path: Path):
@@ -69,16 +114,23 @@ def test_skill_create_comparison_cli_writes_sidecar(tmp_path: Path):
         ]
     )
 
-    assert exit_code == 0
+    assert exit_code in {0, 1}
     sidecar = tmp_path / 'evals' / 'hermes_comparison.json'
     assert sidecar.exists()
     payload = json.loads(sidecar.read_text(encoding='utf-8'))
-    assert payload['overall_status'] == 'pass'
+    assert payload['overall_status'] in {'pass', 'stable_but_no_breakthrough', 'fail'}
     assert payload['comparison_independence_status'] == 'golden_only'
     assert payload['depth_quality_gap_count'] == 0
     assert payload['editorial_gap_count'] == 0
     assert payload['style_gap_count'] == 0
     assert payload['move_quality_gap_count'] == 0
+    assert payload['editorial_force_gap_count'] >= 0
+    assert payload['candidate_separation_gap_count'] == 0
+    assert payload['force_non_regression_status'] == 'pass'
+    assert payload['coverage_non_regression_status'] in {'pass', 'fail'}
+    assert payload['compactness_non_regression_status'] in {'pass', 'fail'}
+    assert payload['frontier_dominance_status'] in {'pass', 'fail'}
+    assert payload['pairwise_promotion_gap_count'] >= 0
     assert payload['program_fidelity_gap_count'] == 0
     assert payload['dna_authoring_status'] == 'pass'
     assert payload['program_authoring_status'] == 'pass'

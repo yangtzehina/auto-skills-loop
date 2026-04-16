@@ -7,10 +7,16 @@ from ..models.requirements import SkillRequirement
 from ..models.review import RepairSuggestion, RequirementResult, SkillQualityReview
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 from .depth_quality import build_skill_depth_quality_report
+from .editorial_force import build_skill_editorial_force_report
 from .editorial_quality import build_skill_editorial_quality_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
-from .expert_skill_studio import build_skill_program_ir
+from .expert_skill_studio import (
+    build_skill_program_authoring_candidate,
+    build_skill_program_ir,
+    build_skill_realization_candidates,
+    choose_skill_realization_candidate,
+)
 from .expert_structure import build_skill_expert_structure_report
 from .move_quality import build_skill_move_quality_report
 from .operation_coverage import load_operation_coverage_report
@@ -632,6 +638,41 @@ def run_skill_quality_review(
             skill_plan=skill_plan,
             artifacts=artifacts,
         )
+    skill_archetype = str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower()
+    if skill_archetype == 'methodology_guidance':
+        _, realization_spec, realization_candidates = build_skill_realization_candidates(
+            skill_name=str(getattr(skill_plan, 'skill_name', '') or ''),
+            description=str(getattr(skill_plan, 'objective', '') or ''),
+            task=str(getattr(skill_plan, 'objective', '') or ''),
+            references=[file.path for file in list(artifacts.files or []) if file.path.startswith('references/')],
+            scripts=[file.path for file in list(artifacts.files or []) if file.path.startswith('scripts/')],
+        )
+        _, pairwise_editorial, promotion_decision, _ = choose_skill_realization_candidate(
+            skill_name=str(getattr(skill_plan, 'skill_name', '') or ''),
+            task=str(getattr(skill_plan, 'objective', '') or ''),
+            candidates=realization_candidates,
+        )
+        editorial_force = build_skill_editorial_force_report(
+            request=type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})(),
+            skill_plan=skill_plan,
+            artifacts=artifacts,
+            body_quality=body_quality,
+            domain_specificity=domain_specificity,
+            domain_expertise=domain_expertise,
+            depth_quality=depth_quality,
+            editorial_quality=editorial_quality,
+            style_diversity=style_diversity,
+            move_quality=move_quality,
+            pairwise_editorial=pairwise_editorial,
+            promotion_decision=promotion_decision,
+            realization_candidate_count=len(realization_candidates),
+        )
+    else:
+        realization_spec = None
+        realization_candidates = []
+        pairwise_editorial = None
+        promotion_decision = None
+        editorial_force = None
     if program_fidelity is None:
         request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
         program_fidelity = build_skill_program_fidelity_report(
@@ -716,6 +757,17 @@ def run_skill_quality_review(
         if workflow_form is not None
         else []
     )
+    editorial_force_status = str(getattr(editorial_force, 'status', 'not_applicable') or 'not_applicable')
+    editorial_force_passed = editorial_force_status in {'not_applicable', 'pass'}
+    editorial_force_issues = (
+        list(getattr(editorial_force, 'blocking_issues', []) or [])
+        + list(getattr(editorial_force, 'warning_issues', []) or [])
+        if editorial_force is not None
+        else []
+    )
+    pairwise_promotion_status = str(getattr(promotion_decision, 'promotion_status', 'not_applicable') or 'not_applicable')
+    pairwise_promotion_passed = pairwise_promotion_status in {'not_applicable', 'promote'}
+    pairwise_promotion_reason = str(getattr(promotion_decision, 'reason', '') or '')
     program_fidelity_status = str(getattr(program_fidelity, 'status', 'not_applicable') or 'not_applicable')
     program_fidelity_passed = program_fidelity_status in {'not_applicable', 'pass'}
     program_fidelity_issues = (
@@ -733,7 +785,6 @@ def run_skill_quality_review(
             for issue in list(getattr(profile, 'gap_issues', []) or [])
         }
     ) if task_outcome is not None else []
-    skill_archetype = str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower()
     operation_contract = getattr(skill_plan, 'operation_contract', None)
     operation_groups = [getattr(group, 'name', '') for group in list(getattr(operation_contract, 'operations', []) or []) if getattr(group, 'name', '')]
     operation_count = sum(len(list(getattr(group, 'operations', []) or [])) for group in list(getattr(operation_contract, 'operations', []) or []))
@@ -755,24 +806,36 @@ def run_skill_quality_review(
                 recommended_followup = 'patch_current'
             else:
                 operation_validation_status = 'validated'
+    methodology_specific_passed = True
+    if skill_archetype == 'methodology_guidance':
+        methodology_specific_passed = (
+            domain_specificity_passed
+            and domain_expertise_passed
+            and expert_structure_passed
+            and depth_quality_passed
+            and editorial_quality_passed
+            and style_diversity_passed
+            and move_quality_passed
+            and workflow_form_passed
+            and editorial_force_passed
+            and pairwise_promotion_passed
+            and program_fidelity_passed
+            and task_outcome_passed
+        )
+
+    evaluation_gate_passed = True
+    if evaluation_report is not None and skill_archetype != 'methodology_guidance':
+        evaluation_gate_passed = evaluation_score >= 0.75
+
     fully_correct = (
         not missing_evidence
         and not suggestions
         and (security_rating in {None, 'LOW'})
         and body_quality_passed
         and self_review_passed
-        and domain_specificity_passed
-        and domain_expertise_passed
-        and expert_structure_passed
-        and depth_quality_passed
-        and editorial_quality_passed
-        and style_diversity_passed
-        and move_quality_passed
-        and workflow_form_passed
-        and program_fidelity_passed
-        and task_outcome_passed
+        and methodology_specific_passed
         and requirement_score >= 0.99
-        and (evaluation_score >= 0.75 if evaluation_report is not None else True)
+        and evaluation_gate_passed
     )
 
     summary = [
@@ -818,6 +881,12 @@ def run_skill_quality_review(
     if workflow_form is not None:
         summary.append(f"workflow_form_status={workflow_form_status}")
         summary.append(f"workflow_form_issues={','.join(workflow_form_issues[:6]) or 'none'}")
+    if editorial_force is not None:
+        summary.append(f"editorial_force_status={editorial_force_status}")
+        summary.append(f"editorial_force_issues={','.join(editorial_force_issues[:6]) or 'none'}")
+        summary.append(f"realization_candidate_count={len(realization_candidates)}")
+    summary.append(f"pairwise_promotion_status={pairwise_promotion_status}")
+    summary.append(f"pairwise_promotion_reason={pairwise_promotion_reason or 'none'}")
     if program_fidelity is not None:
         summary.append(f"program_fidelity_status={program_fidelity_status}")
         summary.append(f"program_fidelity_issues={','.join(program_fidelity_issues[:6]) or 'none'}")
@@ -866,6 +935,10 @@ def run_skill_quality_review(
         move_quality_issues=move_quality_issues,
         workflow_form_status=workflow_form_status,
         workflow_form_issues=workflow_form_issues,
+        editorial_force_status=editorial_force_status,
+        editorial_force_issues=editorial_force_issues,
+        pairwise_promotion_status=pairwise_promotion_status,
+        pairwise_promotion_reason=pairwise_promotion_reason,
         program_fidelity_status=program_fidelity_status,
         program_fidelity_issues=program_fidelity_issues,
         task_outcome_status=task_outcome_status,

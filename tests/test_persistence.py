@@ -7,7 +7,13 @@ from openclaw_skill_create.models.evaluation import EvaluationRunReport
 from openclaw_skill_create.models.depth_quality import SkillDepthQualityReport
 from openclaw_skill_create.models.editorial_quality import SkillEditorialQualityReport
 from openclaw_skill_create.models.expert_dna import SkillMoveQualityReport
-from openclaw_skill_create.models.expert_studio import SkillProgramFidelityReport, SkillTaskOutcomeReport
+from openclaw_skill_create.models.expert_studio import (
+    PairwiseEditorialReport,
+    SkillEditorialForceReport,
+    SkillProgramFidelityReport,
+    SkillPromotionDecision,
+    SkillTaskOutcomeReport,
+)
 from openclaw_skill_create.models.style_diversity import SkillStyleDiversityReport
 from openclaw_skill_create.models.workflow_form import SkillWorkflowFormReport
 from openclaw_skill_create.models.persistence import PersistencePolicy
@@ -18,8 +24,11 @@ from openclaw_skill_create.services.persistence import (
     EVALUATION_REPORT_PATH,
     DEPTH_QUALITY_REPORT_PATH,
     EDITORIAL_QUALITY_REPORT_PATH,
+    EDITORIAL_FORCE_REPORT_PATH,
     MOVE_QUALITY_REPORT_PATH,
+    PAIRWISE_EDITORIAL_REPORT_PATH,
     PROGRAM_FIDELITY_REPORT_PATH,
+    PROMOTION_DECISION_REPORT_PATH,
     STYLE_DIVERSITY_REPORT_PATH,
     TASK_OUTCOME_REPORT_PATH,
     WORKFLOW_FORM_REPORT_PATH,
@@ -27,9 +36,12 @@ from openclaw_skill_create.services.persistence import (
     SECURITY_AUDIT_REPORT_PATH,
     artifacts_with_evaluation_report,
     artifacts_with_depth_quality,
+    artifacts_with_editorial_force,
     artifacts_with_editorial_quality,
     artifacts_with_move_quality,
+    artifacts_with_pairwise_editorial,
     artifacts_with_program_fidelity,
+    artifacts_with_promotion_decision,
     artifacts_with_style_diversity,
     artifacts_with_task_outcome,
     artifacts_with_workflow_form,
@@ -284,6 +296,66 @@ def test_artifacts_with_workflow_form_adds_workflow_form_report_file():
     assert workflow_form.content_type == 'application/json'
     assert '"skill_name": "demo-skill"' in workflow_form.content
     assert '"workflow_surface": "execution_spine"' in workflow_form.content
+
+
+def test_artifacts_with_pairwise_editorial_adds_pairwise_report_file():
+    artifacts = artifacts_with_pairwise_editorial(
+        artifacts=make_artifacts(),
+        pairwise_editorial=PairwiseEditorialReport(
+            skill_name='demo-skill',
+            winner='tight',
+            loser='balanced',
+            decision_pressure_delta=0.08,
+            redundancy_delta=0.05,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    report = next(file for file in artifacts.files if file.path == PAIRWISE_EDITORIAL_REPORT_PATH)
+    assert report.content_type == 'application/json'
+    assert '"winner": "tight"' in report.content
+    assert '"decision_pressure_delta": 0.08' in report.content
+
+
+def test_artifacts_with_promotion_decision_adds_promotion_report_file():
+    artifacts = artifacts_with_promotion_decision(
+        artifacts=make_artifacts(),
+        promotion_decision=SkillPromotionDecision(
+            skill_name='demo-skill',
+            candidate_id='tight',
+            current_best_id='current-best',
+            promotion_status='promote',
+            reason='winner beat current best on editorial score',
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    report = next(file for file in artifacts.files if file.path == PROMOTION_DECISION_REPORT_PATH)
+    assert report.content_type == 'application/json'
+    assert '"promotion_status": "promote"' in report.content
+    assert '"candidate_id": "tight"' in report.content
+
+
+def test_artifacts_with_editorial_force_adds_editorial_force_report_file():
+    artifacts = artifacts_with_editorial_force(
+        artifacts=make_artifacts(),
+        editorial_force=SkillEditorialForceReport(
+            skill_name='demo-skill',
+            skill_archetype='methodology_guidance',
+            status='pass',
+            decision_pressure_score=0.82,
+            cut_sharpness_score=0.78,
+            failure_repair_force=0.80,
+            section_rhythm_distinctness=0.76,
+            compression_without_loss=0.74,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    report = next(file for file in artifacts.files if file.path == EDITORIAL_FORCE_REPORT_PATH)
+    assert report.content_type == 'application/json'
+    assert '"cut_sharpness_score": 0.78' in report.content
+    assert '"section_rhythm_distinctness": 0.76' in report.content
 
 
 def test_artifacts_with_program_fidelity_adds_program_report_file():

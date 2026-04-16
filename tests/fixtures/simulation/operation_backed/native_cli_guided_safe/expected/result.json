@@ -1,5 +1,11 @@
 {
+  "scenario_kind": "skill_create",
+  "severity": "pass",
+  "skill_archetype": "operation_backed",
+  "operation_validation_status": "validated",
+  "recommended_followup": "no_change",
   "coverage_gap_summary": [],
+  "security_rating": "LOW",
   "generated_files": [
     "SKILL.md",
     "evals/benchmark.json",
@@ -7,6 +13,7 @@
     "evals/depth_quality.json",
     "evals/domain_expertise.json",
     "evals/domain_specificity.json",
+    "evals/editorial_force.json",
     "evals/editorial_quality.json",
     "evals/expert_structure.json",
     "evals/move_quality.json",
@@ -14,6 +21,7 @@
     "evals/operation_validation.json",
     "evals/output_eval.json",
     "evals/program_fidelity.json",
+    "evals/promotion_decision.json",
     "evals/report.json",
     "evals/review.json",
     "evals/security_audit.json",
@@ -25,11 +33,5 @@
     "references/README.md",
     "references/operations/contract.json",
     "scripts/cli.py"
-  ],
-  "operation_validation_status": "validated",
-  "recommended_followup": "no_change",
-  "scenario_kind": "skill_create",
-  "security_rating": "LOW",
-  "severity": "pass",
-  "skill_archetype": "operation_backed"
+  ]
 }

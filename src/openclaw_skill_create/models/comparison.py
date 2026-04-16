@@ -9,9 +9,13 @@ from .depth_quality import SkillDepthQualityReport
 from .editorial_quality import SkillEditorialQualityReport
 from .expert_dna import ExpertDNAAuthoringPack, SkillMoveQualityReport, SkillUsefulnessEvalReport
 from .expert_studio import (
+    MonotonicImprovementReport,
+    PairwiseEditorialReport,
+    SkillEditorialForceReport,
     ProgramCandidateReviewBatchReport,
     SkillProgramAuthoringPack,
     SkillProgramFidelityReport,
+    SkillPromotionDecision,
     SkillTaskOutcomeReport,
 )
 from .expert_structure import SkillExpertStructureReport
@@ -56,7 +60,7 @@ class SkillCreateComparisonMetrics(BaseModel):
     worked_example_count: int = 0
     failure_pattern_density: int = 0
     output_field_guidance_coverage: float = 0.0
-    boundary_rule_coverage: float = 0.0
+    force_boundary_rule_coverage: float = 0.0
     depth_gap_count: int = 0
     editorial_quality_status: str = "unknown"
     decision_pressure_score: float = 0.0
@@ -95,6 +99,42 @@ class SkillCreateComparisonMetrics(BaseModel):
     output_block_separation: bool = True
     structural_block_count: int = 0
     workflow_form_gap_count: int = 0
+    realization_candidate_count: int = 0
+    pairwise_editorial_status: str = "unknown"
+    pairwise_decision_pressure_delta: float = 0.0
+    pairwise_cut_sharpness_delta: float = 0.0
+    pairwise_failure_repair_clarity_delta: float = 0.0
+    pairwise_output_executability_delta: float = 0.0
+    pairwise_redundancy_delta: float = 0.0
+    pairwise_style_convergence_delta: float = 0.0
+    pairwise_promotion_status: str = "unknown"
+    pairwise_promotion_reason: str = ""
+    candidate_separation_status: str = "unknown"
+    candidate_separation_score: float = 0.0
+    best_balance_comparison_status: str = "unknown"
+    best_coverage_comparison_status: str = "unknown"
+    force_non_regression_status: str = "unknown"
+    coverage_non_regression_status: str = "unknown"
+    compactness_non_regression_status: str = "unknown"
+    frontier_dominance_status: str = "unknown"
+    compression_gain_status: str = "unknown"
+    current_best_comparison_status: str = "unknown"
+    primary_force_win_count: int = 0
+    promotion_hold_reason: str = ""
+    stable_but_no_breakthrough: bool = False
+    candidate_strategy_matrix: list[dict[str, str]] = Field(default_factory=list)
+    editorial_force_status: str = "unknown"
+    cut_sharpness_score: float = 0.0
+    failure_repair_force: float = 0.0
+    boundary_rule_coverage: float = 0.0
+    stop_condition_coverage: float = 0.0
+    anti_filler_score: float = 0.0
+    section_force_distinctness: float = 0.0
+    section_rhythm_distinctness: float = 0.0
+    opening_distinctness: float = 0.0
+    compression_without_loss: float = 0.0
+    generic_surface_leakage: float = 0.0
+    editorial_force_gap_count: int = 0
     program_fidelity_status: str = "unknown"
     execution_move_recall: float = 0.0
     execution_move_order_alignment: float = 0.0
@@ -130,6 +170,10 @@ class SkillCreateComparisonCaseResult(BaseModel):
     style_diversity: SkillStyleDiversityReport | None = None
     move_quality: SkillMoveQualityReport | None = None
     workflow_form: SkillWorkflowFormReport | None = None
+    pairwise_editorial: PairwiseEditorialReport | None = None
+    promotion_decision: SkillPromotionDecision | None = None
+    monotonic_improvement: MonotonicImprovementReport | None = None
+    editorial_force: SkillEditorialForceReport | None = None
     program_fidelity: SkillProgramFidelityReport | None = None
     task_outcome: SkillTaskOutcomeReport | None = None
     gap_issues: list[str] = Field(default_factory=list)
@@ -170,7 +214,20 @@ class SkillCreateComparisonReport(BaseModel):
     style_gap_count: int = 0
     move_quality_gap_count: int = 0
     workflow_form_gap_count: int = 0
+    editorial_force_gap_count: int = 0
+    pairwise_promotion_gap_count: int = 0
     program_fidelity_gap_count: int = 0
+    candidate_separation_gap_count: int = 0
+    best_balance_not_beaten_count: int = 0
+    best_coverage_not_beaten_count: int = 0
+    current_best_not_beaten_count: int = 0
+    promotion_hold_count: int = 0
+    force_non_regression_status: str = "pass"
+    coverage_non_regression_status: str = "pass"
+    compactness_non_regression_status: str = "pass"
+    frontier_dominance_status: str = "pass"
+    compression_gain_status: str = "pass"
+    stable_but_no_breakthrough_count: int = 0
     generic_shell_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
     negative_case_resistance: float = 1.0

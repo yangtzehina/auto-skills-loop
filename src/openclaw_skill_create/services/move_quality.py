@@ -47,6 +47,25 @@ def _named_workflow_block_count(workflow_text: str) -> int:
     return count
 
 
+def _workflow_step_support_counts(workflow_text: str) -> list[int]:
+    counts: list[int] = []
+    current = -1
+    for raw in str(workflow_text or "").splitlines():
+        if re.match(r"\s*\d+\.\s+(?:\*\*)?([^*\n]+?)(?:\*\*)?\s*$", raw):
+            if current >= 0:
+                counts.append(current)
+            current = 0
+            continue
+        if current < 0:
+            continue
+        stripped = raw.strip()
+        if re.match(r"^-\s+[^:]{2,}:\s+.+$", stripped):
+            current += 1
+    if current >= 0:
+        counts.append(current)
+    return counts
+
+
 def _move_precision(*, dna: ExpertSkillDNA, detected_moves: list[str]) -> tuple[float, list[str]]:
     expected = [_normalize(move.name) for move in list(dna.workflow_moves or [])]
     if not detected_moves:
@@ -59,9 +78,11 @@ def _numbered_spine_present(*, workflow_text: str, dna: ExpertSkillDNA) -> bool:
     detected = _numbered_moves(workflow_text)
     if len(detected) < min(5, len(list(dna.workflow_moves or []))):
         return False
-    normalized = _normalize(workflow_text)
-    required_labels = ("decision", "do", "output", "failure signal", "fix")
-    if not all(label in normalized for label in required_labels):
+    support_counts = _workflow_step_support_counts(workflow_text)
+    if not support_counts:
+        return False
+    rich_steps = sum(1 for count in support_counts if count >= 4)
+    if rich_steps / max(1, len(support_counts)) < 0.80:
         return False
     workflow_surface = str(getattr(dna, "workflow_surface", "") or "execution_spine").strip().lower()
     if workflow_surface == "execution_spine":

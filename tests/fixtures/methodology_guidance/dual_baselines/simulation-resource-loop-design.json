@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "skill_name": "simulation-resource-loop-design",
+  "best_balance_snapshot": {
+    "label": "rerun4",
+    "primary_force_metrics": {
+      "failure_repair_force": 1.0,
+      "section_force_distinctness": 1.0,
+      "boundary_rule_coverage": 0.2
+    },
+    "coverage_metrics": {
+      "domain_move_coverage": 0.9,
+      "section_depth_score": 0.9111,
+      "task_outcome_with_skill_average": 0.8704
+    },
+    "compactness_metrics": {
+      "redundancy_ratio": 0.1429,
+      "shared_opening_phrase_ratio": 0.0,
+      "cross_case_similarity": 0.25,
+      "compression_without_loss": 0.7659
+    },
+    "summary": [
+      "best_balance=rerun4",
+      "lower similarity ceiling than rerun5"
+    ]
+  },
+  "best_coverage_snapshot": {
+    "label": "rerun5",
+    "primary_force_metrics": {
+      "failure_repair_force": 1.0,
+      "section_force_distinctness": 1.0,
+      "boundary_rule_coverage": 0.2
+    },
+    "coverage_metrics": {
+      "domain_move_coverage": 0.9,
+      "section_depth_score": 0.9111,
+      "task_outcome_with_skill_average": 0.8704
+    },
+    "compactness_metrics": {
+      "redundancy_ratio": 0.1264,
+      "shared_opening_phrase_ratio": 0.0,
+      "cross_case_similarity": 0.2571,
+      "compression_without_loss": 0.7448
+    },
+    "summary": [
+      "best_coverage=rerun5",
+      "slightly denser than rerun4 without losing coverage"
+    ]
+  },
+  "force_floor": {
+    "failure_repair_force": 1.0,
+    "section_force_distinctness": 1.0,
+    "boundary_rule_coverage": 0.2
+  },
+  "coverage_floor": {
+    "domain_move_coverage": 0.9,
+    "section_depth_score": 0.9111,
+    "task_outcome_with_skill_average": 0.8704
+  },
+  "compactness_ceiling": {
+    "redundancy_ratio": 0.1429,
+    "shared_opening_phrase_ratio": 0.0,
+    "cross_case_similarity": 0.25
+  },
+  "tolerance": {
+    "score_metric": 0.01,
+    "compactness_metric": 0.01
+  },
+  "summary": [
+    "freeze best_balance=rerun4",
+    "freeze best_coverage=rerun5"
+  ]
+}

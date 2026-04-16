@@ -11,7 +11,14 @@ from .body_quality import build_skill_body_quality_report, build_skill_self_revi
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
 from .depth_quality import build_skill_depth_quality_report
+from .editorial_force import build_skill_editorial_force_report
 from .editorial_quality import build_skill_editorial_quality_report
+from .expert_skill_studio import (
+    build_expert_evidence_gap_report,
+    build_skill_program_authoring_candidate,
+    build_skill_realization_candidates,
+    choose_skill_realization_candidate,
+)
 from .expert_structure import build_skill_expert_structure_report
 from .move_quality import build_skill_move_quality_report
 from .skill_program_fidelity import build_skill_program_fidelity_report
@@ -825,6 +832,33 @@ def run_rule_validation(
         skill_plan=skill_plan,
         artifacts=artifacts,
     )
+    _, realization_spec, realization_candidates = build_skill_realization_candidates(
+        skill_name=str(getattr(skill_plan, 'skill_name', '') or ''),
+        description=str(getattr(request, 'task', '') or ''),
+        task=str(getattr(request, 'task', '') or ''),
+        references=[file.path for file in list(artifacts.files or []) if file.path.startswith('references/')],
+        scripts=[file.path for file in list(artifacts.files or []) if file.path.startswith('scripts/')],
+    )
+    _, pairwise_editorial, promotion_decision, monotonic_improvement = choose_skill_realization_candidate(
+        skill_name=str(getattr(skill_plan, 'skill_name', '') or ''),
+        task=str(getattr(request, 'task', '') or ''),
+        candidates=realization_candidates,
+    )
+    editorial_force = build_skill_editorial_force_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+        body_quality=body_quality,
+        domain_specificity=domain_specificity,
+        domain_expertise=domain_expertise,
+        depth_quality=depth_quality,
+        editorial_quality=editorial_quality,
+        style_diversity=style_diversity,
+        move_quality=move_quality,
+        pairwise_editorial=pairwise_editorial,
+        promotion_decision=promotion_decision,
+        realization_candidate_count=len(realization_candidates),
+    )
     program_fidelity = build_skill_program_fidelity_report(
         request=request,
         skill_plan=skill_plan,
@@ -873,6 +907,10 @@ def run_rule_validation(
         validation.summary.append(f'Workflow form failed: {issue}')
     for issue in list(workflow_form.warning_issues or []):
         validation.summary.append(f'Workflow form warning: {issue}')
+    for issue in list(editorial_force.blocking_issues or []):
+        validation.summary.append(f'Editorial force failed: {issue}')
+    for issue in list(editorial_force.warning_issues or []):
+        validation.summary.append(f'Editorial force warning: {issue}')
     for issue in list(program_fidelity.blocking_issues or []):
         validation.summary.append(f'Program fidelity failed: {issue}')
     for issue in list(program_fidelity.warning_issues or []):
@@ -929,8 +967,16 @@ def run_rule_validation(
     notes.extend(list(style_diversity.summary or []))
     notes.extend(list(move_quality.summary or []))
     notes.extend(list(workflow_form.summary or []))
+    notes.extend(list(editorial_force.summary or []))
     notes.extend(list(program_fidelity.summary or []))
     notes.extend([task_outcome.summary] if getattr(task_outcome, 'summary', '') else [])
+    expert_evidence_gap = build_expert_evidence_gap_report(
+        build_skill_program_authoring_candidate(
+            skill_name=str(getattr(skill_plan, 'skill_name', '') or ''),
+            task_brief=str(getattr(request, 'task', '') or ''),
+            generated_skill_md=skill_md,
+        )
+    )
 
     return Diagnostics(
         warnings=list(validation.summary),
@@ -946,8 +992,15 @@ def run_rule_validation(
         style_diversity=style_diversity,
         move_quality=move_quality,
         workflow_form=workflow_form,
+        realization_spec=realization_spec,
+        realization_candidates=realization_candidates,
+        pairwise_editorial=pairwise_editorial,
+        promotion_decision=promotion_decision,
+        monotonic_improvement=monotonic_improvement,
+        editorial_force=editorial_force,
         program_fidelity=program_fidelity,
         task_outcome=task_outcome,
+        expert_evidence_gap=expert_evidence_gap,
         notes=notes,
     )
 

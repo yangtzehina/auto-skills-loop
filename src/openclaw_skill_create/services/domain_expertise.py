@@ -133,7 +133,18 @@ def build_skill_domain_expertise_report(
     workflow_text = _extract_section(body, ("workflow", "process", "steps"))
     output_text = _extract_section(body, ("output format", "output template", "deliverable", "output"))
     quality_text = _extract_section(body, ("quality checks", "quality bar", "acceptance", "checks"))
-    pitfall_text = _extract_section(body, ("common pitfalls", "pitfalls", "failure modes", "anti-patterns", "mistakes"))
+    pitfall_text = _extract_section(
+        body,
+        (
+            "common pitfalls",
+            "failure patterns and fixes",
+            "failure patterns",
+            "pitfalls",
+            "failure modes",
+            "anti-patterns",
+            "mistakes",
+        ),
+    )
 
     action_hits = [
         anchor

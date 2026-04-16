@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "skill_name": "concept-to-mvp-pack",
+  "best_balance_snapshot": {
+    "label": "rerun4",
+    "primary_force_metrics": {
+      "decision_pressure_score": 0.9467,
+      "cut_sharpness_score": 1.0,
+      "boundary_rule_coverage": 0.2
+    },
+    "coverage_metrics": {
+      "domain_move_coverage": 0.8583,
+      "section_depth_score": 0.872,
+      "task_outcome_with_skill_average": 0.8982
+    },
+    "compactness_metrics": {
+      "redundancy_ratio": 0.0561,
+      "shared_opening_phrase_ratio": 0.0,
+      "cross_case_similarity": 0.2195,
+      "compression_without_loss": 0.8072
+    },
+    "summary": [
+      "best_balance=rerun4",
+      "lower redundancy and lower shared opening than rerun5"
+    ]
+  },
+  "best_coverage_snapshot": {
+    "label": "rerun5",
+    "primary_force_metrics": {
+      "decision_pressure_score": 0.9467,
+      "cut_sharpness_score": 1.0,
+      "boundary_rule_coverage": 0.4
+    },
+    "coverage_metrics": {
+      "domain_move_coverage": 0.8833,
+      "section_depth_score": 0.9016,
+      "task_outcome_with_skill_average": 0.8982
+    },
+    "compactness_metrics": {
+      "redundancy_ratio": 0.0973,
+      "shared_opening_phrase_ratio": 0.0526,
+      "cross_case_similarity": 0.2272,
+      "compression_without_loss": 0.7966
+    },
+    "summary": [
+      "best_coverage=rerun5",
+      "higher move coverage and section depth than rerun4"
+    ]
+  },
+  "force_floor": {
+    "decision_pressure_score": 0.9467,
+    "cut_sharpness_score": 1.0,
+    "boundary_rule_coverage": 0.4
+  },
+  "coverage_floor": {
+    "domain_move_coverage": 0.8833,
+    "section_depth_score": 0.9016,
+    "task_outcome_with_skill_average": 0.8982
+  },
+  "compactness_ceiling": {
+    "redundancy_ratio": 0.0561,
+    "shared_opening_phrase_ratio": 0.0,
+    "cross_case_similarity": 0.2195
+  },
+  "tolerance": {
+    "score_metric": 0.01,
+    "compactness_metric": 0.01
+  },
+  "summary": [
+    "freeze best_balance=rerun4",
+    "freeze best_coverage=rerun5"
+  ]
+}

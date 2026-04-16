@@ -79,10 +79,27 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- workflow_form_fail_count={report.workflow_form_fail_count}',
         f'- workflow_form_warn_count={report.workflow_form_warn_count}',
         f'- workflow_form_gap_count={report.workflow_form_gap_count}',
+        f'- editorial_force_status={report.editorial_force_status}',
+        f'- editorial_force_fail_count={report.editorial_force_fail_count}',
+        f'- editorial_force_warn_count={report.editorial_force_warn_count}',
+        f'- editorial_force_gap_count={report.editorial_force_gap_count}',
+        f'- editorial_force_non_regression={report.editorial_force_non_regression}',
+        f'- pairwise_promotion_status={report.pairwise_promotion_status}',
+        f'- pairwise_promotion_gap_count={report.pairwise_promotion_gap_count}',
+        f'- promotion_hold_count={report.promotion_hold_count}',
+        f'- coverage_non_regression_status={report.coverage_non_regression_status}',
+        f'- compactness_non_regression_status={report.compactness_non_regression_status}',
+        f'- frontier_dominance_status={report.frontier_dominance_status}',
+        f'- compression_gain_status={report.compression_gain_status}',
         f'- program_fidelity_status={report.program_fidelity_status}',
         f'- program_fidelity_fail_count={report.program_fidelity_fail_count}',
         f'- program_fidelity_warn_count={report.program_fidelity_warn_count}',
         f'- program_fidelity_gap_count={report.program_fidelity_gap_count}',
+        f'- candidate_separation_gap_count={report.candidate_separation_gap_count}',
+        f'- best_balance_not_beaten_count={report.best_balance_not_beaten_count}',
+        f'- best_coverage_not_beaten_count={report.best_coverage_not_beaten_count}',
+        f'- current_best_not_beaten_count={report.current_best_not_beaten_count}',
+        f'- stable_but_no_breakthrough_count={report.stable_but_no_breakthrough_count}',
         f'- dna_authoring_status={report.dna_authoring_status}',
         f'- candidate_dna_count={report.candidate_dna_count}',
         f'- program_authoring_status={report.program_authoring_status}',
@@ -97,6 +114,7 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- negative_case_resistance={report.negative_case_resistance:.2f}',
         f'- generic_shell_rejection={report.generic_shell_rejection:.2f}',
         f'- program_regression_count={report.program_regression_count}',
+        f'- breakthrough_status={report.breakthrough_status}',
         '',
         '## Commands',
     ]
@@ -222,6 +240,37 @@ def build_verify_report(
             else 'pass'
         )
     )
+    editorial_force_status = (
+        'fail'
+        if any(item.auto_metrics.editorial_force_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.editorial_force_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
+    pairwise_promotion_status = (
+        'fail'
+        if any(
+            item.auto_metrics.pairwise_promotion_status not in {'promote', 'pass'}
+            and not item.auto_metrics.stable_but_no_breakthrough
+            for item in list(comparison_report.cases or [])
+        )
+        else (
+            'hold'
+            if any(item.auto_metrics.stable_but_no_breakthrough for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
+    editorial_force_non_regression = (
+        'fail'
+        if any(item.auto_metrics.force_non_regression_status == 'fail' for item in list(comparison_report.cases or []))
+        else 'pass'
+    )
+    coverage_non_regression_status = str(comparison_report.coverage_non_regression_status or 'pass')
+    compactness_non_regression_status = str(comparison_report.compactness_non_regression_status or 'pass')
+    frontier_dominance_status = str(comparison_report.frontier_dominance_status or 'pass')
+    compression_gain_status = str(comparison_report.compression_gain_status or 'pass')
     program_fidelity_status = (
         'fail'
         if any(item.auto_metrics.program_fidelity_status == 'fail' for item in list(comparison_report.cases or []))
@@ -338,6 +387,26 @@ def build_verify_report(
             if item.auto_metrics.workflow_form_status == 'warn'
         ),
         workflow_form_gap_count=int(comparison_report.workflow_form_gap_count or 0),
+        editorial_force_status=editorial_force_status,
+        editorial_force_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.editorial_force_status == 'fail'
+        ),
+        editorial_force_warn_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.editorial_force_status == 'warn'
+        ),
+        editorial_force_gap_count=int(comparison_report.editorial_force_gap_count or 0),
+        editorial_force_non_regression=editorial_force_non_regression,
+        pairwise_promotion_status=pairwise_promotion_status,
+        pairwise_promotion_gap_count=int(comparison_report.pairwise_promotion_gap_count or 0),
+        promotion_hold_count=int(comparison_report.promotion_hold_count or 0),
+        coverage_non_regression_status=coverage_non_regression_status,
+        compactness_non_regression_status=compactness_non_regression_status,
+        frontier_dominance_status=frontier_dominance_status,
+        compression_gain_status=compression_gain_status,
         program_fidelity_status=program_fidelity_status,
         program_fidelity_fail_count=sum(
             1
@@ -350,6 +419,11 @@ def build_verify_report(
             if item.auto_metrics.program_fidelity_status == 'warn'
         ),
         program_fidelity_gap_count=int(comparison_report.program_fidelity_gap_count or 0),
+        candidate_separation_gap_count=int(comparison_report.candidate_separation_gap_count or 0),
+        best_balance_not_beaten_count=int(comparison_report.best_balance_not_beaten_count or 0),
+        best_coverage_not_beaten_count=int(comparison_report.best_coverage_not_beaten_count or 0),
+        current_best_not_beaten_count=int(comparison_report.current_best_not_beaten_count or 0),
+        stable_but_no_breakthrough_count=int(comparison_report.stable_but_no_breakthrough_count or 0),
         dna_authoring_status=str(comparison_report.dna_authoring_status or 'pass'),
         candidate_dna_count=int(comparison_report.candidate_dna_count or 0),
         program_authoring_status=str(comparison_report.program_authoring_status or 'pass'),
@@ -370,6 +444,7 @@ def build_verify_report(
         program_regression_count=int(comparison_report.program_regression_count or 0),
         skill_create_comparison_report=comparison_report,
         overall_status=overall_status,
+        breakthrough_status=str(comparison_report.overall_status or 'pass'),
         summary=(
             f'Verify report complete: commands={len(commands)} '
             f'failed={len(failed)} overall_status={overall_status} '
@@ -384,6 +459,16 @@ def build_verify_report(
             f'style_diversity={style_diversity_status} '
             f'move_quality={move_quality_status} '
             f'workflow_form={workflow_form_status} '
+            f'editorial_force={editorial_force_status} '
+            f'editorial_force_non_regression={editorial_force_non_regression} '
+            f'coverage_non_regression={coverage_non_regression_status} '
+            f'compactness_non_regression={compactness_non_regression_status} '
+            f'frontier_dominance={frontier_dominance_status} '
+            f'pairwise_promotion={pairwise_promotion_status} '
+            f'candidate_separation_gaps={comparison_report.candidate_separation_gap_count} '
+            f'best_balance_not_beaten={comparison_report.best_balance_not_beaten_count} '
+            f'best_coverage_not_beaten={comparison_report.best_coverage_not_beaten_count} '
+            f'current_best_not_beaten={comparison_report.current_best_not_beaten_count} '
             f'program_fidelity={program_fidelity_status} '
             f'dna_authoring={comparison_report.dna_authoring_status} '
             f'program_authoring={comparison_report.program_authoring_status} '
@@ -501,10 +586,27 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- workflow_form_fail_count={report.workflow_form_fail_count}')
     lines.append(f'- workflow_form_warn_count={report.workflow_form_warn_count}')
     lines.append(f'- workflow_form_gap_count={report.workflow_form_gap_count}')
+    lines.append(f'- editorial_force_status={report.editorial_force_status}')
+    lines.append(f'- editorial_force_fail_count={report.editorial_force_fail_count}')
+    lines.append(f'- editorial_force_warn_count={report.editorial_force_warn_count}')
+    lines.append(f'- editorial_force_gap_count={report.editorial_force_gap_count}')
+    lines.append(f'- editorial_force_non_regression={report.editorial_force_non_regression}')
+    lines.append(f'- pairwise_promotion_status={report.pairwise_promotion_status}')
+    lines.append(f'- pairwise_promotion_gap_count={report.pairwise_promotion_gap_count}')
+    lines.append(f'- promotion_hold_count={report.promotion_hold_count}')
+    lines.append(f'- coverage_non_regression_status={report.coverage_non_regression_status}')
+    lines.append(f'- compactness_non_regression_status={report.compactness_non_regression_status}')
+    lines.append(f'- frontier_dominance_status={report.frontier_dominance_status}')
+    lines.append(f'- compression_gain_status={report.compression_gain_status}')
     lines.append(f'- program_fidelity_status={report.program_fidelity_status}')
     lines.append(f'- program_fidelity_fail_count={report.program_fidelity_fail_count}')
     lines.append(f'- program_fidelity_warn_count={report.program_fidelity_warn_count}')
     lines.append(f'- program_fidelity_gap_count={report.program_fidelity_gap_count}')
+    lines.append(f'- candidate_separation_gap_count={report.candidate_separation_gap_count}')
+    lines.append(f'- best_balance_not_beaten_count={report.best_balance_not_beaten_count}')
+    lines.append(f'- best_coverage_not_beaten_count={report.best_coverage_not_beaten_count}')
+    lines.append(f'- current_best_not_beaten_count={report.current_best_not_beaten_count}')
+    lines.append(f'- stable_but_no_breakthrough_count={report.stable_but_no_breakthrough_count}')
     lines.append(f'- dna_authoring_status={report.dna_authoring_status}')
     lines.append(f'- candidate_dna_count={report.candidate_dna_count}')
     lines.append(f'- program_authoring_status={report.program_authoring_status}')
@@ -519,6 +621,7 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- negative_case_resistance={report.negative_case_resistance:.2f}')
     lines.append(f'- generic_shell_rejection={report.generic_shell_rejection:.2f}')
     lines.append(f'- program_regression_count={report.program_regression_count}')
+    lines.append(f'- breakthrough_status={report.breakthrough_status}')
     return '\n'.join(lines).strip()
 
 
@@ -699,10 +802,27 @@ def build_ops_roundbook_report(
         workflow_form_fail_count=verify_report.workflow_form_fail_count,
         workflow_form_warn_count=verify_report.workflow_form_warn_count,
         workflow_form_gap_count=verify_report.workflow_form_gap_count,
+        editorial_force_status=verify_report.editorial_force_status,
+        editorial_force_fail_count=verify_report.editorial_force_fail_count,
+        editorial_force_warn_count=verify_report.editorial_force_warn_count,
+        editorial_force_gap_count=verify_report.editorial_force_gap_count,
+        editorial_force_non_regression=verify_report.editorial_force_non_regression,
+        pairwise_promotion_status=verify_report.pairwise_promotion_status,
+        pairwise_promotion_gap_count=verify_report.pairwise_promotion_gap_count,
+        promotion_hold_count=verify_report.promotion_hold_count,
+        coverage_non_regression_status=verify_report.coverage_non_regression_status,
+        compactness_non_regression_status=verify_report.compactness_non_regression_status,
+        frontier_dominance_status=verify_report.frontier_dominance_status,
+        compression_gain_status=verify_report.compression_gain_status,
         program_fidelity_status=verify_report.program_fidelity_status,
         program_fidelity_fail_count=verify_report.program_fidelity_fail_count,
         program_fidelity_warn_count=verify_report.program_fidelity_warn_count,
         program_fidelity_gap_count=verify_report.program_fidelity_gap_count,
+        candidate_separation_gap_count=verify_report.candidate_separation_gap_count,
+        best_balance_not_beaten_count=verify_report.best_balance_not_beaten_count,
+        best_coverage_not_beaten_count=verify_report.best_coverage_not_beaten_count,
+        current_best_not_beaten_count=verify_report.current_best_not_beaten_count,
+        stable_but_no_breakthrough_count=verify_report.stable_but_no_breakthrough_count,
         dna_authoring_status=verify_report.dna_authoring_status,
         candidate_dna_count=verify_report.candidate_dna_count,
         program_authoring_status=verify_report.program_authoring_status,
@@ -718,6 +838,7 @@ def build_ops_roundbook_report(
         generic_shell_rejection=verify_report.generic_shell_rejection,
         program_regression_count=verify_report.program_regression_count,
         overall_readiness=overall_readiness,
+        breakthrough_status=verify_report.breakthrough_status,
         summary=(
             f'Ops roundbook complete: verification={verify_report.overall_status} '
             f'create_seed_pending={len(pending_create_seed_decisions)} '
@@ -734,11 +855,22 @@ def build_ops_roundbook_report(
             f'style_diversity={verify_report.style_diversity_status} '
             f'move_quality={verify_report.move_quality_status} '
             f'workflow_form={verify_report.workflow_form_status} '
+            f'editorial_force={verify_report.editorial_force_status} '
+            f'editorial_force_non_regression={verify_report.editorial_force_non_regression} '
+            f'coverage_non_regression={verify_report.coverage_non_regression_status} '
+            f'compactness_non_regression={verify_report.compactness_non_regression_status} '
+            f'frontier_dominance={verify_report.frontier_dominance_status} '
+            f'pairwise_promotion={verify_report.pairwise_promotion_status} '
+            f'candidate_separation_gaps={verify_report.candidate_separation_gap_count} '
+            f'best_balance_not_beaten={verify_report.best_balance_not_beaten_count} '
+            f'best_coverage_not_beaten={verify_report.best_coverage_not_beaten_count} '
+            f'current_best_not_beaten={verify_report.current_best_not_beaten_count} '
             f'program_fidelity={verify_report.program_fidelity_status} '
             f'dna_authoring={verify_report.dna_authoring_status} '
             f'program_authoring={verify_report.program_authoring_status} '
             f'usefulness_eval={verify_report.usefulness_eval_status} '
             f'task_outcome={verify_report.task_outcome_status} '
+            f'breakthrough_status={verify_report.breakthrough_status} '
             f'overall_readiness={overall_readiness} '
             f'next_create_seed={next_create_seed_candidate or "none"} '
             f'next_prior_hold={next_prior_family_on_hold or "none"}'

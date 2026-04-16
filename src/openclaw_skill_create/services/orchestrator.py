@@ -31,12 +31,15 @@ from .persistence import (
     artifacts_with_expert_structure,
     artifacts_with_move_quality,
     artifacts_with_operation_coverage,
+    artifacts_with_pairwise_editorial,
+    artifacts_with_promotion_decision,
     artifacts_with_quality_review,
     artifacts_with_security_audit,
     artifacts_with_self_review,
     artifacts_with_style_diversity,
     artifacts_with_task_outcome,
     artifacts_with_program_fidelity,
+    artifacts_with_editorial_force,
     artifacts_with_workflow_form,
     persist_artifacts,
 )
@@ -645,6 +648,21 @@ def run_skill_create(
             workflow_form=getattr(diagnostics, "workflow_form", None),
             policy=effective_persistence_policy,
         )
+        artifacts = artifacts_with_pairwise_editorial(
+            artifacts=artifacts,
+            pairwise_editorial=getattr(diagnostics, "pairwise_editorial", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_promotion_decision(
+            artifacts=artifacts,
+            promotion_decision=getattr(diagnostics, "promotion_decision", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_editorial_force(
+            artifacts=artifacts,
+            editorial_force=getattr(diagnostics, "editorial_force", None),
+            policy=effective_persistence_policy,
+        )
         artifacts = artifacts_with_program_fidelity(
             artifacts=artifacts,
             program_fidelity=getattr(diagnostics, "program_fidelity", None),
@@ -705,6 +723,21 @@ def run_skill_create(
         artifacts = artifacts_with_workflow_form(
             artifacts=artifacts,
             workflow_form=getattr(diagnostics, "workflow_form", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_pairwise_editorial(
+            artifacts=artifacts,
+            pairwise_editorial=getattr(diagnostics, "pairwise_editorial", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_promotion_decision(
+            artifacts=artifacts,
+            promotion_decision=getattr(diagnostics, "promotion_decision", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_editorial_force(
+            artifacts=artifacts,
+            editorial_force=getattr(diagnostics, "editorial_force", None),
             policy=effective_persistence_policy,
         )
         artifacts = artifacts_with_program_fidelity(

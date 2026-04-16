@@ -13,11 +13,15 @@ from .expert_dna_authoring import (
     render_expert_dna_review_markdown,
 )
 from .expert_skill_studio import (
+    build_expert_evidence_gap_report,
     build_program_candidate_review_batch_report,
     build_program_candidate_review_report,
+    build_skill_realization_candidates,
+    build_skill_realization_spec,
     build_skill_program_authoring_pack,
     build_skill_program_authoring_candidate,
     build_skill_program_ir,
+    choose_skill_realization_candidate,
     evaluate_negative_case_resistance,
     expert_corpus_entry_for_skill,
     load_expert_skill_corpus,
@@ -26,6 +30,7 @@ from .expert_skill_studio import (
     render_skill_program_authoring_pack_markdown,
     render_skill_program_markdown,
 )
+from .editorial_force import build_skill_editorial_force_report, editorial_force_artifact
 from .move_quality import build_skill_move_quality_report
 from .skill_program_fidelity import build_skill_program_fidelity_report, program_fidelity_artifact
 from .skill_task_outcome import build_skill_task_outcome_report, task_outcome_artifact
@@ -152,9 +157,13 @@ __all__ = [
     'load_expert_skill_corpus',
     'expert_corpus_entry_for_skill',
     'build_skill_program_ir',
+    'build_skill_realization_spec',
+    'build_skill_realization_candidates',
+    'choose_skill_realization_candidate',
     'render_skill_program_markdown',
     'build_skill_program_authoring_candidate',
     'build_skill_program_authoring_pack',
+    'build_expert_evidence_gap_report',
     'render_skill_program_authoring_pack_markdown',
     'build_program_candidate_review_report',
     'build_program_candidate_review_batch_report',
@@ -167,6 +176,8 @@ __all__ = [
     'program_fidelity_artifact',
     'build_skill_task_outcome_report',
     'task_outcome_artifact',
+    'build_skill_editorial_force_report',
+    'editorial_force_artifact',
     'build_skill_style_diversity_report',
     'build_skill_workflow_form_report',
     'workflow_form_artifact',

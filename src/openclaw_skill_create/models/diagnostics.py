@@ -9,7 +9,17 @@ from .domain_specificity import SkillDomainSpecificityReport
 from .depth_quality import SkillDepthQualityReport
 from .editorial_quality import SkillEditorialQualityReport
 from .expert_dna import SkillMoveQualityReport
-from .expert_studio import SkillProgramFidelityReport, SkillTaskOutcomeReport
+from .expert_studio import (
+    ExpertEvidenceGapReport,
+    MonotonicImprovementReport,
+    PairwiseEditorialReport,
+    SkillEditorialForceReport,
+    SkillProgramFidelityReport,
+    SkillPromotionDecision,
+    SkillRealizationCandidate,
+    SkillRealizationSpec,
+    SkillTaskOutcomeReport,
+)
 from .expert_structure import SkillExpertStructureReport
 from .security import SecurityAuditReport
 from .style_diversity import SkillStyleDiversityReport
@@ -45,6 +55,13 @@ class Diagnostics(BaseModel):
     style_diversity: Optional[SkillStyleDiversityReport] = None
     move_quality: Optional[SkillMoveQualityReport] = None
     workflow_form: Optional[SkillWorkflowFormReport] = None
+    realization_spec: Optional[SkillRealizationSpec] = None
+    realization_candidates: list[SkillRealizationCandidate] = Field(default_factory=list)
+    pairwise_editorial: Optional[PairwiseEditorialReport] = None
+    promotion_decision: Optional[SkillPromotionDecision] = None
+    monotonic_improvement: Optional[MonotonicImprovementReport] = None
+    editorial_force: Optional[SkillEditorialForceReport] = None
     program_fidelity: Optional[SkillProgramFidelityReport] = None
     task_outcome: Optional[SkillTaskOutcomeReport] = None
+    expert_evidence_gap: Optional[ExpertEvidenceGapReport] = None
     notes: list[str] = Field(default_factory=list)

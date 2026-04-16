@@ -26,7 +26,15 @@ SECTION_ALIASES = {
     "workflow": ("workflow", "process", "steps", "procedure"),
     "output_format": ("output format", "output template", "template", "deliverable"),
     "quality_checks": ("quality checks", "quality bar", "acceptance", "review checks"),
-    "common_pitfalls": ("common pitfalls", "pitfalls", "failure modes", "anti-patterns", "mistakes"),
+    "common_pitfalls": (
+        "common pitfalls",
+        "pitfalls",
+        "failure patterns and fixes",
+        "failure patterns",
+        "failure modes",
+        "anti-patterns",
+        "mistakes",
+    ),
 }
 
 PROMPT_TOKEN_RE = re.compile(r"[a-zA-Z][a-zA-Z0-9_-]{3,}")

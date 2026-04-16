@@ -90,6 +90,18 @@ def test_build_ops_roundbook_report_marks_pending_manual_work_as_caution():
     assert report.operation_backed_derive_child_candidates == []
     assert report.operation_backed_hold_candidates == []
     assert report.program_fidelity_status == 'pass'
+    assert report.editorial_force_status == 'pass'
+    assert report.editorial_force_non_regression == 'pass'
+    assert report.pairwise_promotion_status == 'pass'
+    assert report.promotion_hold_count == 0
+    assert report.coverage_non_regression_status == 'pass'
+    assert report.compactness_non_regression_status == 'pass'
+    assert report.frontier_dominance_status == 'pass'
+    assert report.candidate_separation_gap_count == 0
+    assert report.best_balance_not_beaten_count == 0
+    assert report.best_coverage_not_beaten_count == 0
+    assert report.current_best_not_beaten_count == 0
     assert report.program_authoring_status == 'pass'
     assert report.task_outcome_status == 'pass'
+    assert report.breakthrough_status == 'pass'
     assert report.overall_readiness == 'caution'

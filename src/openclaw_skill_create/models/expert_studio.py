@@ -30,12 +30,23 @@ class ExpertFailureCase(BaseModel):
     repair_direction: str = ""
 
 
+class ExpertSectionCorpusEntry(BaseModel):
+    skill_name: str
+    section_name: str
+    expert_excerpt: str = ""
+    section_purpose: str = ""
+    judgment_moves: list[str] = Field(default_factory=list)
+    cut_moves: list[str] = Field(default_factory=list)
+    repair_moves: list[str] = Field(default_factory=list)
+
+
 class ExpertSkillCorpusEntry(BaseModel):
     skill_name: str
     domain_family: str = "methodology_guidance"
     task_brief: str = ""
     expert_skill_markdown: str = ""
     expert_notes: list[str] = Field(default_factory=list)
+    section_corpus: list[ExpertSectionCorpusEntry] = Field(default_factory=list)
     anti_patterns: list[str] = Field(default_factory=list)
     task_probes: list[ExpertTaskProbe] = Field(default_factory=list)
     expected_outputs: list[str] = Field(default_factory=list)
@@ -79,6 +90,82 @@ class SkillProgramIR(BaseModel):
     source_skill_name: str = ""
     source_confidence: str = "checked_in"
     summary: list[str] = Field(default_factory=list)
+
+
+class SectionRealizationSpec(BaseModel):
+    section_name: str
+    rhetorical_purpose: str = ""
+    allowed_surface_forms: list[str] = Field(default_factory=list)
+    sentence_budget: int = 3
+    required_judgment_moves: list[str] = Field(default_factory=list)
+    forbidden_filler_patterns: list[str] = Field(default_factory=list)
+    section_form: str = "compact"
+    primary_force_focus: str = ""
+    emphasis_level: str = "balanced"
+
+
+class SkillRealizationSpec(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str
+    workflow_surface: str = "execution_spine"
+    opening_frame: str = ""
+    section_order: list[str] = Field(default_factory=list)
+    section_rhythm: list[str] = Field(default_factory=list)
+    compression_policy: str = "balanced"
+    voice_profile: list[str] = Field(default_factory=list)
+    boilerplate_forbidden: list[str] = Field(default_factory=list)
+    strategy_family: str = "default"
+    strategy_tags: list[str] = Field(default_factory=list)
+    sections: list[SectionRealizationSpec] = Field(default_factory=list)
+    summary: list[str] = Field(default_factory=list)
+
+
+class SkillRealizationCandidate(BaseModel):
+    schema_version: str = "1.0.0"
+    candidate_id: str
+    skill_name: str
+    program_id: str
+    realization_strategy: str = ""
+    strategy_family: str = "default"
+    strategy_profile: dict[str, str] = Field(default_factory=dict)
+    rendered_markdown: str = ""
+    diagnostic_summary: list[str] = Field(default_factory=list)
+
+
+class ProfileBaselineSnapshot(BaseModel):
+    label: str
+    primary_force_metrics: dict[str, float] = Field(default_factory=dict)
+    coverage_metrics: dict[str, float] = Field(default_factory=dict)
+    compactness_metrics: dict[str, float] = Field(default_factory=dict)
+    summary: list[str] = Field(default_factory=list)
+
+
+class ProfileBaselineBundle(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str
+    best_balance_snapshot: ProfileBaselineSnapshot
+    best_coverage_snapshot: ProfileBaselineSnapshot
+    force_floor: dict[str, float] = Field(default_factory=dict)
+    coverage_floor: dict[str, float] = Field(default_factory=dict)
+    compactness_ceiling: dict[str, float] = Field(default_factory=dict)
+    tolerance: dict[str, float] = Field(default_factory=dict)
+    summary: list[str] = Field(default_factory=list)
+
+
+class SectionCompressionPlan(BaseModel):
+    section_name: str
+    max_sentence_budget: int = 3
+    protected_terms: list[str] = Field(default_factory=list)
+    forbidden_removals: list[str] = Field(default_factory=list)
+    compression_rules: list[str] = Field(default_factory=list)
+
+
+class SectionCompressionResult(BaseModel):
+    section_name: str
+    removed_redundant_lines: int = 0
+    opening_rewrite_applied: bool = False
+    filler_removed_count: int = 0
+    protected_terms_preserved: bool = True
 
 
 class SkillProgramAuthoringCandidate(BaseModel):
@@ -130,6 +217,90 @@ class ProgramCandidateReviewBatchReport(BaseModel):
     approved_for_release_gate_count: int = 0
     summary: str = ""
     markdown_summary: str = ""
+
+
+class PairwiseEditorialReport(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str = ""
+    winner: str = ""
+    loser: str = ""
+    decision_pressure_delta: float = 0.0
+    cut_sharpness_delta: float = 0.0
+    failure_repair_clarity_delta: float = 0.0
+    output_executability_delta: float = 0.0
+    redundancy_delta: float = 0.0
+    style_convergence_delta: float = 0.0
+    candidate_separation_status: str = "unknown"
+    candidate_separation_score: float = 0.0
+    force_non_regression_status: str = "unknown"
+    current_best_comparison_status: str = "unknown"
+    primary_force_win_count: int = 0
+    promotion_hold_reason: str = ""
+    candidate_strategy_matrix: list[dict[str, str]] = Field(default_factory=list)
+    summary: list[str] = Field(default_factory=list)
+
+
+class SkillPromotionDecision(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str = ""
+    candidate_id: str = ""
+    current_best_id: str = ""
+    promotion_status: str = "hold"
+    reason: str = ""
+    best_balance_comparison_status: str = "unknown"
+    best_coverage_comparison_status: str = "unknown"
+    candidate_separation_status: str = "unknown"
+    force_non_regression_status: str = "unknown"
+    coverage_non_regression_status: str = "unknown"
+    compactness_non_regression_status: str = "unknown"
+    frontier_dominance_status: str = "unknown"
+    compression_gain_status: str = "unknown"
+    current_best_comparison_status: str = "unknown"
+    primary_force_win_count: int = 0
+    promotion_hold_reason: str = ""
+    stable_but_no_breakthrough: bool = False
+    summary: list[str] = Field(default_factory=list)
+
+
+class MonotonicImprovementReport(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str = ""
+    best_balance_comparison_status: str = "unknown"
+    best_coverage_comparison_status: str = "unknown"
+    force_non_regression_status: str = "unknown"
+    coverage_non_regression_status: str = "unknown"
+    compactness_non_regression_status: str = "unknown"
+    frontier_dominance_status: str = "unknown"
+    compression_gain_status: str = "unknown"
+    promotion_status: str = "hold"
+    promotion_reason: str = ""
+    primary_force_win_count: int = 0
+    protected_regressions: list[str] = Field(default_factory=list)
+    compactness_gains: list[str] = Field(default_factory=list)
+    summary: list[str] = Field(default_factory=list)
+
+
+class SkillEditorialForceReport(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str = ""
+    skill_archetype: str = "guidance"
+    status: str = "pass"
+    decision_pressure_score: float = 0.0
+    cut_sharpness_score: float = 0.0
+    failure_repair_force: float = 0.0
+    boundary_rule_coverage: float = 0.0
+    stop_condition_coverage: float = 0.0
+    output_executability_score: float = 0.0
+    anti_filler_score: float = 0.0
+    section_force_distinctness: float = 0.0
+    section_rhythm_distinctness: float = 0.0
+    opening_distinctness: float = 0.0
+    compression_without_loss: float = 0.0
+    generic_surface_leakage: float = 0.0
+    blocking_issues: list[str] = Field(default_factory=list)
+    warning_issues: list[str] = Field(default_factory=list)
+    primary_force_metrics: dict[str, float] = Field(default_factory=dict)
+    summary: list[str] = Field(default_factory=list)
 
 
 class SkillProgramFidelityReport(BaseModel):
@@ -193,3 +364,17 @@ class SkillTaskOutcomeReport(BaseModel):
     expert_reference_average: float = 0.0
     summary: str = ""
     markdown_summary: str = ""
+
+
+class ExpertEvidenceGapReport(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str = ""
+    status: str = "pass"
+    missing_expert_golden: bool = False
+    missing_section_corpus: bool = False
+    missing_probe_outputs: bool = False
+    unstable_move_sequence: bool = False
+    unstable_program_shape: bool = False
+    generic_realization_candidate: bool = False
+    backlog_categories: list[str] = Field(default_factory=list)
+    summary: list[str] = Field(default_factory=list)

@@ -11,7 +11,13 @@ from ..models.body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from ..models.depth_quality import SkillDepthQualityReport
 from ..models.editorial_quality import SkillEditorialQualityReport
 from ..models.expert_dna import SkillMoveQualityReport
-from ..models.expert_studio import SkillProgramFidelityReport, SkillTaskOutcomeReport
+from ..models.expert_studio import (
+    PairwiseEditorialReport,
+    SkillEditorialForceReport,
+    SkillProgramFidelityReport,
+    SkillPromotionDecision,
+    SkillTaskOutcomeReport,
+)
 from ..models.domain_expertise import SkillDomainExpertiseReport
 from ..models.domain_specificity import SkillDomainSpecificityReport
 from ..models.expert_structure import SkillExpertStructureReport
@@ -44,6 +50,9 @@ EDITORIAL_QUALITY_REPORT_PATH = 'evals/editorial_quality.json'
 STYLE_DIVERSITY_REPORT_PATH = 'evals/style_diversity.json'
 MOVE_QUALITY_REPORT_PATH = 'evals/move_quality.json'
 WORKFLOW_FORM_REPORT_PATH = 'evals/workflow_form.json'
+PAIRWISE_EDITORIAL_REPORT_PATH = 'evals/pairwise_editorial.json'
+PROMOTION_DECISION_REPORT_PATH = 'evals/promotion_decision.json'
+EDITORIAL_FORCE_REPORT_PATH = 'evals/editorial_force.json'
 PROGRAM_FIDELITY_REPORT_PATH = 'evals/program_fidelity.json'
 TASK_OUTCOME_REPORT_PATH = 'evals/task_outcome.json'
 SECURITY_AUDIT_REPORT_PATH = 'evals/security_audit.json'
@@ -400,6 +409,81 @@ def artifacts_with_workflow_form(
     )
 
     files = [file for file in artifacts.files if file.path != WORKFLOW_FORM_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_pairwise_editorial(
+    *,
+    artifacts: Artifacts,
+    pairwise_editorial: Optional[PairwiseEditorialReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if pairwise_editorial is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=PAIRWISE_EDITORIAL_REPORT_PATH,
+        content=json.dumps(pairwise_editorial.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['pairwise_editorial'],
+        status='new',
+    )
+    files = [file for file in artifacts.files if file.path != PAIRWISE_EDITORIAL_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_promotion_decision(
+    *,
+    artifacts: Artifacts,
+    promotion_decision: Optional[SkillPromotionDecision],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if promotion_decision is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=PROMOTION_DECISION_REPORT_PATH,
+        content=json.dumps(promotion_decision.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['promotion_decision'],
+        status='new',
+    )
+    files = [file for file in artifacts.files if file.path != PROMOTION_DECISION_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_editorial_force(
+    *,
+    artifacts: Artifacts,
+    editorial_force: Optional[SkillEditorialForceReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if editorial_force is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=EDITORIAL_FORCE_REPORT_PATH,
+        content=json.dumps(editorial_force.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['editorial_force'],
+        status='new',
+    )
+    files = [file for file in artifacts.files if file.path != EDITORIAL_FORCE_REPORT_PATH]
     files.append(report_file)
     return Artifacts(files=files)
 

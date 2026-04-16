@@ -19,6 +19,7 @@ from ..models.plan import PlannedFile, SkillPlan
 from ..models.request import SkillCreateRequestV6
 from .body_quality import build_skill_body_quality_report, build_skill_self_review_report
 from .depth_quality import build_skill_depth_quality_report
+from .editorial_force import build_skill_editorial_force_report
 from .editorial_quality import build_skill_editorial_quality_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
@@ -26,7 +27,9 @@ from .expert_dna_authoring import build_expert_dna_authoring_pack
 from .expert_dna import move_signature_from_markdown
 from .expert_skill_studio import (
     build_program_candidate_review_batch_report,
+    build_skill_realization_candidates,
     build_skill_program_authoring_pack,
+    choose_skill_realization_candidate,
     evaluate_negative_case_resistance,
 )
 from .expert_structure import build_skill_expert_structure_report
@@ -48,6 +51,7 @@ from .workflow_form import build_skill_workflow_form_report
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_COMPARISON_GOLDEN_ROOT = ROOT / 'tests' / 'fixtures' / 'methodology_guidance' / 'golden'
 DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT = ROOT / 'tests' / 'fixtures' / 'methodology_guidance' / 'expert_depth_golden'
+DUAL_BASELINE_ROOT = ROOT / 'tests' / 'fixtures' / 'methodology_guidance' / 'dual_baselines'
 
 
 def _default_hermes_wrappers() -> list[Path]:
@@ -134,6 +138,11 @@ def _metrics_from_reports(
     style_diversity=None,
     move_quality=None,
     workflow_form=None,
+    pairwise_editorial=None,
+    promotion_decision=None,
+    monotonic_improvement=None,
+    editorial_force=None,
+    realization_candidate_count: int = 0,
     program_fidelity=None,
     task_outcome=None,
     severity: str = '',
@@ -223,6 +232,42 @@ def _metrics_from_reports(
         output_block_separation=bool(getattr(workflow_form, 'output_block_separation', True)),
         structural_block_count=int(getattr(workflow_form, 'structural_block_count', 0) or 0),
         workflow_form_gap_count=workflow_form_blocking_count,
+        realization_candidate_count=int(realization_candidate_count or 0),
+        pairwise_editorial_status='pass' if pairwise_editorial is not None else 'unknown',
+        pairwise_decision_pressure_delta=float(getattr(pairwise_editorial, 'decision_pressure_delta', 0.0) or 0.0),
+        pairwise_cut_sharpness_delta=float(getattr(pairwise_editorial, 'cut_sharpness_delta', 0.0) or 0.0),
+        pairwise_failure_repair_clarity_delta=float(getattr(pairwise_editorial, 'failure_repair_clarity_delta', 0.0) or 0.0),
+        pairwise_output_executability_delta=float(getattr(pairwise_editorial, 'output_executability_delta', 0.0) or 0.0),
+        pairwise_redundancy_delta=float(getattr(pairwise_editorial, 'redundancy_delta', 0.0) or 0.0),
+        pairwise_style_convergence_delta=float(getattr(pairwise_editorial, 'style_convergence_delta', 0.0) or 0.0),
+        pairwise_promotion_status=str(getattr(promotion_decision, 'promotion_status', 'unknown') or 'unknown'),
+        pairwise_promotion_reason=str(getattr(promotion_decision, 'reason', '') or ''),
+        candidate_separation_status=str(getattr(promotion_decision, 'candidate_separation_status', 'unknown') or 'unknown'),
+        candidate_separation_score=float(getattr(pairwise_editorial, 'candidate_separation_score', 0.0) or 0.0),
+        best_balance_comparison_status=str(getattr(promotion_decision, 'best_balance_comparison_status', 'unknown') or 'unknown'),
+        best_coverage_comparison_status=str(getattr(promotion_decision, 'best_coverage_comparison_status', 'unknown') or 'unknown'),
+        force_non_regression_status=str(getattr(promotion_decision, 'force_non_regression_status', 'unknown') or 'unknown'),
+        coverage_non_regression_status=str(getattr(promotion_decision, 'coverage_non_regression_status', 'unknown') or 'unknown'),
+        compactness_non_regression_status=str(getattr(promotion_decision, 'compactness_non_regression_status', 'unknown') or 'unknown'),
+        frontier_dominance_status=str(getattr(promotion_decision, 'frontier_dominance_status', 'unknown') or 'unknown'),
+        compression_gain_status=str(getattr(promotion_decision, 'compression_gain_status', 'unknown') or 'unknown'),
+        current_best_comparison_status=str(getattr(promotion_decision, 'current_best_comparison_status', 'unknown') or 'unknown'),
+        primary_force_win_count=int(getattr(promotion_decision, 'primary_force_win_count', 0) or 0),
+        promotion_hold_reason=str(getattr(promotion_decision, 'promotion_hold_reason', '') or ''),
+        stable_but_no_breakthrough=bool(getattr(promotion_decision, 'stable_but_no_breakthrough', False)),
+        candidate_strategy_matrix=list(getattr(pairwise_editorial, 'candidate_strategy_matrix', []) or []),
+        editorial_force_status=str(getattr(editorial_force, 'status', 'unknown') or 'unknown'),
+        cut_sharpness_score=float(getattr(editorial_force, 'cut_sharpness_score', 0.0) or 0.0),
+        failure_repair_force=float(getattr(editorial_force, 'failure_repair_force', 0.0) or 0.0),
+        force_boundary_rule_coverage=float(getattr(editorial_force, 'boundary_rule_coverage', 0.0) or 0.0),
+        stop_condition_coverage=float(getattr(editorial_force, 'stop_condition_coverage', 0.0) or 0.0),
+        anti_filler_score=float(getattr(editorial_force, 'anti_filler_score', 0.0) or 0.0),
+        section_force_distinctness=float(getattr(editorial_force, 'section_force_distinctness', 0.0) or 0.0),
+        section_rhythm_distinctness=float(getattr(editorial_force, 'section_rhythm_distinctness', 0.0) or 0.0),
+        opening_distinctness=float(getattr(editorial_force, 'opening_distinctness', 0.0) or 0.0),
+        compression_without_loss=float(getattr(editorial_force, 'compression_without_loss', 0.0) or 0.0),
+        generic_surface_leakage=float(getattr(editorial_force, 'generic_surface_leakage', 0.0) or 0.0),
+        editorial_force_gap_count=len(list(getattr(editorial_force, 'blocking_issues', []) or [])),
         program_fidelity_status=str(getattr(program_fidelity, 'status', 'unknown') or 'unknown'),
         execution_move_recall=float(getattr(program_fidelity, 'execution_move_recall', 0.0) or 0.0),
         execution_move_order_alignment=float(getattr(program_fidelity, 'execution_move_order_alignment', 0.0) or 0.0),
@@ -243,7 +288,7 @@ def _metrics_from_reports(
     )
 
 
-def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any]:
+def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any]:
     request = _request(case)
     plan = _plan(case)
     artifacts = _artifact_skill_md(content)
@@ -304,6 +349,33 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         generated_skill_markdown_by_name={case['skill_name']: content},
         skill_names=[case['skill_name']],
     )
+    _, _, realization_candidates = build_skill_realization_candidates(
+        skill_name=case['skill_name'],
+        description=case['task'],
+        task=case['task'],
+        references=[],
+        scripts=[],
+    )
+    _, pairwise_editorial, promotion_decision, monotonic_improvement = choose_skill_realization_candidate(
+        skill_name=case['skill_name'],
+        task=case['task'],
+        candidates=realization_candidates,
+    )
+    editorial_force = build_skill_editorial_force_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+        body_quality=body_quality,
+        domain_specificity=domain_specificity,
+        domain_expertise=domain_expertise,
+        depth_quality=depth_quality,
+        editorial_quality=editorial_quality,
+        style_diversity=style_diversity,
+        move_quality=move_quality,
+        pairwise_editorial=pairwise_editorial,
+        promotion_decision=promotion_decision,
+        realization_candidate_count=len(realization_candidates),
+    )
     return (
         _metrics_from_reports(
             body_quality=body_quality,
@@ -316,6 +388,11 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
             style_diversity=style_diversity,
             move_quality=move_quality,
             workflow_form=workflow_form,
+            pairwise_editorial=pairwise_editorial,
+            promotion_decision=promotion_decision,
+            monotonic_improvement=monotonic_improvement,
+            editorial_force=editorial_force,
+            realization_candidate_count=len(realization_candidates),
             program_fidelity=program_fidelity,
             task_outcome=task_outcome,
             severity='reference',
@@ -330,6 +407,8 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
                 and style_diversity.status == 'pass'
                 and move_quality.status == 'pass'
                 and workflow_form.status == 'pass'
+                and editorial_force.status == 'pass'
+                and str(getattr(promotion_decision, 'promotion_status', '') or '') == 'promote'
                 and program_fidelity.status == 'pass'
                 and task_outcome.status == 'pass'
             ),
@@ -344,12 +423,16 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         style_diversity,
         move_quality,
         workflow_form,
+        pairwise_editorial,
+        promotion_decision,
+        monotonic_improvement,
+        editorial_force,
         program_fidelity,
         task_outcome,
     )
 
 
-def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, str]:
+def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, str]:
     with tempfile.TemporaryDirectory(prefix='auto-skills-loop-comparison-') as tmpdir:
         response = run_skill_create(
             _request(case),
@@ -371,8 +454,13 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
     style_diversity = getattr(response.diagnostics, 'style_diversity', None) if response.diagnostics is not None else None
     move_quality = getattr(response.diagnostics, 'move_quality', None) if response.diagnostics is not None else None
     workflow_form = getattr(response.diagnostics, 'workflow_form', None) if response.diagnostics is not None else None
+    pairwise_editorial = getattr(response.diagnostics, 'pairwise_editorial', None) if response.diagnostics is not None else None
+    promotion_decision = getattr(response.diagnostics, 'promotion_decision', None) if response.diagnostics is not None else None
+    monotonic_improvement = getattr(response.diagnostics, 'monotonic_improvement', None) if response.diagnostics is not None else None
+    editorial_force = getattr(response.diagnostics, 'editorial_force', None) if response.diagnostics is not None else None
     program_fidelity = getattr(response.diagnostics, 'program_fidelity', None) if response.diagnostics is not None else None
     task_outcome = getattr(response.diagnostics, 'task_outcome', None) if response.diagnostics is not None else None
+    realization_candidates = list(getattr(response.diagnostics, 'realization_candidates', []) or []) if response.diagnostics is not None else []
     return (
         _metrics_from_reports(
             body_quality=body_quality,
@@ -385,6 +473,11 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
             style_diversity=style_diversity,
             move_quality=move_quality,
             workflow_form=workflow_form,
+            pairwise_editorial=pairwise_editorial,
+            promotion_decision=promotion_decision,
+            monotonic_improvement=monotonic_improvement,
+            editorial_force=editorial_force,
+            realization_candidate_count=len(realization_candidates),
             program_fidelity=program_fidelity,
             task_outcome=task_outcome,
             severity=response.severity,
@@ -400,6 +493,10 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
         style_diversity,
         move_quality,
         workflow_form,
+        pairwise_editorial,
+        promotion_decision,
+        monotonic_improvement,
+        editorial_force,
         program_fidelity,
         task_outcome,
         _skill_md_content(response.artifacts),
@@ -462,7 +559,7 @@ def _run_hermes_case(case: dict[str, str], wrapper: Path) -> tuple[SkillCreateCo
         skill_md = generated_root / 'SKILL.md'
         if not skill_md.exists():
             return None, f'Hermes wrapper did not write SKILL.md under {generated_root}'
-        metrics, _, _, _, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
+        metrics, *_ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
         metrics.severity = str(payload.get('severity') or '')
         return metrics, None
 
@@ -556,6 +653,131 @@ def _line_jaccard(left: str, right: str) -> float:
     return round(len(left_lines & right_lines) / max(1, len(left_lines | right_lines)), 4)
 
 
+def _dual_baseline_bundle(skill_name: str) -> dict[str, Any] | None:
+    path = DUAL_BASELINE_ROOT / f'{skill_name}.json'
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _primary_force_metric_names(skill_name: str) -> list[str]:
+    return {
+        'concept-to-mvp-pack': ['decision_pressure_score', 'cut_sharpness_score', 'boundary_rule_coverage'],
+        'decision-loop-stress-test': ['decision_pressure_score', 'failure_repair_force', 'stop_condition_coverage'],
+        'simulation-resource-loop-design': ['failure_repair_force', 'section_force_distinctness', 'boundary_rule_coverage'],
+    }.get(
+        skill_name,
+        ['decision_pressure_score', 'cut_sharpness_score', 'failure_repair_force'],
+    )
+
+
+def _coverage_metric_names(skill_name: str) -> list[str]:
+    return ['domain_move_coverage', 'section_depth_score', 'task_outcome_with_skill_average']
+
+
+def _compactness_metric_names(skill_name: str) -> list[str]:
+    return ['redundancy_ratio', 'shared_opening_phrase_ratio', 'cross_case_similarity']
+
+
+def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_name: str) -> None:
+    bundle = _dual_baseline_bundle(skill_name)
+    if bundle is None:
+        return
+    score_tol = float(dict(bundle.get('tolerance') or {}).get('score_metric', 0.01) or 0.01)
+    compactness_tol = float(dict(bundle.get('tolerance') or {}).get('compactness_metric', 0.01) or 0.01)
+    force_floor = dict(bundle.get('force_floor') or {})
+    coverage_floor = dict(bundle.get('coverage_floor') or {})
+    compactness_ceiling = dict(bundle.get('compactness_ceiling') or {})
+    balance_force = dict(((bundle.get('best_balance_snapshot') or {}).get('primary_force_metrics')) or {})
+    coverage_force = dict(((bundle.get('best_coverage_snapshot') or {}).get('primary_force_metrics')) or {})
+    force_regression = any(
+        float(getattr(metrics, metric, 0.0) or 0.0) + score_tol < float(value)
+        for metric, value in force_floor.items()
+    )
+    coverage_regression = any(
+        float(getattr(metrics, metric, 0.0) or 0.0) + score_tol < float(value)
+        for metric, value in coverage_floor.items()
+    )
+    compactness_regression = any(
+        float(getattr(metrics, metric, 0.0) or 0.0) > float(value) + compactness_tol
+        for metric, value in compactness_ceiling.items()
+    )
+    primary_force_win_count = sum(
+        1
+        for metric in _primary_force_metric_names(skill_name)
+        if (
+            float(getattr(metrics, metric, 0.0) or 0.0) > float(balance_force.get(metric, 0.0) or 0.0) + 0.015
+            or float(getattr(metrics, metric, 0.0) or 0.0) > float(coverage_force.get(metric, 0.0) or 0.0) + 0.015
+        )
+    )
+    balance_beaten = any(
+        float(getattr(metrics, metric, 0.0) or 0.0) > float(balance_force.get(metric, 0.0) or 0.0) + 0.015
+        for metric in _primary_force_metric_names(skill_name)
+    )
+    coverage_beaten = any(
+        float(getattr(metrics, metric, 0.0) or 0.0) > float(coverage_force.get(metric, 0.0) or 0.0) + 0.015
+        for metric in _primary_force_metric_names(skill_name)
+    )
+    metrics.best_balance_comparison_status = 'beaten' if balance_beaten else 'not_beaten'
+    metrics.best_coverage_comparison_status = 'beaten' if coverage_beaten else 'not_beaten'
+    metrics.force_non_regression_status = 'fail' if force_regression else 'pass'
+    metrics.coverage_non_regression_status = 'fail' if coverage_regression else 'pass'
+    metrics.compactness_non_regression_status = 'fail' if compactness_regression else 'pass'
+    metrics.frontier_dominance_status = (
+        'pass'
+        if (
+            metrics.force_non_regression_status == 'pass'
+            and metrics.coverage_non_regression_status == 'pass'
+            and metrics.compactness_non_regression_status == 'pass'
+        )
+        else 'fail'
+    )
+    compactness_gain = (
+        (float(compactness_ceiling.get('redundancy_ratio', 1.0) or 1.0) - float(metrics.redundancy_ratio or 0.0) >= 0.02)
+        or (float(compactness_ceiling.get('shared_opening_phrase_ratio', 1.0) or 1.0) - float(metrics.shared_opening_phrase_ratio or 0.0) >= 0.05)
+        or (float(compactness_ceiling.get('cross_case_similarity', 1.0) or 1.0) - float(metrics.cross_case_similarity or 0.0) >= 0.02)
+        or (
+            float(metrics.compression_without_loss or 0.0)
+            - max(
+                float((((bundle.get('best_balance_snapshot') or {}).get('compactness_metrics') or {}).get('compression_without_loss', 0.0) or 0.0)),
+                float((((bundle.get('best_coverage_snapshot') or {}).get('compactness_metrics') or {}).get('compression_without_loss', 0.0) or 0.0)),
+            )
+            >= 0.03
+        )
+    )
+    metrics.compression_gain_status = 'pass' if compactness_gain else 'fail'
+    metrics.primary_force_win_count = primary_force_win_count
+    metrics.current_best_comparison_status = 'beaten' if (balance_beaten and coverage_beaten) else 'not_beaten'
+    if metrics.force_non_regression_status != 'pass':
+        metrics.promotion_hold_reason = 'hold_due_to_force_regression'
+        metrics.pairwise_promotion_status = 'hold'
+        metrics.pairwise_promotion_reason = 'hold_due_to_force_regression'
+        metrics.stable_but_no_breakthrough = False
+    elif metrics.coverage_non_regression_status != 'pass':
+        metrics.promotion_hold_reason = 'hold_due_to_coverage_regression'
+        metrics.pairwise_promotion_status = 'hold'
+        metrics.pairwise_promotion_reason = 'hold_due_to_coverage_regression'
+        metrics.stable_but_no_breakthrough = False
+    elif metrics.compactness_non_regression_status != 'pass':
+        metrics.promotion_hold_reason = 'hold_due_to_compactness_regression'
+        metrics.pairwise_promotion_status = 'hold'
+        metrics.pairwise_promotion_reason = 'hold_due_to_compactness_regression'
+        metrics.stable_but_no_breakthrough = False
+    elif balance_beaten and coverage_beaten:
+        metrics.promotion_hold_reason = ''
+        metrics.pairwise_promotion_status = 'promote'
+        metrics.pairwise_promotion_reason = 'breakthrough'
+        metrics.stable_but_no_breakthrough = False
+    else:
+        metrics.promotion_hold_reason = 'stable_but_no_breakthrough'
+        metrics.pairwise_promotion_status = 'hold'
+        metrics.pairwise_promotion_reason = 'stable_but_no_breakthrough'
+        metrics.stable_but_no_breakthrough = True
+
+
 def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateComparisonMetrics) -> list[str]:
     issues: list[str] = []
     if auto.body_lines < 40 and reference.body_lines > 150:
@@ -618,7 +840,11 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_failure_corrections_thin')
     if auto.redundancy_ratio > 0.25:
         issues.append('auto_redundancy_high')
-    if auto.bullet_count > reference.bullet_count * 1.6 and auto.decision_pressure_score < 0.85:
+    if (
+        auto.bullet_count > reference.bullet_count * 1.8
+        and auto.decision_pressure_score < 0.85
+        and (auto.redundancy_ratio > 0.12 or auto.action_density_score < 0.30)
+    ):
         issues.append('auto_explanatory_bulk_high')
     if auto.shared_opening_phrase_ratio > 0.35:
         issues.append('auto_shared_opening_phrase')
@@ -652,6 +878,38 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_output_blocks_mixed_into_workflow')
     if auto.workflow_surface == 'hybrid' and auto.structural_block_count < 3:
         issues.append('auto_structural_analysis_blocks_missing')
+    if auto.editorial_force_status != 'pass':
+        issues.append('auto_editorial_force_not_pass')
+    if auto.decision_pressure_score < 0.70:
+        issues.append('auto_decision_pressure_low')
+    if auto.cut_sharpness_score < 0.70:
+        issues.append('auto_cut_sharpness_low')
+    if auto.failure_repair_force < 0.70:
+        issues.append('auto_failure_repair_force_low')
+    if auto.section_rhythm_distinctness < 0.70:
+        issues.append('auto_section_rhythm_distinctness_low')
+    if auto.compression_without_loss < 0.65:
+        issues.append('auto_compression_without_loss_low')
+    if auto.generic_surface_leakage > 0.35:
+        issues.append('auto_generic_surface_leakage')
+    if auto.candidate_separation_status != 'pass':
+        issues.append('auto_candidate_separation_not_pass')
+    if auto.force_non_regression_status != 'pass':
+        issues.append('auto_force_non_regression_not_pass')
+    if auto.coverage_non_regression_status != 'pass':
+        issues.append('auto_coverage_non_regression_not_pass')
+    if auto.compactness_non_regression_status != 'pass':
+        issues.append('auto_compactness_non_regression_not_pass')
+    if auto.frontier_dominance_status != 'pass':
+        issues.append('auto_frontier_dominance_not_pass')
+    if auto.current_best_comparison_status == 'not_beaten':
+        issues.append('auto_current_best_not_beaten')
+    if auto.best_balance_comparison_status == 'not_beaten':
+        issues.append('auto_best_balance_not_beaten')
+    if auto.best_coverage_comparison_status == 'not_beaten':
+        issues.append('auto_best_coverage_not_beaten')
+    if auto.pairwise_promotion_status != 'promote' and not auto.stable_but_no_breakthrough:
+        issues.append('auto_pairwise_promotion_not_promoted')
     if auto.execution_move_recall < 0.85:
         issues.append('auto_execution_move_recall_low')
     if auto.execution_move_order_alignment < 0.80:
@@ -691,7 +949,7 @@ def _anthropic_reference_metrics() -> tuple[SkillCreateComparisonMetrics | None,
             'skill_name': 'skill-creator',
             'task': 'Create and iteratively improve skills with evals, baseline comparisons, qualitative review, and quantitative benchmarks.',
         }
-        metrics, _, _, _, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, content)
+        metrics, *_ = _metrics_from_markdown(case, content)
         summary = [
             'Anthropic skill-creator reference available',
             f'body_lines={metrics.body_lines}',
@@ -729,6 +987,19 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         f'- style_gap_count={report.style_gap_count}',
         f'- move_quality_gap_count={report.move_quality_gap_count}',
         f'- workflow_form_gap_count={report.workflow_form_gap_count}',
+        f'- editorial_force_gap_count={report.editorial_force_gap_count}',
+        f'- candidate_separation_gap_count={report.candidate_separation_gap_count}',
+        f'- force_non_regression_status={report.force_non_regression_status}',
+        f'- coverage_non_regression_status={report.coverage_non_regression_status}',
+        f'- compactness_non_regression_status={report.compactness_non_regression_status}',
+        f'- frontier_dominance_status={report.frontier_dominance_status}',
+        f'- compression_gain_status={report.compression_gain_status}',
+        f'- best_balance_not_beaten_count={report.best_balance_not_beaten_count}',
+        f'- best_coverage_not_beaten_count={report.best_coverage_not_beaten_count}',
+        f'- current_best_not_beaten_count={report.current_best_not_beaten_count}',
+        f'- stable_but_no_breakthrough_count={report.stable_but_no_breakthrough_count}',
+        f'- promotion_hold_count={report.promotion_hold_count}',
+        f'- pairwise_promotion_gap_count={report.pairwise_promotion_gap_count}',
         f'- program_fidelity_gap_count={report.program_fidelity_gap_count}',
         f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
@@ -793,6 +1064,44 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_workflow_heading_alignment={case.auto_metrics.workflow_heading_alignment:.2f}')
         lines.append(f'- auto_output_block_separation={case.auto_metrics.output_block_separation}')
         lines.append(f'- auto_structural_block_count={case.auto_metrics.structural_block_count}')
+        lines.append(f'- auto_realization_candidate_count={case.auto_metrics.realization_candidate_count}')
+        lines.append(f'- auto_pairwise_editorial_status={case.auto_metrics.pairwise_editorial_status}')
+        lines.append(f'- auto_pairwise_decision_pressure_delta={case.auto_metrics.pairwise_decision_pressure_delta:.2f}')
+        lines.append(f'- auto_pairwise_cut_sharpness_delta={case.auto_metrics.pairwise_cut_sharpness_delta:.2f}')
+        lines.append(f'- auto_pairwise_failure_repair_clarity_delta={case.auto_metrics.pairwise_failure_repair_clarity_delta:.2f}')
+        lines.append(f'- auto_pairwise_output_executability_delta={case.auto_metrics.pairwise_output_executability_delta:.2f}')
+        lines.append(f'- auto_pairwise_redundancy_delta={case.auto_metrics.pairwise_redundancy_delta:.2f}')
+        lines.append(f'- auto_pairwise_style_convergence_delta={case.auto_metrics.pairwise_style_convergence_delta:.2f}')
+        lines.append(f'- auto_pairwise_promotion_status={case.auto_metrics.pairwise_promotion_status}')
+        if case.auto_metrics.pairwise_promotion_reason:
+            lines.append(f'- auto_pairwise_promotion_reason={case.auto_metrics.pairwise_promotion_reason}')
+        lines.append(f'- auto_candidate_separation_status={case.auto_metrics.candidate_separation_status}')
+        lines.append(f'- auto_candidate_separation_score={case.auto_metrics.candidate_separation_score:.2f}')
+        lines.append(f'- auto_best_balance_comparison_status={case.auto_metrics.best_balance_comparison_status}')
+        lines.append(f'- auto_best_coverage_comparison_status={case.auto_metrics.best_coverage_comparison_status}')
+        lines.append(f'- auto_force_non_regression_status={case.auto_metrics.force_non_regression_status}')
+        lines.append(f'- auto_coverage_non_regression_status={case.auto_metrics.coverage_non_regression_status}')
+        lines.append(f'- auto_compactness_non_regression_status={case.auto_metrics.compactness_non_regression_status}')
+        lines.append(f'- auto_frontier_dominance_status={case.auto_metrics.frontier_dominance_status}')
+        lines.append(f'- auto_compression_gain_status={case.auto_metrics.compression_gain_status}')
+        lines.append(f'- auto_current_best_comparison_status={case.auto_metrics.current_best_comparison_status}')
+        lines.append(f'- auto_primary_force_win_count={case.auto_metrics.primary_force_win_count}')
+        lines.append(f'- auto_stable_but_no_breakthrough={case.auto_metrics.stable_but_no_breakthrough}')
+        if case.auto_metrics.promotion_hold_reason:
+            lines.append(f'- auto_promotion_hold_reason={case.auto_metrics.promotion_hold_reason}')
+        lines.append(f'- auto_editorial_force={case.auto_metrics.editorial_force_status}')
+        lines.append(f'- auto_cut_sharpness_score={case.auto_metrics.cut_sharpness_score:.2f}')
+        lines.append(f'- auto_failure_repair_force={case.auto_metrics.failure_repair_force:.2f}')
+        lines.append(f'- auto_force_boundary_rule_coverage={case.auto_metrics.force_boundary_rule_coverage:.2f}')
+        lines.append(f'- auto_stop_condition_coverage={case.auto_metrics.stop_condition_coverage:.2f}')
+        lines.append(f'- auto_anti_filler_score={case.auto_metrics.anti_filler_score:.2f}')
+        lines.append(f'- auto_section_force_distinctness={case.auto_metrics.section_force_distinctness:.2f}')
+        lines.append(f'- auto_section_rhythm_distinctness={case.auto_metrics.section_rhythm_distinctness:.2f}')
+        lines.append(f'- auto_opening_distinctness={case.auto_metrics.opening_distinctness:.2f}')
+        lines.append(f'- auto_compression_without_loss={case.auto_metrics.compression_without_loss:.2f}')
+        lines.append(f'- auto_generic_surface_leakage={case.auto_metrics.generic_surface_leakage:.2f}')
+        if case.auto_metrics.candidate_strategy_matrix:
+            lines.append(f'- auto_candidate_strategy_matrix={case.auto_metrics.candidate_strategy_matrix}')
         lines.append(f'- auto_program_fidelity={case.auto_metrics.program_fidelity_status}')
         lines.append(f'- auto_execution_move_recall={case.auto_metrics.execution_move_recall:.2f}')
         lines.append(f'- auto_execution_move_order_alignment={case.auto_metrics.execution_move_order_alignment:.2f}')
@@ -877,12 +1186,16 @@ def build_skill_create_comparison_report(
             style_diversity,
             move_quality,
             workflow_form,
+            pairwise_editorial,
+            promotion_decision,
+            monotonic_improvement,
+            editorial_force,
             program_fidelity,
             task_outcome,
             auto_content,
         ) = _run_auto_case(case)
         reference_root = DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT if DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT.exists() else root
-        golden_metrics, _, _, _, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, reference_root))
+        golden_metrics, *_ = _metrics_from_markdown(case, _golden_content(case, reference_root))
         hermes_metrics = None
         if hermes_wrapper is not None:
             hermes_metrics, error = _run_hermes_case(case, hermes_wrapper)
@@ -904,6 +1217,10 @@ def build_skill_create_comparison_report(
                 'style_diversity': style_diversity,
                 'move_quality': move_quality,
                 'workflow_form': workflow_form,
+                'pairwise_editorial': pairwise_editorial,
+                'promotion_decision': promotion_decision,
+                'monotonic_improvement': monotonic_improvement,
+                'editorial_force': editorial_force,
                 'program_fidelity': program_fidelity,
                 'task_outcome': task_outcome,
                 'auto_content': auto_content,
@@ -1032,6 +1349,33 @@ def build_skill_create_comparison_report(
             skill_names=[str(payload['case']['skill_name'])],
         )
         profile_result = next(iter(list(payload['task_outcome'].profile_results or [])), None)
+        payload['editorial_force'] = build_skill_editorial_force_report(
+            request=_request(payload['case']),
+            skill_plan=_plan(payload['case']),
+            artifacts=_artifact_skill_md(payload['auto_content']),
+            body_quality=payload['body_quality'],
+            domain_specificity=payload['domain_specificity'],
+            domain_expertise=payload['domain_expertise'],
+            depth_quality=payload['depth_quality'],
+            editorial_quality=payload['editorial_quality'],
+            style_diversity=payload['style_diversity'],
+            move_quality=payload['move_quality'],
+            pairwise_editorial=payload['pairwise_editorial'],
+            promotion_decision=payload['promotion_decision'],
+            realization_candidate_count=int(payload['auto_metrics'].realization_candidate_count or 0),
+        )
+        payload['auto_metrics'].editorial_force_status = payload['editorial_force'].status
+        payload['auto_metrics'].cut_sharpness_score = payload['editorial_force'].cut_sharpness_score
+        payload['auto_metrics'].failure_repair_force = payload['editorial_force'].failure_repair_force
+        payload['auto_metrics'].force_boundary_rule_coverage = payload['editorial_force'].boundary_rule_coverage
+        payload['auto_metrics'].stop_condition_coverage = payload['editorial_force'].stop_condition_coverage
+        payload['auto_metrics'].anti_filler_score = payload['editorial_force'].anti_filler_score
+        payload['auto_metrics'].section_force_distinctness = payload['editorial_force'].section_force_distinctness
+        payload['auto_metrics'].section_rhythm_distinctness = payload['editorial_force'].section_rhythm_distinctness
+        payload['auto_metrics'].opening_distinctness = payload['editorial_force'].opening_distinctness
+        payload['auto_metrics'].compression_without_loss = payload['editorial_force'].compression_without_loss
+        payload['auto_metrics'].generic_surface_leakage = payload['editorial_force'].generic_surface_leakage
+        payload['auto_metrics'].editorial_force_gap_count = len(list(payload['editorial_force'].blocking_issues or []))
         payload['auto_metrics'].task_outcome_status = payload['task_outcome'].status
         payload['auto_metrics'].task_outcome_pass_count = int(getattr(profile_result, 'pass_count', 0) or 0)
         payload['auto_metrics'].task_outcome_probe_count = int(getattr(profile_result, 'probe_count', 0) or 0)
@@ -1053,6 +1397,7 @@ def build_skill_create_comparison_report(
                 payload['expert_structure'].blocking_issues.append('high_generated_line_jaccard')
                 payload['expert_structure'].status = 'fail'
             payload['auto_metrics'].expert_structure_status = payload['expert_structure'].status
+        _apply_dual_baseline_statuses(payload['auto_metrics'], str(payload['case']['skill_name']))
 
     if not include_hermes:
         hermes_execution_status = 'not_requested'
@@ -1106,6 +1451,10 @@ def build_skill_create_comparison_report(
                 style_diversity=payload['style_diversity'],
                 move_quality=payload['move_quality'],
                 workflow_form=payload['workflow_form'],
+                pairwise_editorial=payload['pairwise_editorial'],
+                promotion_decision=payload['promotion_decision'],
+                monotonic_improvement=payload['monotonic_improvement'],
+                editorial_force=payload['editorial_force'],
                 program_fidelity=payload['program_fidelity'],
                 task_outcome=payload['task_outcome'],
                 gap_issues=gap_issues,
@@ -1206,6 +1555,62 @@ def build_skill_create_comparison_report(
         )
         or item.auto_metrics.workflow_form_status != 'pass'
     )
+    editorial_force_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue
+            in {
+                'auto_editorial_force_not_pass',
+                'auto_cut_sharpness_low',
+                'auto_failure_repair_force_low',
+                'auto_section_rhythm_distinctness_low',
+                'auto_compression_without_loss_low',
+                'auto_generic_surface_leakage',
+            }
+            for issue in list(item.gap_issues or [])
+        )
+        or item.auto_metrics.editorial_force_status != 'pass'
+    )
+    candidate_separation_gap_count = sum(
+        1
+        for item in cases
+        if any(issue in {'auto_candidate_separation_not_pass'} for issue in list(item.gap_issues or []))
+        or item.auto_metrics.candidate_separation_status != 'pass'
+    )
+    best_balance_not_beaten_count = sum(
+        1
+        for item in cases
+        if item.auto_metrics.best_balance_comparison_status == 'not_beaten'
+    )
+    best_coverage_not_beaten_count = sum(
+        1
+        for item in cases
+        if item.auto_metrics.best_coverage_comparison_status == 'not_beaten'
+    )
+    current_best_not_beaten_count = sum(
+        1
+        for item in cases
+        if any(issue in {'auto_current_best_not_beaten'} for issue in list(item.gap_issues or []))
+        or item.auto_metrics.current_best_comparison_status == 'not_beaten'
+    )
+    promotion_hold_count = sum(
+        1
+        for item in cases
+        if item.auto_metrics.pairwise_promotion_status != 'promote'
+    )
+    pairwise_promotion_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue in {'auto_pairwise_promotion_not_promoted'}
+            for issue in list(item.gap_issues or [])
+        )
+        or (
+            item.auto_metrics.pairwise_promotion_status != 'promote'
+            and not item.auto_metrics.stable_but_no_breakthrough
+        )
+    )
     program_fidelity_gap_count = sum(
         1
         for item in cases
@@ -1237,6 +1642,36 @@ def build_skill_create_comparison_report(
             for issue in list(item.gap_issues or [])
         )
         or item.auto_metrics.task_outcome_status != 'pass'
+    )
+    force_non_regression_status = (
+        'fail'
+        if any(item.auto_metrics.force_non_regression_status == 'fail' for item in cases)
+        else 'pass'
+    )
+    coverage_non_regression_status = (
+        'fail'
+        if any(item.auto_metrics.coverage_non_regression_status == 'fail' for item in cases)
+        else 'pass'
+    )
+    compactness_non_regression_status = (
+        'fail'
+        if any(item.auto_metrics.compactness_non_regression_status == 'fail' for item in cases)
+        else 'pass'
+    )
+    frontier_dominance_status = (
+        'fail'
+        if any(item.auto_metrics.frontier_dominance_status == 'fail' for item in cases)
+        else 'pass'
+    )
+    compression_gain_status = (
+        'pass'
+        if any(item.auto_metrics.compression_gain_status == 'pass' for item in cases)
+        else 'fail'
+    )
+    stable_but_no_breakthrough_count = sum(
+        1
+        for item in cases
+        if item.auto_metrics.stable_but_no_breakthrough
     )
     generic_shell_gap_count = sum(
         1
@@ -1271,6 +1706,36 @@ def build_skill_create_comparison_report(
     usefulness_eval_status = usefulness_report.status
     program_authoring_status = 'pass' if program_authoring_pack.rejected == [] else 'fail'
     task_outcome_status = task_outcome_report.status
+    breakthrough_ready = (
+        gap_count == 0
+        and usefulness_report.usefulness_gap_count == 0
+        and task_outcome_report.task_outcome_gap_count == 0
+        and dna_authoring_status == 'pass'
+        and program_authoring_status == 'pass'
+        and editorial_force_gap_count == 0
+        and pairwise_promotion_gap_count == 0
+        and candidate_separation_gap_count == 0
+        and force_non_regression_status == 'pass'
+        and coverage_non_regression_status == 'pass'
+        and compactness_non_regression_status == 'pass'
+        and frontier_dominance_status == 'pass'
+        and best_balance_not_beaten_count == 0
+        and best_coverage_not_beaten_count == 0
+        and stable_but_no_breakthrough_count == 0
+    )
+    stable_but_no_breakthrough = (
+        not breakthrough_ready
+        and gap_count == 0
+        and usefulness_report.usefulness_gap_count == 0
+        and task_outcome_report.task_outcome_gap_count == 0
+        and dna_authoring_status == 'pass'
+        and program_authoring_status == 'pass'
+        and editorial_force_gap_count == 0
+        and force_non_regression_status == 'pass'
+        and coverage_non_regression_status == 'pass'
+        and compactness_non_regression_status == 'pass'
+        and frontier_dominance_status == 'pass'
+    )
     report = SkillCreateComparisonReport(
         cases=cases,
         include_hermes=include_hermes,
@@ -1303,14 +1768,35 @@ def build_skill_create_comparison_report(
         style_gap_count=style_gap_count,
         move_quality_gap_count=move_quality_gap_count,
         workflow_form_gap_count=workflow_form_gap_count,
+        editorial_force_gap_count=editorial_force_gap_count,
+        pairwise_promotion_gap_count=pairwise_promotion_gap_count,
         program_fidelity_gap_count=program_fidelity_gap_count,
+        candidate_separation_gap_count=candidate_separation_gap_count,
+        best_balance_not_beaten_count=best_balance_not_beaten_count,
+        best_coverage_not_beaten_count=best_coverage_not_beaten_count,
+        current_best_not_beaten_count=current_best_not_beaten_count,
+        promotion_hold_count=promotion_hold_count,
+        force_non_regression_status=force_non_regression_status,
+        coverage_non_regression_status=coverage_non_regression_status,
+        compactness_non_regression_status=compactness_non_regression_status,
+        frontier_dominance_status=frontier_dominance_status,
+        compression_gain_status=compression_gain_status,
+        stable_but_no_breakthrough_count=stable_but_no_breakthrough_count,
         generic_shell_gap_count=generic_shell_gap_count,
         pairwise_similarity_gap_count=pairwise_similarity_gap_count,
         negative_case_resistance=negative_case_resistance,
         generic_shell_rejection=generic_shell_rejection,
         program_regression_count=program_regression_count,
         gap_count=gap_count,
-        overall_status='fail' if gap_count or usefulness_report.usefulness_gap_count or task_outcome_report.task_outcome_gap_count or dna_authoring_status == 'fail' or program_authoring_status == 'fail' else 'pass',
+        overall_status=(
+            'pass'
+            if breakthrough_ready
+            else (
+                'stable_but_no_breakthrough'
+                if stable_but_no_breakthrough
+                else 'fail'
+            )
+        ),
         summary=(
             f'Skill create comparison complete: cases={len(cases)} gaps={gap_count} '
             f'comparison_source={comparison_source} '
@@ -1319,6 +1805,16 @@ def build_skill_create_comparison_report(
             f'hermes_status={hermes_execution_status} '
             f'move_quality_gaps={move_quality_gap_count} '
             f'workflow_form_gaps={workflow_form_gap_count} '
+            f'editorial_force_gaps={editorial_force_gap_count} '
+            f'candidate_separation_gaps={candidate_separation_gap_count} '
+            f'force_non_regression={force_non_regression_status} '
+            f'coverage_non_regression={coverage_non_regression_status} '
+            f'compactness_non_regression={compactness_non_regression_status} '
+            f'frontier_dominance={frontier_dominance_status} '
+            f'best_balance_not_beaten={best_balance_not_beaten_count} '
+            f'best_coverage_not_beaten={best_coverage_not_beaten_count} '
+            f'current_best_not_beaten={current_best_not_beaten_count} '
+            f'pairwise_promotion_gaps={pairwise_promotion_gap_count} '
             f'program_fidelity_gaps={program_fidelity_gap_count} '
             f'dna_candidates={authoring_pack.candidate_dna_count} '
             f'program_candidates={program_authoring_pack.candidate_program_count} '
