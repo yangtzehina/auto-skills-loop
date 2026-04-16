@@ -184,12 +184,7 @@ def build_expert_dna_authoring_candidate(
         evidence_sources.append("design_notes")
     if checked_in is not None:
         evidence_sources.append("checked_in_profile")
-    if checked_in is not None and reference:
-        candidate = checked_in.model_copy(deep=True)
-        confidence = "ready_for_review"
-        missing_evidence: list[str] = []
-        stable_sequence = True
-    elif _looks_like_generic_shell(generated_skill_md):
+    if generated_skill_md and _looks_like_generic_shell(generated_skill_md):
         candidate = _derived_candidate_dna(
             skill_name=skill_name,
             task_brief=task_brief,
@@ -199,6 +194,11 @@ def build_expert_dna_authoring_candidate(
         confidence = "reject"
         missing_evidence = ["expert_golden", "stable_domain_move_sequence"]
         stable_sequence = False
+    elif checked_in is not None and reference:
+        candidate = checked_in.model_copy(deep=True)
+        confidence = "ready_for_review"
+        missing_evidence = []
+        stable_sequence = True
     else:
         candidate = _derived_candidate_dna(
             skill_name=skill_name,

@@ -24,9 +24,16 @@ from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
 from .expert_dna_authoring import build_expert_dna_authoring_pack
 from .expert_dna import move_signature_from_markdown
+from .expert_skill_studio import (
+    build_program_candidate_review_batch_report,
+    build_skill_program_authoring_pack,
+    evaluate_negative_case_resistance,
+)
 from .expert_structure import build_skill_expert_structure_report
 from .move_quality import build_skill_move_quality_report
 from .orchestrator import run_skill_create
+from .skill_program_fidelity import build_skill_program_fidelity_report
+from .skill_task_outcome import build_skill_task_outcome_report
 from .skill_usefulness_eval import build_skill_usefulness_eval_report
 from .style_diversity import (
     build_skill_style_diversity_report,
@@ -35,6 +42,7 @@ from .style_diversity import (
     shared_step_label_ratio,
     style_signature_from_markdown,
 )
+from .workflow_form import build_skill_workflow_form_report
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -125,6 +133,9 @@ def _metrics_from_reports(
     editorial_quality=None,
     style_diversity=None,
     move_quality=None,
+    workflow_form=None,
+    program_fidelity=None,
+    task_outcome=None,
     severity: str = '',
     fully_correct: bool = False,
 ) -> SkillCreateComparisonMetrics:
@@ -132,6 +143,10 @@ def _metrics_from_reports(
     editorial_blocking_count = len(list(getattr(editorial_quality, 'blocking_issues', []) or []))
     style_blocking_count = len(list(getattr(style_diversity, 'blocking_issues', []) or []))
     move_blocking_count = len(list(getattr(move_quality, 'blocking_issues', []) or []))
+    workflow_form_blocking_count = len(list(getattr(workflow_form, 'blocking_issues', []) or []))
+    program_fidelity_blocking_count = len(list(getattr(program_fidelity, 'blocking_issues', []) or []))
+    task_outcome_gap_count = int(getattr(task_outcome, 'task_outcome_gap_count', 0) or 0)
+    task_outcome_profile = next(iter(list(getattr(task_outcome, 'profile_results', []) or [])), None)
     return SkillCreateComparisonMetrics(
         body_lines=int(getattr(body_quality, 'body_lines', 0) or 0),
         body_chars=int(getattr(body_quality, 'body_chars', 0) or 0),
@@ -199,12 +214,36 @@ def _metrics_from_reports(
         voice_rule_alignment=float(getattr(move_quality, 'voice_rule_alignment', 0.0) or 0.0),
         cross_case_move_overlap=float(getattr(move_quality, 'cross_case_move_overlap', 0.0) or 0.0),
         move_quality_gap_count=move_blocking_count,
+        workflow_form_status=str(getattr(workflow_form, 'status', 'unknown') or 'unknown'),
+        workflow_surface=str(getattr(workflow_form, 'workflow_surface', 'unknown') or 'unknown'),
+        numbered_spine_count=int(getattr(workflow_form, 'numbered_spine_count', 0) or 0),
+        imperative_move_recall=float(getattr(workflow_form, 'imperative_move_recall', 0.0) or 0.0),
+        named_block_dominance_ratio=float(getattr(workflow_form, 'named_block_dominance_ratio', 0.0) or 0.0),
+        workflow_heading_alignment=float(getattr(workflow_form, 'workflow_heading_alignment', 0.0) or 0.0),
+        output_block_separation=bool(getattr(workflow_form, 'output_block_separation', True)),
+        structural_block_count=int(getattr(workflow_form, 'structural_block_count', 0) or 0),
+        workflow_form_gap_count=workflow_form_blocking_count,
+        program_fidelity_status=str(getattr(program_fidelity, 'status', 'unknown') or 'unknown'),
+        execution_move_recall=float(getattr(program_fidelity, 'execution_move_recall', 0.0) or 0.0),
+        execution_move_order_alignment=float(getattr(program_fidelity, 'execution_move_order_alignment', 0.0) or 0.0),
+        decision_rule_fidelity=float(getattr(program_fidelity, 'decision_rule_fidelity', 0.0) or 0.0),
+        cut_rule_fidelity=float(getattr(program_fidelity, 'cut_rule_fidelity', 0.0) or 0.0),
+        failure_repair_fidelity=float(getattr(program_fidelity, 'failure_repair_fidelity', 0.0) or 0.0),
+        output_schema_fidelity=float(getattr(program_fidelity, 'output_schema_fidelity', 0.0) or 0.0),
+        workflow_surface_fidelity=float(getattr(program_fidelity, 'workflow_surface_fidelity', 0.0) or 0.0),
+        style_strategy_fidelity=float(getattr(program_fidelity, 'style_strategy_fidelity', 0.0) or 0.0),
+        program_fidelity_gap_count=program_fidelity_blocking_count,
+        task_outcome_status=str(getattr(task_outcome, 'status', 'unknown') or 'unknown'),
+        task_outcome_pass_count=int(getattr(task_outcome_profile, 'pass_count', 0) or 0),
+        task_outcome_probe_count=int(getattr(task_outcome_profile, 'probe_count', 0) or 0),
+        task_outcome_with_skill_average=float(getattr(task_outcome_profile, 'with_skill_average', 0.0) or 0.0),
+        task_outcome_gap_count=task_outcome_gap_count,
         fully_correct=bool(fully_correct),
         severity=str(severity or ''),
     )
 
 
-def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any]:
+def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any]:
     request = _request(case)
     plan = _plan(case)
     artifacts = _artifact_skill_md(content)
@@ -250,6 +289,21 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         skill_plan=plan,
         artifacts=artifacts,
     )
+    workflow_form = build_skill_workflow_form_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+    )
+    program_fidelity = build_skill_program_fidelity_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+        workflow_form=workflow_form,
+    )
+    task_outcome = build_skill_task_outcome_report(
+        generated_skill_markdown_by_name={case['skill_name']: content},
+        skill_names=[case['skill_name']],
+    )
     return (
         _metrics_from_reports(
             body_quality=body_quality,
@@ -261,6 +315,9 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
             editorial_quality=editorial_quality,
             style_diversity=style_diversity,
             move_quality=move_quality,
+            workflow_form=workflow_form,
+            program_fidelity=program_fidelity,
+            task_outcome=task_outcome,
             severity='reference',
             fully_correct=(
                 body_quality.passed
@@ -272,6 +329,9 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
                 and editorial_quality.status == 'pass'
                 and style_diversity.status == 'pass'
                 and move_quality.status == 'pass'
+                and workflow_form.status == 'pass'
+                and program_fidelity.status == 'pass'
+                and task_outcome.status == 'pass'
             ),
         ),
         body_quality,
@@ -283,10 +343,13 @@ def _metrics_from_markdown(case: dict[str, str], content: str) -> tuple[SkillCre
         editorial_quality,
         style_diversity,
         move_quality,
+        workflow_form,
+        program_fidelity,
+        task_outcome,
     )
 
 
-def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any, str]:
+def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, str]:
     with tempfile.TemporaryDirectory(prefix='auto-skills-loop-comparison-') as tmpdir:
         response = run_skill_create(
             _request(case),
@@ -307,6 +370,9 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
     editorial_quality = getattr(response.diagnostics, 'editorial_quality', None) if response.diagnostics is not None else None
     style_diversity = getattr(response.diagnostics, 'style_diversity', None) if response.diagnostics is not None else None
     move_quality = getattr(response.diagnostics, 'move_quality', None) if response.diagnostics is not None else None
+    workflow_form = getattr(response.diagnostics, 'workflow_form', None) if response.diagnostics is not None else None
+    program_fidelity = getattr(response.diagnostics, 'program_fidelity', None) if response.diagnostics is not None else None
+    task_outcome = getattr(response.diagnostics, 'task_outcome', None) if response.diagnostics is not None else None
     return (
         _metrics_from_reports(
             body_quality=body_quality,
@@ -318,6 +384,9 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
             editorial_quality=editorial_quality,
             style_diversity=style_diversity,
             move_quality=move_quality,
+            workflow_form=workflow_form,
+            program_fidelity=program_fidelity,
+            task_outcome=task_outcome,
             severity=response.severity,
             fully_correct=bool(getattr(response.quality_review, 'fully_correct', False)),
         ),
@@ -330,6 +399,9 @@ def _run_auto_case(case: dict[str, str]) -> tuple[SkillCreateComparisonMetrics, 
         editorial_quality,
         style_diversity,
         move_quality,
+        workflow_form,
+        program_fidelity,
+        task_outcome,
         _skill_md_content(response.artifacts),
     )
 
@@ -390,7 +462,7 @@ def _run_hermes_case(case: dict[str, str], wrapper: Path) -> tuple[SkillCreateCo
         skill_md = generated_root / 'SKILL.md'
         if not skill_md.exists():
             return None, f'Hermes wrapper did not write SKILL.md under {generated_root}'
-        metrics, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
+        metrics, _, _, _, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, skill_md.read_text(encoding='utf-8'))
         metrics.severity = str(payload.get('severity') or '')
         return metrics, None
 
@@ -514,6 +586,12 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_style_diversity_not_pass')
     if auto.move_quality_status != 'pass':
         issues.append('auto_move_quality_not_pass')
+    if auto.workflow_form_status != 'pass':
+        issues.append('auto_workflow_form_not_pass')
+    if auto.program_fidelity_status != 'pass':
+        issues.append('auto_program_fidelity_not_pass')
+    if auto.task_outcome_status != 'pass':
+        issues.append('auto_task_outcome_not_pass')
     if auto.expert_action_cluster_recall < 0.75 and reference.expert_action_cluster_recall >= 0.75:
         issues.append('auto_expert_action_clusters_missing')
     if auto.expert_output_field_recall < 0.70 and reference.expert_output_field_recall >= 0.70:
@@ -566,6 +644,30 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_numbered_workflow_spine_missing')
     if auto.cross_case_move_overlap >= 0.35:
         issues.append('auto_cross_case_move_overlap_high')
+    if auto.workflow_surface in {'execution_spine', 'hybrid'} and auto.numbered_spine_count < 5:
+        issues.append('auto_numbered_spine_count_low')
+    if auto.workflow_surface == 'execution_spine' and auto.named_block_dominance_ratio > 0.35:
+        issues.append('auto_workflow_named_blocks_dominate')
+    if auto.workflow_surface == 'execution_spine' and not auto.output_block_separation:
+        issues.append('auto_output_blocks_mixed_into_workflow')
+    if auto.workflow_surface == 'hybrid' and auto.structural_block_count < 3:
+        issues.append('auto_structural_analysis_blocks_missing')
+    if auto.execution_move_recall < 0.85:
+        issues.append('auto_execution_move_recall_low')
+    if auto.execution_move_order_alignment < 0.80:
+        issues.append('auto_execution_move_order_alignment_low')
+    if auto.decision_rule_fidelity < 0.75:
+        issues.append('auto_decision_rule_fidelity_low')
+    if auto.output_schema_fidelity < 0.75:
+        issues.append('auto_output_schema_fidelity_low')
+    if auto.failure_repair_fidelity < 0.75:
+        issues.append('auto_failure_repair_fidelity_low')
+    if auto.workflow_surface_fidelity < 1.0:
+        issues.append('auto_workflow_surface_fidelity_low')
+    if auto.task_outcome_probe_count and auto.task_outcome_pass_count * 3 < auto.task_outcome_probe_count * 2:
+        issues.append('auto_task_outcome_probe_pass_rate_low')
+    if auto.task_outcome_gap_count > 0:
+        issues.append('auto_task_outcome_gaps_present')
     if auto.generated_vs_generated_heading_overlap >= 0.80:
         issues.append('auto_generated_heading_overlap_high')
     if auto.generated_vs_generated_line_jaccard >= 0.42:
@@ -589,7 +691,7 @@ def _anthropic_reference_metrics() -> tuple[SkillCreateComparisonMetrics | None,
             'skill_name': 'skill-creator',
             'task': 'Create and iteratively improve skills with evals, baseline comparisons, qualitative review, and quantitative benchmarks.',
         }
-        metrics, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, content)
+        metrics, _, _, _, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, content)
         summary = [
             'Anthropic skill-creator reference available',
             f'body_lines={metrics.body_lines}',
@@ -615,15 +717,24 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         f'- anthropic_reference_available={report.anthropic_reference_available}',
         f'- dna_authoring_status={report.dna_authoring_status}',
         f'- candidate_dna_count={report.candidate_dna_count}',
+        f'- program_authoring_status={report.program_authoring_status}',
+        f'- candidate_program_count={report.candidate_program_count}',
         f'- usefulness_eval_status={report.usefulness_eval_status}',
         f'- usefulness_gap_count={report.usefulness_gap_count}',
+        f'- task_outcome_status={report.task_outcome_status}',
+        f'- task_outcome_gap_count={report.task_outcome_gap_count}',
         f'- expert_structure_gap_count={report.expert_structure_gap_count}',
         f'- depth_quality_gap_count={report.depth_quality_gap_count}',
         f'- editorial_gap_count={report.editorial_gap_count}',
         f'- style_gap_count={report.style_gap_count}',
         f'- move_quality_gap_count={report.move_quality_gap_count}',
+        f'- workflow_form_gap_count={report.workflow_form_gap_count}',
+        f'- program_fidelity_gap_count={report.program_fidelity_gap_count}',
         f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
+        f'- negative_case_resistance={report.negative_case_resistance:.2f}',
+        f'- generic_shell_rejection={report.generic_shell_rejection:.2f}',
+        f'- program_regression_count={report.program_regression_count}',
         f'- Summary: {report.summary}',
         '',
     ]
@@ -675,6 +786,25 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_numbered_workflow_spine_present={case.auto_metrics.numbered_workflow_spine_present}')
         lines.append(f'- auto_voice_rule_alignment={case.auto_metrics.voice_rule_alignment:.2f}')
         lines.append(f'- auto_cross_case_move_overlap={case.auto_metrics.cross_case_move_overlap:.2f}')
+        lines.append(f'- auto_workflow_form={case.auto_metrics.workflow_form_status}')
+        lines.append(f'- auto_workflow_surface={case.auto_metrics.workflow_surface}')
+        lines.append(f'- auto_numbered_spine_count={case.auto_metrics.numbered_spine_count}')
+        lines.append(f'- auto_named_block_dominance_ratio={case.auto_metrics.named_block_dominance_ratio:.2f}')
+        lines.append(f'- auto_workflow_heading_alignment={case.auto_metrics.workflow_heading_alignment:.2f}')
+        lines.append(f'- auto_output_block_separation={case.auto_metrics.output_block_separation}')
+        lines.append(f'- auto_structural_block_count={case.auto_metrics.structural_block_count}')
+        lines.append(f'- auto_program_fidelity={case.auto_metrics.program_fidelity_status}')
+        lines.append(f'- auto_execution_move_recall={case.auto_metrics.execution_move_recall:.2f}')
+        lines.append(f'- auto_execution_move_order_alignment={case.auto_metrics.execution_move_order_alignment:.2f}')
+        lines.append(f'- auto_decision_rule_fidelity={case.auto_metrics.decision_rule_fidelity:.2f}')
+        lines.append(f'- auto_cut_rule_fidelity={case.auto_metrics.cut_rule_fidelity:.2f}')
+        lines.append(f'- auto_failure_repair_fidelity={case.auto_metrics.failure_repair_fidelity:.2f}')
+        lines.append(f'- auto_output_schema_fidelity={case.auto_metrics.output_schema_fidelity:.2f}')
+        lines.append(f'- auto_workflow_surface_fidelity={case.auto_metrics.workflow_surface_fidelity:.2f}')
+        lines.append(f'- auto_style_strategy_fidelity={case.auto_metrics.style_strategy_fidelity:.2f}')
+        lines.append(f'- auto_task_outcome={case.auto_metrics.task_outcome_status}')
+        lines.append(f'- auto_task_outcome_pass_count={case.auto_metrics.task_outcome_pass_count}/{case.auto_metrics.task_outcome_probe_count}')
+        lines.append(f'- auto_task_outcome_with_skill_average={case.auto_metrics.task_outcome_with_skill_average:.2f}')
         lines.append(f'- auto_generated_heading_overlap={case.auto_metrics.generated_vs_generated_heading_overlap:.2f}')
         lines.append(f'- auto_generated_line_jaccard={case.auto_metrics.generated_vs_generated_line_jaccard:.2f}')
         lines.append(f'- auto_generic_skeleton_ratio={case.auto_metrics.generic_skeleton_ratio:.2f}')
@@ -702,12 +832,24 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- ready_for_review={len(report.expert_dna_authoring_pack.ready_for_review)}')
         lines.append(f'- needs_human_authoring={len(report.expert_dna_authoring_pack.needs_human_authoring)}')
         lines.append(f'- rejected={len(report.expert_dna_authoring_pack.rejected)}')
+    if report.skill_program_authoring_pack is not None:
+        lines.extend(['', '## Skill Program Authoring'])
+        lines.append(f'- ready_for_review={len(report.skill_program_authoring_pack.ready_for_review)}')
+        lines.append(f'- needs_human_authoring={len(report.skill_program_authoring_pack.needs_human_authoring)}')
+        lines.append(f'- rejected={len(report.skill_program_authoring_pack.rejected)}')
+        lines.append(f'- backlog_counts={report.skill_program_authoring_pack.backlog_counts}')
     if report.skill_usefulness_eval_report is not None:
         lines.extend(['', '## Skill Usefulness Eval'])
         lines.append(f'- status={report.skill_usefulness_eval_report.status}')
         lines.append(f'- probe_count={report.skill_usefulness_eval_report.probe_count}')
         lines.append(f'- usefulness_gap_count={report.skill_usefulness_eval_report.usefulness_gap_count}')
         lines.append(f'- with_skill_average={report.skill_usefulness_eval_report.with_skill_average:.2f}')
+    if report.skill_task_outcome_report is not None:
+        lines.extend(['', '## Skill Task Outcome'])
+        lines.append(f'- status={report.skill_task_outcome_report.status}')
+        lines.append(f'- probe_count={report.skill_task_outcome_report.probe_count}')
+        lines.append(f'- task_outcome_gap_count={report.skill_task_outcome_report.task_outcome_gap_count}')
+        lines.append(f'- with_skill_average={report.skill_task_outcome_report.with_skill_average:.2f}')
     return '\n'.join(lines).strip()
 
 
@@ -734,10 +876,13 @@ def build_skill_create_comparison_report(
             editorial_quality,
             style_diversity,
             move_quality,
+            workflow_form,
+            program_fidelity,
+            task_outcome,
             auto_content,
         ) = _run_auto_case(case)
         reference_root = DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT if DEFAULT_EXPERT_DEPTH_GOLDEN_ROOT.exists() else root
-        golden_metrics, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, reference_root))
+        golden_metrics, _, _, _, _, _, _, _, _, _, _, _, _ = _metrics_from_markdown(case, _golden_content(case, reference_root))
         hermes_metrics = None
         if hermes_wrapper is not None:
             hermes_metrics, error = _run_hermes_case(case, hermes_wrapper)
@@ -758,6 +903,9 @@ def build_skill_create_comparison_report(
                 'editorial_quality': editorial_quality,
                 'style_diversity': style_diversity,
                 'move_quality': move_quality,
+                'workflow_form': workflow_form,
+                'program_fidelity': program_fidelity,
+                'task_outcome': task_outcome,
                 'auto_content': auto_content,
             }
         )
@@ -849,6 +997,46 @@ def build_skill_create_comparison_report(
         payload['auto_metrics'].voice_rule_alignment = payload['move_quality'].voice_rule_alignment
         payload['auto_metrics'].cross_case_move_overlap = payload['move_quality'].cross_case_move_overlap
         payload['auto_metrics'].move_quality_gap_count = len(list(payload['move_quality'].blocking_issues or []))
+        payload['workflow_form'] = build_skill_workflow_form_report(
+            request=_request(payload['case']),
+            skill_plan=_plan(payload['case']),
+            artifacts=_artifact_skill_md(payload['auto_content']),
+        )
+        payload['auto_metrics'].workflow_form_status = payload['workflow_form'].status
+        payload['auto_metrics'].workflow_surface = payload['workflow_form'].workflow_surface
+        payload['auto_metrics'].numbered_spine_count = payload['workflow_form'].numbered_spine_count
+        payload['auto_metrics'].imperative_move_recall = payload['workflow_form'].imperative_move_recall
+        payload['auto_metrics'].named_block_dominance_ratio = payload['workflow_form'].named_block_dominance_ratio
+        payload['auto_metrics'].workflow_heading_alignment = payload['workflow_form'].workflow_heading_alignment
+        payload['auto_metrics'].output_block_separation = payload['workflow_form'].output_block_separation
+        payload['auto_metrics'].structural_block_count = payload['workflow_form'].structural_block_count
+        payload['auto_metrics'].workflow_form_gap_count = len(list(payload['workflow_form'].blocking_issues or []))
+        payload['program_fidelity'] = build_skill_program_fidelity_report(
+            request=_request(payload['case']),
+            skill_plan=_plan(payload['case']),
+            artifacts=_artifact_skill_md(payload['auto_content']),
+            workflow_form=payload['workflow_form'],
+        )
+        payload['auto_metrics'].program_fidelity_status = payload['program_fidelity'].status
+        payload['auto_metrics'].execution_move_recall = payload['program_fidelity'].execution_move_recall
+        payload['auto_metrics'].execution_move_order_alignment = payload['program_fidelity'].execution_move_order_alignment
+        payload['auto_metrics'].decision_rule_fidelity = payload['program_fidelity'].decision_rule_fidelity
+        payload['auto_metrics'].cut_rule_fidelity = payload['program_fidelity'].cut_rule_fidelity
+        payload['auto_metrics'].failure_repair_fidelity = payload['program_fidelity'].failure_repair_fidelity
+        payload['auto_metrics'].output_schema_fidelity = payload['program_fidelity'].output_schema_fidelity
+        payload['auto_metrics'].workflow_surface_fidelity = payload['program_fidelity'].workflow_surface_fidelity
+        payload['auto_metrics'].style_strategy_fidelity = payload['program_fidelity'].style_strategy_fidelity
+        payload['auto_metrics'].program_fidelity_gap_count = len(list(payload['program_fidelity'].blocking_issues or []))
+        payload['task_outcome'] = build_skill_task_outcome_report(
+            generated_skill_markdown_by_name={str(payload['case']['skill_name']): payload['auto_content']},
+            skill_names=[str(payload['case']['skill_name'])],
+        )
+        profile_result = next(iter(list(payload['task_outcome'].profile_results or [])), None)
+        payload['auto_metrics'].task_outcome_status = payload['task_outcome'].status
+        payload['auto_metrics'].task_outcome_pass_count = int(getattr(profile_result, 'pass_count', 0) or 0)
+        payload['auto_metrics'].task_outcome_probe_count = int(getattr(profile_result, 'probe_count', 0) or 0)
+        payload['auto_metrics'].task_outcome_with_skill_average = float(getattr(profile_result, 'with_skill_average', 0.0) or 0.0)
+        payload['auto_metrics'].task_outcome_gap_count = int(payload['task_outcome'].task_outcome_gap_count or 0)
         if payload['domain_specificity'] is not None:
             payload['domain_specificity'].cross_case_similarity = max_similarity
             if max_similarity >= 0.82 and 'high_cross_case_similarity' not in payload['domain_specificity'].blocking_issues:
@@ -917,6 +1105,9 @@ def build_skill_create_comparison_report(
                 editorial_quality=payload['editorial_quality'],
                 style_diversity=payload['style_diversity'],
                 move_quality=payload['move_quality'],
+                workflow_form=payload['workflow_form'],
+                program_fidelity=payload['program_fidelity'],
+                task_outcome=payload['task_outcome'],
                 gap_issues=gap_issues,
                 status=status,
                 summary=f'{case["case_id"]}: {status}',
@@ -999,6 +1190,54 @@ def build_skill_create_comparison_report(
         )
         or item.auto_metrics.move_quality_status != 'pass'
     )
+    workflow_form_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue
+            in {
+                'auto_workflow_form_not_pass',
+                'auto_numbered_spine_count_low',
+                'auto_workflow_named_blocks_dominate',
+                'auto_output_blocks_mixed_into_workflow',
+                'auto_structural_analysis_blocks_missing',
+            }
+            for issue in list(item.gap_issues or [])
+        )
+        or item.auto_metrics.workflow_form_status != 'pass'
+    )
+    program_fidelity_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue
+            in {
+                'auto_program_fidelity_not_pass',
+                'auto_execution_move_recall_low',
+                'auto_execution_move_order_alignment_low',
+                'auto_decision_rule_fidelity_low',
+                'auto_output_schema_fidelity_low',
+                'auto_failure_repair_fidelity_low',
+                'auto_workflow_surface_fidelity_low',
+            }
+            for issue in list(item.gap_issues or [])
+        )
+        or item.auto_metrics.program_fidelity_status != 'pass'
+    )
+    task_outcome_gap_count = sum(
+        1
+        for item in cases
+        if any(
+            issue
+            in {
+                'auto_task_outcome_not_pass',
+                'auto_task_outcome_probe_pass_rate_low',
+                'auto_task_outcome_gaps_present',
+            }
+            for issue in list(item.gap_issues or [])
+        )
+        or item.auto_metrics.task_outcome_status != 'pass'
+    )
     generic_shell_gap_count = sum(
         1
         for item in cases
@@ -1018,11 +1257,20 @@ def build_skill_create_comparison_report(
         for payload in case_payloads
     }
     authoring_pack = build_expert_dna_authoring_pack()
+    program_authoring_pack = build_skill_program_authoring_pack()
+    program_review_batch = build_program_candidate_review_batch_report(program_authoring_pack)
     usefulness_report = build_skill_usefulness_eval_report(
         generated_skill_markdown_by_name=auto_content_by_name,
     )
+    task_outcome_report = build_skill_task_outcome_report(
+        generated_skill_markdown_by_name=auto_content_by_name,
+        skill_names=list(auto_content_by_name.keys()),
+    )
+    negative_case_resistance, generic_shell_rejection, program_regression_count = evaluate_negative_case_resistance()
     dna_authoring_status = 'pass' if authoring_pack.rejected == [] else 'fail'
     usefulness_eval_status = usefulness_report.status
+    program_authoring_status = 'pass' if program_authoring_pack.rejected == [] else 'fail'
+    task_outcome_status = task_outcome_report.status
     report = SkillCreateComparisonReport(
         cases=cases,
         include_hermes=include_hermes,
@@ -1037,20 +1285,32 @@ def build_skill_create_comparison_report(
         anthropic_reference_metrics=anthropic_metrics,
         anthropic_reference_summary=anthropic_summary,
         expert_dna_authoring_pack=authoring_pack,
+        skill_program_authoring_pack=program_authoring_pack,
+        program_candidate_review_batch=program_review_batch,
         skill_usefulness_eval_report=usefulness_report,
+        skill_task_outcome_report=task_outcome_report,
         dna_authoring_status=dna_authoring_status,
         candidate_dna_count=authoring_pack.candidate_dna_count,
+        program_authoring_status=program_authoring_status,
+        candidate_program_count=program_authoring_pack.candidate_program_count,
         usefulness_eval_status=usefulness_eval_status,
         usefulness_gap_count=usefulness_report.usefulness_gap_count,
+        task_outcome_status=task_outcome_status,
+        task_outcome_gap_count=task_outcome_report.task_outcome_gap_count,
         expert_structure_gap_count=expert_structure_gap_count,
         depth_quality_gap_count=depth_quality_gap_count,
         editorial_gap_count=editorial_gap_count,
         style_gap_count=style_gap_count,
         move_quality_gap_count=move_quality_gap_count,
+        workflow_form_gap_count=workflow_form_gap_count,
+        program_fidelity_gap_count=program_fidelity_gap_count,
         generic_shell_gap_count=generic_shell_gap_count,
         pairwise_similarity_gap_count=pairwise_similarity_gap_count,
+        negative_case_resistance=negative_case_resistance,
+        generic_shell_rejection=generic_shell_rejection,
+        program_regression_count=program_regression_count,
         gap_count=gap_count,
-        overall_status='fail' if gap_count or usefulness_report.usefulness_gap_count or dna_authoring_status == 'fail' else 'pass',
+        overall_status='fail' if gap_count or usefulness_report.usefulness_gap_count or task_outcome_report.task_outcome_gap_count or dna_authoring_status == 'fail' or program_authoring_status == 'fail' else 'pass',
         summary=(
             f'Skill create comparison complete: cases={len(cases)} gaps={gap_count} '
             f'comparison_source={comparison_source} '
@@ -1058,8 +1318,12 @@ def build_skill_create_comparison_report(
             f'reference_role={reference_role} '
             f'hermes_status={hermes_execution_status} '
             f'move_quality_gaps={move_quality_gap_count} '
+            f'workflow_form_gaps={workflow_form_gap_count} '
+            f'program_fidelity_gaps={program_fidelity_gap_count} '
             f'dna_candidates={authoring_pack.candidate_dna_count} '
-            f'usefulness_gaps={usefulness_report.usefulness_gap_count}'
+            f'program_candidates={program_authoring_pack.candidate_program_count} '
+            f'usefulness_gaps={usefulness_report.usefulness_gap_count} '
+            f'task_outcome_gaps={task_outcome_report.task_outcome_gap_count}'
         ),
     )
     report.markdown_summary = render_skill_create_comparison_markdown(report)

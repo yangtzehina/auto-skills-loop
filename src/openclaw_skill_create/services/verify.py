@@ -75,13 +75,28 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- move_quality_fail_count={report.move_quality_fail_count}',
         f'- move_quality_warn_count={report.move_quality_warn_count}',
         f'- move_quality_gap_count={report.move_quality_gap_count}',
+        f'- workflow_form_status={report.workflow_form_status}',
+        f'- workflow_form_fail_count={report.workflow_form_fail_count}',
+        f'- workflow_form_warn_count={report.workflow_form_warn_count}',
+        f'- workflow_form_gap_count={report.workflow_form_gap_count}',
+        f'- program_fidelity_status={report.program_fidelity_status}',
+        f'- program_fidelity_fail_count={report.program_fidelity_fail_count}',
+        f'- program_fidelity_warn_count={report.program_fidelity_warn_count}',
+        f'- program_fidelity_gap_count={report.program_fidelity_gap_count}',
         f'- dna_authoring_status={report.dna_authoring_status}',
         f'- candidate_dna_count={report.candidate_dna_count}',
+        f'- program_authoring_status={report.program_authoring_status}',
+        f'- candidate_program_count={report.candidate_program_count}',
         f'- usefulness_eval_status={report.usefulness_eval_status}',
         f'- usefulness_gap_count={report.usefulness_gap_count}',
+        f'- task_outcome_status={report.task_outcome_status}',
+        f'- task_outcome_gap_count={report.task_outcome_gap_count}',
         f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}',
         f'- generic_shell_gap_count={report.generic_shell_gap_count}',
         f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}',
+        f'- negative_case_resistance={report.negative_case_resistance:.2f}',
+        f'- generic_shell_rejection={report.generic_shell_rejection:.2f}',
+        f'- program_regression_count={report.program_regression_count}',
         '',
         '## Commands',
     ]
@@ -198,6 +213,24 @@ def build_verify_report(
             else 'pass'
         )
     )
+    workflow_form_status = (
+        'fail'
+        if any(item.auto_metrics.workflow_form_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.workflow_form_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
+    program_fidelity_status = (
+        'fail'
+        if any(item.auto_metrics.program_fidelity_status == 'fail' for item in list(comparison_report.cases or []))
+        else (
+            'warn'
+            if any(item.auto_metrics.program_fidelity_status == 'warn' for item in list(comparison_report.cases or []))
+            else 'pass'
+        )
+    )
     report = VerifyReport(
         mode=mode,
         include_live_curation=include_live_curation,
@@ -293,10 +326,38 @@ def build_verify_report(
             if item.auto_metrics.move_quality_status == 'warn'
         ),
         move_quality_gap_count=int(comparison_report.move_quality_gap_count or 0),
+        workflow_form_status=workflow_form_status,
+        workflow_form_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.workflow_form_status == 'fail'
+        ),
+        workflow_form_warn_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.workflow_form_status == 'warn'
+        ),
+        workflow_form_gap_count=int(comparison_report.workflow_form_gap_count or 0),
+        program_fidelity_status=program_fidelity_status,
+        program_fidelity_fail_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.program_fidelity_status == 'fail'
+        ),
+        program_fidelity_warn_count=sum(
+            1
+            for item in list(comparison_report.cases or [])
+            if item.auto_metrics.program_fidelity_status == 'warn'
+        ),
+        program_fidelity_gap_count=int(comparison_report.program_fidelity_gap_count or 0),
         dna_authoring_status=str(comparison_report.dna_authoring_status or 'pass'),
         candidate_dna_count=int(comparison_report.candidate_dna_count or 0),
+        program_authoring_status=str(comparison_report.program_authoring_status or 'pass'),
+        candidate_program_count=int(comparison_report.candidate_program_count or 0),
         usefulness_eval_status=str(comparison_report.usefulness_eval_status or 'pass'),
         usefulness_gap_count=int(comparison_report.usefulness_gap_count or 0),
+        task_outcome_status=str(comparison_report.task_outcome_status or 'pass'),
+        task_outcome_gap_count=int(comparison_report.task_outcome_gap_count or 0),
         pairwise_similarity_gap_count=int(comparison_report.pairwise_similarity_gap_count or 0),
         generic_shell_gap_count=sum(
             1
@@ -304,6 +365,9 @@ def build_verify_report(
             if any(issue in {'auto_generic_shell_gap', 'auto_generic_skeleton_gap'} for issue in list(item.gap_issues or []))
         ),
         hermes_comparison_gap_count=int(comparison_report.gap_count or 0),
+        negative_case_resistance=float(comparison_report.negative_case_resistance or 0.0),
+        generic_shell_rejection=float(comparison_report.generic_shell_rejection or 0.0),
+        program_regression_count=int(comparison_report.program_regression_count or 0),
         skill_create_comparison_report=comparison_report,
         overall_status=overall_status,
         summary=(
@@ -319,8 +383,12 @@ def build_verify_report(
             f'editorial_quality={editorial_quality_status} '
             f'style_diversity={style_diversity_status} '
             f'move_quality={move_quality_status} '
+            f'workflow_form={workflow_form_status} '
+            f'program_fidelity={program_fidelity_status} '
             f'dna_authoring={comparison_report.dna_authoring_status} '
+            f'program_authoring={comparison_report.program_authoring_status} '
             f'usefulness_eval={comparison_report.usefulness_eval_status} '
+            f'task_outcome={comparison_report.task_outcome_status} '
             f'hermes_comparison_gaps={comparison_report.gap_count}'
         ),
     )
@@ -429,13 +497,28 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- move_quality_fail_count={report.move_quality_fail_count}')
     lines.append(f'- move_quality_warn_count={report.move_quality_warn_count}')
     lines.append(f'- move_quality_gap_count={report.move_quality_gap_count}')
+    lines.append(f'- workflow_form_status={report.workflow_form_status}')
+    lines.append(f'- workflow_form_fail_count={report.workflow_form_fail_count}')
+    lines.append(f'- workflow_form_warn_count={report.workflow_form_warn_count}')
+    lines.append(f'- workflow_form_gap_count={report.workflow_form_gap_count}')
+    lines.append(f'- program_fidelity_status={report.program_fidelity_status}')
+    lines.append(f'- program_fidelity_fail_count={report.program_fidelity_fail_count}')
+    lines.append(f'- program_fidelity_warn_count={report.program_fidelity_warn_count}')
+    lines.append(f'- program_fidelity_gap_count={report.program_fidelity_gap_count}')
     lines.append(f'- dna_authoring_status={report.dna_authoring_status}')
     lines.append(f'- candidate_dna_count={report.candidate_dna_count}')
+    lines.append(f'- program_authoring_status={report.program_authoring_status}')
+    lines.append(f'- candidate_program_count={report.candidate_program_count}')
     lines.append(f'- usefulness_eval_status={report.usefulness_eval_status}')
     lines.append(f'- usefulness_gap_count={report.usefulness_gap_count}')
+    lines.append(f'- task_outcome_status={report.task_outcome_status}')
+    lines.append(f'- task_outcome_gap_count={report.task_outcome_gap_count}')
     lines.append(f'- pairwise_similarity_gap_count={report.pairwise_similarity_gap_count}')
     lines.append(f'- generic_shell_gap_count={report.generic_shell_gap_count}')
     lines.append(f'- hermes_comparison_gap_count={report.hermes_comparison_gap_count}')
+    lines.append(f'- negative_case_resistance={report.negative_case_resistance:.2f}')
+    lines.append(f'- generic_shell_rejection={report.generic_shell_rejection:.2f}')
+    lines.append(f'- program_regression_count={report.program_regression_count}')
     return '\n'.join(lines).strip()
 
 
@@ -612,13 +695,28 @@ def build_ops_roundbook_report(
         move_quality_fail_count=verify_report.move_quality_fail_count,
         move_quality_warn_count=verify_report.move_quality_warn_count,
         move_quality_gap_count=verify_report.move_quality_gap_count,
+        workflow_form_status=verify_report.workflow_form_status,
+        workflow_form_fail_count=verify_report.workflow_form_fail_count,
+        workflow_form_warn_count=verify_report.workflow_form_warn_count,
+        workflow_form_gap_count=verify_report.workflow_form_gap_count,
+        program_fidelity_status=verify_report.program_fidelity_status,
+        program_fidelity_fail_count=verify_report.program_fidelity_fail_count,
+        program_fidelity_warn_count=verify_report.program_fidelity_warn_count,
+        program_fidelity_gap_count=verify_report.program_fidelity_gap_count,
         dna_authoring_status=verify_report.dna_authoring_status,
         candidate_dna_count=verify_report.candidate_dna_count,
+        program_authoring_status=verify_report.program_authoring_status,
+        candidate_program_count=verify_report.candidate_program_count,
         usefulness_eval_status=verify_report.usefulness_eval_status,
         usefulness_gap_count=verify_report.usefulness_gap_count,
+        task_outcome_status=verify_report.task_outcome_status,
+        task_outcome_gap_count=verify_report.task_outcome_gap_count,
         pairwise_similarity_gap_count=verify_report.pairwise_similarity_gap_count,
         generic_shell_gap_count=verify_report.generic_shell_gap_count,
         hermes_comparison_gap_count=verify_report.hermes_comparison_gap_count,
+        negative_case_resistance=verify_report.negative_case_resistance,
+        generic_shell_rejection=verify_report.generic_shell_rejection,
+        program_regression_count=verify_report.program_regression_count,
         overall_readiness=overall_readiness,
         summary=(
             f'Ops roundbook complete: verification={verify_report.overall_status} '
@@ -635,8 +733,12 @@ def build_ops_roundbook_report(
             f'editorial_quality={verify_report.editorial_quality_status} '
             f'style_diversity={verify_report.style_diversity_status} '
             f'move_quality={verify_report.move_quality_status} '
+            f'workflow_form={verify_report.workflow_form_status} '
+            f'program_fidelity={verify_report.program_fidelity_status} '
             f'dna_authoring={verify_report.dna_authoring_status} '
+            f'program_authoring={verify_report.program_authoring_status} '
             f'usefulness_eval={verify_report.usefulness_eval_status} '
+            f'task_outcome={verify_report.task_outcome_status} '
             f'overall_readiness={overall_readiness} '
             f'next_create_seed={next_create_seed_candidate or "none"} '
             f'next_prior_hold={next_prior_family_on_hold or "none"}'

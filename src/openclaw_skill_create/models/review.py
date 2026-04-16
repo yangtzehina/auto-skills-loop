@@ -68,4 +68,10 @@ class SkillQualityReview(BaseModel):
     style_diversity_issues: list[str] = Field(default_factory=list)
     move_quality_status: str = "not_applicable"
     move_quality_issues: list[str] = Field(default_factory=list)
+    workflow_form_status: str = "not_applicable"
+    workflow_form_issues: list[str] = Field(default_factory=list)
+    program_fidelity_status: str = "not_applicable"
+    program_fidelity_issues: list[str] = Field(default_factory=list)
+    task_outcome_status: str = "not_applicable"
+    task_outcome_issues: list[str] = Field(default_factory=list)
     summary: list[str] = Field(default_factory=list)

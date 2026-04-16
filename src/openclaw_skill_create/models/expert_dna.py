@@ -18,6 +18,7 @@ class ExpertWorkflowMove(BaseModel):
 class ExpertSkillDNA(BaseModel):
     skill_name: str
     core_thesis: str = ""
+    workflow_surface: str = "execution_spine"
     workflow_moves: list[ExpertWorkflowMove] = Field(default_factory=list)
     output_fields: list[str] = Field(default_factory=list)
     decision_rules: list[str] = Field(default_factory=list)
@@ -35,6 +36,7 @@ class DomainMovePlan(BaseModel):
     when_to_use: list[str] = Field(default_factory=list)
     when_not_to_use: list[str] = Field(default_factory=list)
     inputs: list[str] = Field(default_factory=list)
+    workflow_surface: str = "execution_spine"
     dna: ExpertSkillDNA
 
 

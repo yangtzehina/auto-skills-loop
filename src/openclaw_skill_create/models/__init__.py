@@ -18,6 +18,23 @@ from .expert_dna import (
     SkillUsefulnessEvalReport,
     SkillUsefulnessProbeResult,
 )
+from .expert_studio import (
+    AnalysisBlock,
+    ExecutionMove,
+    ExpertFailureCase,
+    ExpertRewritePair,
+    ExpertSkillCorpusEntry,
+    ExpertTaskProbe,
+    ProgramCandidateReviewBatchReport,
+    ProgramCandidateReviewReport,
+    SkillProgramAuthoringCandidate,
+    SkillProgramAuthoringPack,
+    SkillProgramFidelityReport,
+    SkillProgramIR,
+    SkillTaskOutcomeProbeResult,
+    SkillTaskOutcomeProfileResult,
+    SkillTaskOutcomeReport,
+)
 from .expert_structure import ExpertSkillProfile, SkillExpertStructureReport
 from .findings import CandidateResources, RepoFinding, RepoFindings
 from .lineage import SkillLineageHistoryEntry, SkillLineageManifest
@@ -69,6 +86,7 @@ from .request import SkillCreateRequestV6
 from .response import SkillCreateResponseV6
 from .security import SecurityAuditFinding, SecurityAuditReport
 from .style_diversity import ExpertStyleProfile, SkillStyleDiversityReport
+from .workflow_form import SkillWorkflowFormReport
 from .runtime import (
     EvolutionPlan,
     RuntimeCreateCandidate,
@@ -140,6 +158,7 @@ __all__ = [
     'SkillExpertStructureReport',
     'ExpertStyleProfile',
     'SkillStyleDiversityReport',
+    'SkillWorkflowFormReport',
     'ExpertWorkflowMove',
     'ExpertSkillDNA',
     'DomainMovePlan',
@@ -150,6 +169,21 @@ __all__ = [
     'ExpertDNAReviewBatchReport',
     'SkillUsefulnessProbeResult',
     'SkillUsefulnessEvalReport',
+    'ExpertTaskProbe',
+    'ExpertRewritePair',
+    'ExpertFailureCase',
+    'ExpertSkillCorpusEntry',
+    'ExecutionMove',
+    'AnalysisBlock',
+    'SkillProgramIR',
+    'SkillProgramAuthoringCandidate',
+    'SkillProgramAuthoringPack',
+    'ProgramCandidateReviewReport',
+    'ProgramCandidateReviewBatchReport',
+    'SkillProgramFidelityReport',
+    'SkillTaskOutcomeProbeResult',
+    'SkillTaskOutcomeProfileResult',
+    'SkillTaskOutcomeReport',
     'SkillCreateComparisonCaseResult',
     'SkillCreateComparisonMetrics',
     'SkillCreateComparisonReport',

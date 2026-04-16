@@ -295,6 +295,15 @@ def _validate_methodology_guidance_projection(payload: Any) -> dict[str, Any]:
             'move_quality_status',
             'move_quality_min_met',
             'move_quality_warn_count',
+            'workflow_form_status',
+            'workflow_form_min_met',
+            'workflow_form_warn_count',
+            'program_fidelity_status',
+            'program_fidelity_min_met',
+            'program_fidelity_warn_count',
+            'task_outcome_status',
+            'task_outcome_min_met',
+            'task_outcome_gap_count',
             'body_lines_min_met',
             'required_sections_missing',
             'generated_files_contains_sidecars',
@@ -725,6 +734,9 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
         editorial_quality = getattr(response.diagnostics, 'editorial_quality', None) if response.diagnostics is not None else None
         style_diversity = getattr(response.diagnostics, 'style_diversity', None) if response.diagnostics is not None else None
         move_quality = getattr(response.diagnostics, 'move_quality', None) if response.diagnostics is not None else None
+        workflow_form = getattr(response.diagnostics, 'workflow_form', None) if response.diagnostics is not None else None
+        program_fidelity = getattr(response.diagnostics, 'program_fidelity', None) if response.diagnostics is not None else None
+        task_outcome = getattr(response.diagnostics, 'task_outcome', None) if response.diagnostics is not None else None
         generated_files = sorted(item.path for item in list(response.artifacts.files or [])) if response.artifacts is not None else []
         return {
             'severity': response.severity,
@@ -768,6 +780,24 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
                 or str(getattr(move_quality, 'status', '') or '') == 'warn'
             ),
             'move_quality_warn_count': len(list(getattr(move_quality, 'warning_issues', []) or [])),
+            'workflow_form_status': str(getattr(workflow_form, 'status', '') or ''),
+            'workflow_form_min_met': (
+                str(getattr(workflow_form, 'status', '') or '') == 'pass'
+                or str(getattr(workflow_form, 'status', '') or '') == 'warn'
+            ),
+            'workflow_form_warn_count': len(list(getattr(workflow_form, 'warning_issues', []) or [])),
+            'program_fidelity_status': str(getattr(program_fidelity, 'status', '') or ''),
+            'program_fidelity_min_met': (
+                str(getattr(program_fidelity, 'status', '') or '') == 'pass'
+                or str(getattr(program_fidelity, 'status', '') or '') == 'warn'
+            ),
+            'program_fidelity_warn_count': len(list(getattr(program_fidelity, 'warning_issues', []) or [])),
+            'task_outcome_status': str(getattr(task_outcome, 'status', '') or ''),
+            'task_outcome_min_met': (
+                str(getattr(task_outcome, 'status', '') or '') == 'pass'
+                or str(getattr(task_outcome, 'status', '') or '') == 'warn'
+            ),
+            'task_outcome_gap_count': int(getattr(task_outcome, 'task_outcome_gap_count', 0) or 0),
             'body_lines_min_met': int(getattr(body_quality, 'body_lines', 0) or 0) >= 35,
             'required_sections_missing': list(getattr(body_quality, 'missing_required_sections', []) or []),
             'generated_files_contains_sidecars': (
@@ -780,6 +810,9 @@ def _run_methodology_guidance_scenario(scenario_root: Path) -> dict[str, Any]:
                 and 'evals/editorial_quality.json' in generated_files
                 and 'evals/style_diversity.json' in generated_files
                 and 'evals/move_quality.json' in generated_files
+                and 'evals/workflow_form.json' in generated_files
+                and 'evals/program_fidelity.json' in generated_files
+                and 'evals/task_outcome.json' in generated_files
             ),
         }
 

@@ -14,7 +14,10 @@ from .depth_quality import build_skill_depth_quality_report
 from .editorial_quality import build_skill_editorial_quality_report
 from .expert_structure import build_skill_expert_structure_report
 from .move_quality import build_skill_move_quality_report
+from .skill_program_fidelity import build_skill_program_fidelity_report
+from .skill_task_outcome import build_skill_task_outcome_report
 from .style_diversity import build_skill_style_diversity_report
+from .workflow_form import build_skill_workflow_form_report
 
 
 REFERENCE_REQUIRED_SECTIONS = ('## Overview', '## Key points')
@@ -618,6 +621,41 @@ def classify_validation_issues(validation: ValidationResult) -> tuple[list[str],
             ):
                 if issue_type in item:
                     repairable.append(issue_type)
+        if item.startswith('Workflow form failed:'):
+            for issue_type in (
+                'numbered_workflow_spine_missing',
+                'imperative_workflow_moves_missing',
+                'workflow_named_blocks_dominate',
+                'output_blocks_mixed_into_workflow',
+                'numbered_map_sequence_missing',
+                'structural_analysis_blocks_missing',
+                'analytical_blocks_missing',
+            ):
+                if issue_type in item:
+                    repairable.append(issue_type)
+        if item.startswith('Program fidelity failed:'):
+            for issue_type in (
+                'execution_move_recall_low',
+                'execution_move_order_alignment_low',
+                'decision_rule_fidelity_low',
+                'output_schema_fidelity_low',
+                'failure_repair_fidelity_low',
+                'workflow_surface_fidelity_low',
+            ):
+                if issue_type in item:
+                    repairable.append(issue_type)
+        if item.startswith('Task outcome failed:'):
+            for issue_type in (
+                'skill_not_better_than_baseline',
+                'weak_decision_specificity',
+                'weak_cut_strength',
+                'weak_failure_detection',
+                'weak_repair_usefulness',
+                'weak_output_fillability',
+                'generic_advice_leakage',
+            ):
+                if issue_type in item:
+                    repairable.append(issue_type)
     if validation.unsupported_claims_found:
         non_repairable.append('unsupported_claims')
 
@@ -782,6 +820,23 @@ def run_rule_validation(
         skill_plan=skill_plan,
         artifacts=artifacts,
     )
+    workflow_form = build_skill_workflow_form_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+    )
+    program_fidelity = build_skill_program_fidelity_report(
+        request=request,
+        skill_plan=skill_plan,
+        artifacts=artifacts,
+        workflow_form=workflow_form,
+    )
+    task_outcome = build_skill_task_outcome_report(
+        generated_skill_markdown_by_name={
+            str(getattr(skill_plan, 'skill_name', '') or ''): skill_md,
+        },
+        skill_names=[str(getattr(skill_plan, 'skill_name', '') or '')],
+    )
     for issue in list(body_quality.blocking_issues or []):
         validation.summary.append(f'Body quality failed: {issue}')
     for issue in list(self_review.blocking_issues or []):
@@ -814,6 +869,17 @@ def run_rule_validation(
         validation.summary.append(f'Move quality failed: {issue}')
     for issue in list(move_quality.warning_issues or []):
         validation.summary.append(f'Move quality warning: {issue}')
+    for issue in list(workflow_form.blocking_issues or []):
+        validation.summary.append(f'Workflow form failed: {issue}')
+    for issue in list(workflow_form.warning_issues or []):
+        validation.summary.append(f'Workflow form warning: {issue}')
+    for issue in list(program_fidelity.blocking_issues or []):
+        validation.summary.append(f'Program fidelity failed: {issue}')
+    for issue in list(program_fidelity.warning_issues or []):
+        validation.summary.append(f'Program fidelity warning: {issue}')
+    for item in list(getattr(task_outcome, 'profile_results', []) or []):
+        for issue in list(item.gap_issues or []):
+            validation.summary.append(f'Task outcome failed: {issue}')
 
     pattern_summary, pattern_notes = run_pattern_validator_checks(
         extracted_patterns=extracted_patterns,
@@ -862,6 +928,9 @@ def run_rule_validation(
     notes.extend(list(editorial_quality.summary or []))
     notes.extend(list(style_diversity.summary or []))
     notes.extend(list(move_quality.summary or []))
+    notes.extend(list(workflow_form.summary or []))
+    notes.extend(list(program_fidelity.summary or []))
+    notes.extend([task_outcome.summary] if getattr(task_outcome, 'summary', '') else [])
 
     return Diagnostics(
         warnings=list(validation.summary),
@@ -876,6 +945,9 @@ def run_rule_validation(
         editorial_quality=editorial_quality,
         style_diversity=style_diversity,
         move_quality=move_quality,
+        workflow_form=workflow_form,
+        program_fidelity=program_fidelity,
+        task_outcome=task_outcome,
         notes=notes,
     )
 

@@ -36,6 +36,7 @@ def _move(
 EXPERT_SKILL_DNA_PROFILES: dict[str, ExpertSkillDNA] = {
     "concept-to-mvp-pack": ExpertSkillDNA(
         skill_name="concept-to-mvp-pack",
+        workflow_surface="execution_spine",
         core_thesis=(
             "An MVP pack is the smallest honest proof of the player promise. It should make the core "
             "validation question falsifiable, keep the playable loop honest, and cut anything that hides learning."
@@ -153,6 +154,7 @@ EXPERT_SKILL_DNA_PROFILES: dict[str, ExpertSkillDNA] = {
     ),
     "decision-loop-stress-test": ExpertSkillDNA(
         skill_name="decision-loop-stress-test",
+        workflow_surface="execution_spine",
         core_thesis=(
             "A decision loop is healthy when pressure changes over time. Stress it by phase, find the collapse point, "
             "and fix the structure instead of padding with more content."
@@ -284,6 +286,7 @@ EXPERT_SKILL_DNA_PROFILES: dict[str, ExpertSkillDNA] = {
     ),
     "simulation-resource-loop-design": ExpertSkillDNA(
         skill_name="simulation-resource-loop-design",
+        workflow_surface="hybrid",
         core_thesis=(
             "A resource loop is a visible pressure web. Variables matter only when they create choices, feedback, "
             "recovery costs, and emotional fantasy alignment."
@@ -510,6 +513,7 @@ def build_domain_move_plan(*, skill_name: str, task: str = "") -> DomainMovePlan
         when_to_use=when_to_use,
         when_not_to_use=when_not_to_use,
         inputs=inputs,
+        workflow_surface=dna.workflow_surface,
         dna=dna,
     )
 
@@ -617,6 +621,28 @@ def render_expert_dna_skill_md(
         if move.must_include_terms:
             lines.append(f"   - Must include: {', '.join(move.must_include_terms[:5])}.")
         lines.append("")
+    if plan.workflow_surface == "hybrid":
+        structural_fields = [
+            field
+            for field in dna.output_fields
+            if field
+            in {
+                "Variable Web",
+                "Variable Roles",
+                "Pressure Relationships",
+                "Primary Decision Tensions",
+                "Positive and Negative Loops",
+                "Failure Recovery",
+                "Emotional Fantasy Alignment",
+            }
+        ]
+        if structural_fields:
+            lines.extend(["## Analysis Blocks", ""])
+            for field in structural_fields:
+                lines.append(f"### {field}")
+                lines.append(f"- Use this block to hold the {field.lower()} result after the numbered map sequence makes the decision.")
+                lines.append(f"- Keep it separate from `Default Workflow`; this is an output surface, not a replacement for the execution spine.")
+                lines.append("")
     lines.extend(["## Output Format", "", "```markdown"])
     for field in dna.output_fields:
         lines.append(f"## {field}")

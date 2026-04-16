@@ -8,8 +8,15 @@ from .domain_specificity import SkillDomainSpecificityReport
 from .depth_quality import SkillDepthQualityReport
 from .editorial_quality import SkillEditorialQualityReport
 from .expert_dna import ExpertDNAAuthoringPack, SkillMoveQualityReport, SkillUsefulnessEvalReport
+from .expert_studio import (
+    ProgramCandidateReviewBatchReport,
+    SkillProgramAuthoringPack,
+    SkillProgramFidelityReport,
+    SkillTaskOutcomeReport,
+)
 from .expert_structure import SkillExpertStructureReport
 from .style_diversity import SkillStyleDiversityReport
+from .workflow_form import SkillWorkflowFormReport
 
 
 class SkillCreateComparisonMetrics(BaseModel):
@@ -79,6 +86,30 @@ class SkillCreateComparisonMetrics(BaseModel):
     voice_rule_alignment: float = 0.0
     cross_case_move_overlap: float = 0.0
     move_quality_gap_count: int = 0
+    workflow_form_status: str = "unknown"
+    workflow_surface: str = "unknown"
+    numbered_spine_count: int = 0
+    imperative_move_recall: float = 0.0
+    named_block_dominance_ratio: float = 0.0
+    workflow_heading_alignment: float = 0.0
+    output_block_separation: bool = True
+    structural_block_count: int = 0
+    workflow_form_gap_count: int = 0
+    program_fidelity_status: str = "unknown"
+    execution_move_recall: float = 0.0
+    execution_move_order_alignment: float = 0.0
+    decision_rule_fidelity: float = 0.0
+    cut_rule_fidelity: float = 0.0
+    failure_repair_fidelity: float = 0.0
+    output_schema_fidelity: float = 0.0
+    workflow_surface_fidelity: float = 0.0
+    style_strategy_fidelity: float = 0.0
+    program_fidelity_gap_count: int = 0
+    task_outcome_status: str = "unknown"
+    task_outcome_pass_count: int = 0
+    task_outcome_probe_count: int = 0
+    task_outcome_with_skill_average: float = 0.0
+    task_outcome_gap_count: int = 0
     fully_correct: bool = False
     severity: str = ""
 
@@ -98,6 +129,9 @@ class SkillCreateComparisonCaseResult(BaseModel):
     editorial_quality: SkillEditorialQualityReport | None = None
     style_diversity: SkillStyleDiversityReport | None = None
     move_quality: SkillMoveQualityReport | None = None
+    workflow_form: SkillWorkflowFormReport | None = None
+    program_fidelity: SkillProgramFidelityReport | None = None
+    task_outcome: SkillTaskOutcomeReport | None = None
     gap_issues: list[str] = Field(default_factory=list)
     status: str = "matched"
     summary: str = ""
@@ -118,18 +152,30 @@ class SkillCreateComparisonReport(BaseModel):
     anthropic_reference_metrics: SkillCreateComparisonMetrics | None = None
     anthropic_reference_summary: list[str] = Field(default_factory=list)
     expert_dna_authoring_pack: ExpertDNAAuthoringPack | None = None
+    skill_program_authoring_pack: SkillProgramAuthoringPack | None = None
+    program_candidate_review_batch: ProgramCandidateReviewBatchReport | None = None
     skill_usefulness_eval_report: SkillUsefulnessEvalReport | None = None
+    skill_task_outcome_report: SkillTaskOutcomeReport | None = None
     dna_authoring_status: str = "pass"
     candidate_dna_count: int = 0
+    program_authoring_status: str = "pass"
+    candidate_program_count: int = 0
     usefulness_eval_status: str = "pass"
     usefulness_gap_count: int = 0
+    task_outcome_status: str = "pass"
+    task_outcome_gap_count: int = 0
     expert_structure_gap_count: int = 0
     depth_quality_gap_count: int = 0
     editorial_gap_count: int = 0
     style_gap_count: int = 0
     move_quality_gap_count: int = 0
+    workflow_form_gap_count: int = 0
+    program_fidelity_gap_count: int = 0
     generic_shell_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
+    negative_case_resistance: float = 1.0
+    generic_shell_rejection: float = 1.0
+    program_regression_count: int = 0
     gap_count: int = 0
     overall_status: str = "pass"
     summary: str = ""

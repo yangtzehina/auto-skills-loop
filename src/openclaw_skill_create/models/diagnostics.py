@@ -9,9 +9,11 @@ from .domain_specificity import SkillDomainSpecificityReport
 from .depth_quality import SkillDepthQualityReport
 from .editorial_quality import SkillEditorialQualityReport
 from .expert_dna import SkillMoveQualityReport
+from .expert_studio import SkillProgramFidelityReport, SkillTaskOutcomeReport
 from .expert_structure import SkillExpertStructureReport
 from .security import SecurityAuditReport
 from .style_diversity import SkillStyleDiversityReport
+from .workflow_form import SkillWorkflowFormReport
 
 
 class ValidationResult(BaseModel):
@@ -42,4 +44,7 @@ class Diagnostics(BaseModel):
     editorial_quality: Optional[SkillEditorialQualityReport] = None
     style_diversity: Optional[SkillStyleDiversityReport] = None
     move_quality: Optional[SkillMoveQualityReport] = None
+    workflow_form: Optional[SkillWorkflowFormReport] = None
+    program_fidelity: Optional[SkillProgramFidelityReport] = None
+    task_outcome: Optional[SkillTaskOutcomeReport] = None
     notes: list[str] = Field(default_factory=list)

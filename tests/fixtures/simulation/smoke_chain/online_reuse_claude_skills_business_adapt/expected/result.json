@@ -1,9 +1,5 @@
 {
-  "severity": "pass",
-  "reuse_decision": "adapt_existing",
-  "selected_online_skill_names": [
-    "business-workflow-optimizer"
-  ],
+  "evaluation_report_present": true,
   "generated_files": [
     "SKILL.md",
     "_meta.json",
@@ -17,15 +13,22 @@
     "evals/expert_structure.json",
     "evals/move_quality.json",
     "evals/output_eval.json",
+    "evals/program_fidelity.json",
     "evals/report.json",
     "evals/review.json",
     "evals/security_audit.json",
     "evals/self_review.json",
     "evals/style_diversity.json",
+    "evals/task_outcome.json",
     "evals/trigger_eval.json",
+    "evals/workflow_form.json",
     "references/workflow_checklist.md",
     "scripts/review_workflow.py"
   ],
-  "evaluation_report_present": true,
-  "persisted_report_matches_memory": true
+  "persisted_report_matches_memory": true,
+  "reuse_decision": "adapt_existing",
+  "selected_online_skill_names": [
+    "business-workflow-optimizer"
+  ],
+  "severity": "pass"
 }

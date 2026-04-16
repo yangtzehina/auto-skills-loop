@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from ..models.artifacts import ArtifactFile
 from .domain_specificity import extract_task_domain_anchors, profile_for_skill
 from .expert_dna import render_expert_dna_skill_md
+from .expert_skill_studio import render_skill_program_markdown
 from .expert_structure import expert_profile_for_skill
 from .style_diversity import expert_style_profile_for_skill
 
@@ -901,6 +902,16 @@ def fallback_generate_methodology_skill_md(
     references: list[str],
     scripts: list[str],
 ) -> str:
+    program_content = render_skill_program_markdown(
+        skill_name=skill_name,
+        description=description,
+        task=task,
+        references=references,
+        scripts=scripts,
+    )
+    if program_content is not None:
+        return program_content
+
     expert_dna_content = render_expert_dna_skill_md(
         skill_name=skill_name,
         description=description,

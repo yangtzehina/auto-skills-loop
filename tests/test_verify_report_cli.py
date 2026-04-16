@@ -34,6 +34,9 @@ def test_run_verify_report_cli_supports_quick(monkeypatch):
     assert stderr == ''
     payload = json.loads(stdout)
     assert payload['overall_status'] == 'pass'
+    assert payload['program_fidelity_status'] == 'pass'
+    assert payload['task_outcome_status'] == 'pass'
+    assert payload['program_authoring_status'] == 'pass'
 
 
 def test_run_verify_report_cli_warns_when_live_curation_fails(monkeypatch):
@@ -79,3 +82,5 @@ def test_run_verify_report_markdown_includes_decision_statuses(monkeypatch):
     assert '`pending`' in stdout
     assert '## Operation-Backed Summary' in stdout
     assert '`no_change`' in stdout
+    assert '- program_fidelity_status=pass' in stdout
+    assert '- task_outcome_status=pass' in stdout

@@ -35,6 +35,9 @@ from .persistence import (
     artifacts_with_security_audit,
     artifacts_with_self_review,
     artifacts_with_style_diversity,
+    artifacts_with_task_outcome,
+    artifacts_with_program_fidelity,
+    artifacts_with_workflow_form,
     persist_artifacts,
 )
 from .planner import run_planner
@@ -133,6 +136,25 @@ BLOCKING_REPAIRABLE_ISSUES = {
     "failure_repair_missing",
     "numbered_workflow_spine_missing",
     "high_cross_case_move_overlap",
+    "imperative_workflow_moves_missing",
+    "workflow_named_blocks_dominate",
+    "output_blocks_mixed_into_workflow",
+    "numbered_map_sequence_missing",
+    "structural_analysis_blocks_missing",
+    "analytical_blocks_missing",
+    "execution_move_recall_low",
+    "execution_move_order_alignment_low",
+    "decision_rule_fidelity_low",
+    "output_schema_fidelity_low",
+    "failure_repair_fidelity_low",
+    "workflow_surface_fidelity_low",
+    "skill_not_better_than_baseline",
+    "weak_decision_specificity",
+    "weak_cut_strength",
+    "weak_failure_detection",
+    "weak_repair_usefulness",
+    "weak_output_fillability",
+    "generic_advice_leakage",
 }
 
 
@@ -618,6 +640,21 @@ def run_skill_create(
             move_quality=getattr(diagnostics, "move_quality", None),
             policy=effective_persistence_policy,
         )
+        artifacts = artifacts_with_workflow_form(
+            artifacts=artifacts,
+            workflow_form=getattr(diagnostics, "workflow_form", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_program_fidelity(
+            artifacts=artifacts,
+            program_fidelity=getattr(diagnostics, "program_fidelity", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_task_outcome(
+            artifacts=artifacts,
+            task_outcome=getattr(diagnostics, "task_outcome", None),
+            policy=effective_persistence_policy,
+        )
 
     if artifacts is not None and diagnostics is not None:
         artifacts = artifacts_with_body_quality(
@@ -663,6 +700,21 @@ def run_skill_create(
         artifacts = artifacts_with_move_quality(
             artifacts=artifacts,
             move_quality=getattr(diagnostics, "move_quality", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_workflow_form(
+            artifacts=artifacts,
+            workflow_form=getattr(diagnostics, "workflow_form", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_program_fidelity(
+            artifacts=artifacts,
+            program_fidelity=getattr(diagnostics, "program_fidelity", None),
+            policy=effective_persistence_policy,
+        )
+        artifacts = artifacts_with_task_outcome(
+            artifacts=artifacts,
+            task_outcome=getattr(diagnostics, "task_outcome", None),
             policy=effective_persistence_policy,
         )
         operation_coverage = None

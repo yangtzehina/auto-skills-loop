@@ -12,9 +12,26 @@ from .expert_dna_authoring import (
     render_expert_dna_review_batch_markdown,
     render_expert_dna_review_markdown,
 )
+from .expert_skill_studio import (
+    build_program_candidate_review_batch_report,
+    build_program_candidate_review_report,
+    build_skill_program_authoring_pack,
+    build_skill_program_authoring_candidate,
+    build_skill_program_ir,
+    evaluate_negative_case_resistance,
+    expert_corpus_entry_for_skill,
+    load_expert_skill_corpus,
+    render_program_candidate_review_batch_markdown,
+    render_program_candidate_review_markdown,
+    render_skill_program_authoring_pack_markdown,
+    render_skill_program_markdown,
+)
 from .move_quality import build_skill_move_quality_report
+from .skill_program_fidelity import build_skill_program_fidelity_report, program_fidelity_artifact
+from .skill_task_outcome import build_skill_task_outcome_report, task_outcome_artifact
 from .skill_usefulness_eval import build_skill_usefulness_eval_report, render_skill_usefulness_eval_markdown
 from .style_diversity import build_skill_style_diversity_report
+from .workflow_form import build_skill_workflow_form_report, workflow_form_artifact
 from .orchestrator import run_skill_create
 from .ops_approval import (
     apply_ops_approval_state,
@@ -132,9 +149,27 @@ __all__ = [
     'render_expert_dna_authoring_pack_markdown',
     'render_expert_dna_review_markdown',
     'render_expert_dna_review_batch_markdown',
+    'load_expert_skill_corpus',
+    'expert_corpus_entry_for_skill',
+    'build_skill_program_ir',
+    'render_skill_program_markdown',
+    'build_skill_program_authoring_candidate',
+    'build_skill_program_authoring_pack',
+    'render_skill_program_authoring_pack_markdown',
+    'build_program_candidate_review_report',
+    'build_program_candidate_review_batch_report',
+    'render_program_candidate_review_markdown',
+    'render_program_candidate_review_batch_markdown',
+    'evaluate_negative_case_resistance',
     'build_skill_usefulness_eval_report',
     'render_skill_usefulness_eval_markdown',
+    'build_skill_program_fidelity_report',
+    'program_fidelity_artifact',
+    'build_skill_task_outcome_report',
+    'task_outcome_artifact',
     'build_skill_style_diversity_report',
+    'build_skill_workflow_form_report',
+    'workflow_form_artifact',
     'run_skill_create',
     'detect_skill_archetype',
     'build_operation_contract',

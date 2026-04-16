@@ -10,10 +10,14 @@ from .depth_quality import build_skill_depth_quality_report
 from .editorial_quality import build_skill_editorial_quality_report
 from .domain_expertise import build_skill_domain_expertise_report
 from .domain_specificity import build_skill_domain_specificity_report
+from .expert_skill_studio import build_skill_program_ir
 from .expert_structure import build_skill_expert_structure_report
 from .move_quality import build_skill_move_quality_report
 from .operation_coverage import load_operation_coverage_report
+from .skill_program_fidelity import build_skill_program_fidelity_report
+from .skill_task_outcome import build_skill_task_outcome_report
 from .style_diversity import build_skill_style_diversity_report
+from .workflow_form import build_skill_workflow_form_report
 
 
 SCRIPT_PLACEHOLDER_MARKERS = (
@@ -387,6 +391,81 @@ def _move_quality_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
     return suggestions
 
 
+def _workflow_form_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
+    if diagnostics is None:
+        return []
+    workflow_form = getattr(diagnostics, 'workflow_form', None)
+    suggestions: list[RepairSuggestion] = []
+    for issue in list(getattr(workflow_form, 'blocking_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Rewrite SKILL.md so Default Workflow uses the profile-appropriate execution spine and keeps analysis blocks out of the workflow: {issue}',
+                target_paths=['SKILL.md'],
+                priority=107,
+                repair_scope='body_patch',
+            )
+        )
+    for issue in list(getattr(workflow_form, 'warning_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Mark this methodology skill as not release-ready until workflow form matches the Expert DNA profile: {issue}',
+                target_paths=['SKILL.md'],
+                priority=87,
+                repair_scope='body_patch',
+            )
+        )
+    return suggestions
+
+
+def _program_fidelity_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
+    if diagnostics is None:
+        return []
+    program_fidelity = getattr(diagnostics, 'program_fidelity', None)
+    suggestions: list[RepairSuggestion] = []
+    for issue in list(getattr(program_fidelity, 'blocking_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Rewrite SKILL.md from the Skill Program IR so expert execution moves, output schema, and workflow surface stay aligned: {issue}',
+                target_paths=['SKILL.md'],
+                priority=108,
+                repair_scope='body_patch',
+            )
+        )
+    for issue in list(getattr(program_fidelity, 'warning_issues', []) or []):
+        suggestions.append(
+            RepairSuggestion(
+                issue_type=str(issue),
+                instruction=f'Mark this methodology skill as not release-ready until program fidelity is stronger: {issue}',
+                target_paths=['SKILL.md'],
+                priority=88,
+                repair_scope='body_patch',
+            )
+        )
+    return suggestions
+
+
+def _task_outcome_suggestions(diagnostics: Any) -> list[RepairSuggestion]:
+    if diagnostics is None:
+        return []
+    task_outcome = getattr(diagnostics, 'task_outcome', None)
+    suggestions: list[RepairSuggestion] = []
+    for profile in list(getattr(task_outcome, 'profile_results', []) or []):
+        for issue in list(getattr(profile, 'gap_issues', []) or []):
+            suggestions.append(
+                RepairSuggestion(
+                    issue_type=str(issue),
+                    instruction=f'Rewrite SKILL.md so using the skill on probe tasks yields clearer decisions, stronger cuts, and better repair guidance: {issue}',
+                    target_paths=['SKILL.md'],
+                    priority=105,
+                    repair_scope='body_patch',
+                )
+            )
+    return suggestions
+
+
 def _security_summary(diagnostics: Any) -> tuple[str | None, int, list[str]]:
     security_audit = getattr(diagnostics, 'security_audit', None) if diagnostics is not None else None
     if security_audit is None:
@@ -449,6 +528,9 @@ def run_skill_quality_review(
         + _editorial_quality_suggestions(diagnostics)
         + _style_diversity_suggestions(diagnostics)
         + _move_quality_suggestions(diagnostics)
+        + _workflow_form_suggestions(diagnostics)
+        + _program_fidelity_suggestions(diagnostics)
+        + _task_outcome_suggestions(diagnostics)
     )
 
     missing_evidence = sorted(
@@ -476,6 +558,9 @@ def run_skill_quality_review(
     editorial_quality = getattr(diagnostics, 'editorial_quality', None) if diagnostics is not None else None
     style_diversity = getattr(diagnostics, 'style_diversity', None) if diagnostics is not None else None
     move_quality = getattr(diagnostics, 'move_quality', None) if diagnostics is not None else None
+    workflow_form = getattr(diagnostics, 'workflow_form', None) if diagnostics is not None else None
+    program_fidelity = getattr(diagnostics, 'program_fidelity', None) if diagnostics is not None else None
+    task_outcome = getattr(diagnostics, 'task_outcome', None) if diagnostics is not None else None
     if body_quality is None:
         request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
         body_quality = build_skill_body_quality_report(
@@ -540,6 +625,28 @@ def run_skill_quality_review(
             skill_plan=skill_plan,
             artifacts=artifacts,
         )
+    if workflow_form is None:
+        request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
+        workflow_form = build_skill_workflow_form_report(
+            request=request_proxy,
+            skill_plan=skill_plan,
+            artifacts=artifacts,
+        )
+    if program_fidelity is None:
+        request_proxy = type('RequestProxy', (), {'task': getattr(skill_plan, 'objective', '') or ''})()
+        program_fidelity = build_skill_program_fidelity_report(
+            request=request_proxy,
+            skill_plan=skill_plan,
+            artifacts=artifacts,
+            workflow_form=workflow_form,
+        )
+    if task_outcome is None:
+        task_outcome = build_skill_task_outcome_report(
+            generated_skill_markdown_by_name={
+                str(getattr(skill_plan, 'skill_name', '') or ''): _artifact_map(artifacts).get('SKILL.md').content if _artifact_map(artifacts).get('SKILL.md') is not None else '',
+            },
+            skill_names=[str(getattr(skill_plan, 'skill_name', '') or '')],
+        )
     body_quality_status = str(getattr(body_quality, 'status', 'not_applicable') or 'not_applicable')
     body_quality_passed = bool(getattr(body_quality, 'passed', True)) if body_quality is not None else True
     body_quality_issues = list(getattr(body_quality, 'issues', []) or []) if body_quality is not None else []
@@ -601,6 +708,31 @@ def run_skill_quality_review(
         if move_quality is not None
         else []
     )
+    workflow_form_status = str(getattr(workflow_form, 'status', 'not_applicable') or 'not_applicable')
+    workflow_form_passed = workflow_form_status in {'not_applicable', 'pass'}
+    workflow_form_issues = (
+        list(getattr(workflow_form, 'blocking_issues', []) or [])
+        + list(getattr(workflow_form, 'warning_issues', []) or [])
+        if workflow_form is not None
+        else []
+    )
+    program_fidelity_status = str(getattr(program_fidelity, 'status', 'not_applicable') or 'not_applicable')
+    program_fidelity_passed = program_fidelity_status in {'not_applicable', 'pass'}
+    program_fidelity_issues = (
+        list(getattr(program_fidelity, 'blocking_issues', []) or [])
+        + list(getattr(program_fidelity, 'warning_issues', []) or [])
+        if program_fidelity is not None
+        else []
+    )
+    task_outcome_status = str(getattr(task_outcome, 'status', 'not_applicable') or 'not_applicable')
+    task_outcome_passed = task_outcome_status in {'not_applicable', 'pass'}
+    task_outcome_issues = sorted(
+        {
+            issue
+            for profile in list(getattr(task_outcome, 'profile_results', []) or [])
+            for issue in list(getattr(profile, 'gap_issues', []) or [])
+        }
+    ) if task_outcome is not None else []
     skill_archetype = str(getattr(skill_plan, 'skill_archetype', 'guidance') or 'guidance').strip().lower()
     operation_contract = getattr(skill_plan, 'operation_contract', None)
     operation_groups = [getattr(group, 'name', '') for group in list(getattr(operation_contract, 'operations', []) or []) if getattr(group, 'name', '')]
@@ -636,6 +768,9 @@ def run_skill_quality_review(
         and editorial_quality_passed
         and style_diversity_passed
         and move_quality_passed
+        and workflow_form_passed
+        and program_fidelity_passed
+        and task_outcome_passed
         and requirement_score >= 0.99
         and (evaluation_score >= 0.75 if evaluation_report is not None else True)
     )
@@ -680,6 +815,15 @@ def run_skill_quality_review(
     if move_quality is not None:
         summary.append(f"move_quality_status={move_quality_status}")
         summary.append(f"move_quality_issues={','.join(move_quality_issues[:6]) or 'none'}")
+    if workflow_form is not None:
+        summary.append(f"workflow_form_status={workflow_form_status}")
+        summary.append(f"workflow_form_issues={','.join(workflow_form_issues[:6]) or 'none'}")
+    if program_fidelity is not None:
+        summary.append(f"program_fidelity_status={program_fidelity_status}")
+        summary.append(f"program_fidelity_issues={','.join(program_fidelity_issues[:6]) or 'none'}")
+    if task_outcome is not None:
+        summary.append(f"task_outcome_status={task_outcome_status}")
+        summary.append(f"task_outcome_issues={','.join(task_outcome_issues[:6]) or 'none'}")
     if skill_archetype == 'operation_backed':
         summary.append(f"skill_archetype={skill_archetype}")
         summary.append(f"operation_count={operation_count}")
@@ -720,5 +864,11 @@ def run_skill_quality_review(
         style_diversity_issues=style_diversity_issues,
         move_quality_status=move_quality_status,
         move_quality_issues=move_quality_issues,
+        workflow_form_status=workflow_form_status,
+        workflow_form_issues=workflow_form_issues,
+        program_fidelity_status=program_fidelity_status,
+        program_fidelity_issues=program_fidelity_issues,
+        task_outcome_status=task_outcome_status,
+        task_outcome_issues=task_outcome_issues,
         summary=summary,
     )

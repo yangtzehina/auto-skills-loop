@@ -7,7 +7,9 @@ from openclaw_skill_create.models.evaluation import EvaluationRunReport
 from openclaw_skill_create.models.depth_quality import SkillDepthQualityReport
 from openclaw_skill_create.models.editorial_quality import SkillEditorialQualityReport
 from openclaw_skill_create.models.expert_dna import SkillMoveQualityReport
+from openclaw_skill_create.models.expert_studio import SkillProgramFidelityReport, SkillTaskOutcomeReport
 from openclaw_skill_create.models.style_diversity import SkillStyleDiversityReport
+from openclaw_skill_create.models.workflow_form import SkillWorkflowFormReport
 from openclaw_skill_create.models.persistence import PersistencePolicy
 from openclaw_skill_create.models.plan import PlannedFile, SkillPlan
 from openclaw_skill_create.models.review import SkillQualityReview
@@ -17,14 +19,20 @@ from openclaw_skill_create.services.persistence import (
     DEPTH_QUALITY_REPORT_PATH,
     EDITORIAL_QUALITY_REPORT_PATH,
     MOVE_QUALITY_REPORT_PATH,
+    PROGRAM_FIDELITY_REPORT_PATH,
     STYLE_DIVERSITY_REPORT_PATH,
+    TASK_OUTCOME_REPORT_PATH,
+    WORKFLOW_FORM_REPORT_PATH,
     QUALITY_REVIEW_PATH,
     SECURITY_AUDIT_REPORT_PATH,
     artifacts_with_evaluation_report,
     artifacts_with_depth_quality,
     artifacts_with_editorial_quality,
     artifacts_with_move_quality,
+    artifacts_with_program_fidelity,
     artifacts_with_style_diversity,
+    artifacts_with_task_outcome,
+    artifacts_with_workflow_form,
     artifacts_with_quality_review,
     artifacts_with_security_audit,
     persist_artifacts,
@@ -256,3 +264,61 @@ def test_artifacts_with_move_quality_adds_move_report_file():
     assert move_quality.content_type == 'application/json'
     assert '"skill_name": "demo-skill"' in move_quality.content
     assert '"expert_move_recall": 0.91' in move_quality.content
+
+
+def test_artifacts_with_workflow_form_adds_workflow_form_report_file():
+    artifacts = artifacts_with_workflow_form(
+        artifacts=make_artifacts(),
+        workflow_form=SkillWorkflowFormReport(
+            skill_name='demo-skill',
+            skill_archetype='methodology_guidance',
+            status='pass',
+            workflow_surface='execution_spine',
+            numbered_spine_count=6,
+            named_block_dominance_ratio=0.0,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    workflow_form = next(file for file in artifacts.files if file.path == WORKFLOW_FORM_REPORT_PATH)
+    assert workflow_form.content_type == 'application/json'
+    assert '"skill_name": "demo-skill"' in workflow_form.content
+    assert '"workflow_surface": "execution_spine"' in workflow_form.content
+
+
+def test_artifacts_with_program_fidelity_adds_program_report_file():
+    artifacts = artifacts_with_program_fidelity(
+        artifacts=make_artifacts(),
+        program_fidelity=SkillProgramFidelityReport(
+            skill_name='demo-skill',
+            skill_archetype='methodology_guidance',
+            status='pass',
+            execution_move_recall=0.91,
+            execution_move_order_alignment=0.88,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    report = next(file for file in artifacts.files if file.path == PROGRAM_FIDELITY_REPORT_PATH)
+    assert report.content_type == 'application/json'
+    assert '"execution_move_recall": 0.91' in report.content
+    assert '"execution_move_order_alignment": 0.88' in report.content
+
+
+def test_artifacts_with_task_outcome_adds_task_outcome_report_file():
+    artifacts = artifacts_with_task_outcome(
+        artifacts=make_artifacts(),
+        task_outcome=SkillTaskOutcomeReport(
+            status='pass',
+            probe_count=3,
+            task_outcome_gap_count=0,
+            with_skill_average=0.84,
+            baseline_average=0.31,
+        ),
+        policy=PersistencePolicy(persist_evaluation_report=True),
+    )
+
+    report = next(file for file in artifacts.files if file.path == TASK_OUTCOME_REPORT_PATH)
+    assert report.content_type == 'application/json'
+    assert '"probe_count": 3' in report.content
+    assert '"with_skill_average": 0.84' in report.content

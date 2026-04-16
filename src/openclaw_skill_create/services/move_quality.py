@@ -31,6 +31,22 @@ def _numbered_moves(workflow_text: str) -> list[str]:
     return moves
 
 
+def _named_workflow_block_count(workflow_text: str) -> int:
+    count = 0
+    in_fence = False
+    for line in str(workflow_text or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence or not stripped.startswith("#"):
+            continue
+        heading = stripped.lstrip("#").strip()
+        if heading and not re.match(r"^\d+\.", heading):
+            count += 1
+    return count
+
+
 def _move_precision(*, dna: ExpertSkillDNA, detected_moves: list[str]) -> tuple[float, list[str]]:
     expected = [_normalize(move.name) for move in list(dna.workflow_moves or [])]
     if not detected_moves:
@@ -45,7 +61,14 @@ def _numbered_spine_present(*, workflow_text: str, dna: ExpertSkillDNA) -> bool:
         return False
     normalized = _normalize(workflow_text)
     required_labels = ("decision", "do", "output", "failure signal", "fix")
-    return all(label in normalized for label in required_labels)
+    if not all(label in normalized for label in required_labels):
+        return False
+    workflow_surface = str(getattr(dna, "workflow_surface", "") or "execution_spine").strip().lower()
+    if workflow_surface == "execution_spine":
+        named_count = _named_workflow_block_count(workflow_text)
+        if named_count / max(1, named_count + len(detected)) > 0.35:
+            return False
+    return True
 
 
 def _output_semantics_score(*, output_text: str, dna: ExpertSkillDNA) -> tuple[float, list[str]]:

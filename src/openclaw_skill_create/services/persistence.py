@@ -11,6 +11,7 @@ from ..models.body_quality import SkillBodyQualityReport, SkillSelfReviewReport
 from ..models.depth_quality import SkillDepthQualityReport
 from ..models.editorial_quality import SkillEditorialQualityReport
 from ..models.expert_dna import SkillMoveQualityReport
+from ..models.expert_studio import SkillProgramFidelityReport, SkillTaskOutcomeReport
 from ..models.domain_expertise import SkillDomainExpertiseReport
 from ..models.domain_specificity import SkillDomainSpecificityReport
 from ..models.expert_structure import SkillExpertStructureReport
@@ -20,6 +21,7 @@ from ..models.plan import SkillPlan
 from ..models.review import SkillQualityReview
 from ..models.security import SecurityAuditReport
 from ..models.style_diversity import SkillStyleDiversityReport
+from ..models.workflow_form import SkillWorkflowFormReport
 from ..models.operation_coverage import OperationCoverageReport
 
 
@@ -41,6 +43,9 @@ DEPTH_QUALITY_REPORT_PATH = 'evals/depth_quality.json'
 EDITORIAL_QUALITY_REPORT_PATH = 'evals/editorial_quality.json'
 STYLE_DIVERSITY_REPORT_PATH = 'evals/style_diversity.json'
 MOVE_QUALITY_REPORT_PATH = 'evals/move_quality.json'
+WORKFLOW_FORM_REPORT_PATH = 'evals/workflow_form.json'
+PROGRAM_FIDELITY_REPORT_PATH = 'evals/program_fidelity.json'
+TASK_OUTCOME_REPORT_PATH = 'evals/task_outcome.json'
 SECURITY_AUDIT_REPORT_PATH = 'evals/security_audit.json'
 OPERATION_COVERAGE_REPORT_PATH = 'evals/operation_coverage.json'
 
@@ -373,6 +378,82 @@ def artifacts_with_move_quality(
     return Artifacts(files=files)
 
 
+def artifacts_with_workflow_form(
+    *,
+    artifacts: Artifacts,
+    workflow_form: Optional[SkillWorkflowFormReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if workflow_form is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=WORKFLOW_FORM_REPORT_PATH,
+        content=json.dumps(workflow_form.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['workflow_form'],
+        status='new',
+    )
+
+    files = [file for file in artifacts.files if file.path != WORKFLOW_FORM_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_program_fidelity(
+    *,
+    artifacts: Artifacts,
+    program_fidelity: Optional[SkillProgramFidelityReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if program_fidelity is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=PROGRAM_FIDELITY_REPORT_PATH,
+        content=json.dumps(program_fidelity.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['program_fidelity'],
+        status='new',
+    )
+    files = [file for file in artifacts.files if file.path != PROGRAM_FIDELITY_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
+def artifacts_with_task_outcome(
+    *,
+    artifacts: Artifacts,
+    task_outcome: Optional[SkillTaskOutcomeReport],
+    policy: Optional[PersistencePolicy],
+) -> Artifacts:
+    if task_outcome is None:
+        return artifacts
+
+    effective_policy = policy or PersistencePolicy()
+    if not effective_policy.persist_evaluation_report:
+        return artifacts
+
+    report_file = ArtifactFile(
+        path=TASK_OUTCOME_REPORT_PATH,
+        content=json.dumps(task_outcome.model_dump(mode='json'), indent=2, ensure_ascii=False) + '\n',
+        content_type='application/json',
+        generated_from=['task_outcome'],
+        status='new',
+    )
+    files = [file for file in artifacts.files if file.path != TASK_OUTCOME_REPORT_PATH]
+    files.append(report_file)
+    return Artifacts(files=files)
+
+
 def artifacts_with_security_audit(
     *,
     artifacts: Artifacts,
@@ -536,6 +617,21 @@ def persist_artifacts(
         'move_quality_path': (
             str(target_dir / MOVE_QUALITY_REPORT_PATH)
             if MOVE_QUALITY_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'workflow_form_path': (
+            str(target_dir / WORKFLOW_FORM_REPORT_PATH)
+            if WORKFLOW_FORM_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'program_fidelity_path': (
+            str(target_dir / PROGRAM_FIDELITY_REPORT_PATH)
+            if PROGRAM_FIDELITY_REPORT_PATH in artifact_paths(artifacts)
+            else None
+        ),
+        'task_outcome_path': (
+            str(target_dir / TASK_OUTCOME_REPORT_PATH)
+            if TASK_OUTCOME_REPORT_PATH in artifact_paths(artifacts)
             else None
         ),
         'security_audit_path': (

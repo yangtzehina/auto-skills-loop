@@ -89,4 +89,7 @@ def test_build_ops_roundbook_report_marks_pending_manual_work_as_caution():
     assert report.operation_backed_patch_current_candidates == []
     assert report.operation_backed_derive_child_candidates == []
     assert report.operation_backed_hold_candidates == []
+    assert report.program_fidelity_status == 'pass'
+    assert report.program_authoring_status == 'pass'
+    assert report.task_outcome_status == 'pass'
     assert report.overall_readiness == 'caution'
