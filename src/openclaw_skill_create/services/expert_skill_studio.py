@@ -77,6 +77,7 @@ PROFILE_QUALITY_CHECK_LINES: dict[str, list[str]] = {
         "Check whether the build recommendation and success criteria are explicit enough to approve the first playable.",
         "Check whether the pack stays prototype first instead of drifting into a mini vertical slice.",
         "Check whether pass and fail evidence would actually force a redesign instead of just sounding organized.",
+        "Check whether a greybox build with stubbed content and placeholder art still answers the validation question.",
     ],
     "decision-loop-stress-test": [
         "Check whether the decision loop is readable in the first hour before novelty wears off.",
@@ -116,13 +117,13 @@ PROFILE_FAILURE_ENTRIES: dict[str, list[tuple[str, str, str, str]]] = {
             "Scope Creep",
             "Support systems keep sliding back into the first build as if they were core.",
             "The feature cut was polite instead of explicit.",
-            "Move the supportive work into out of scope with a clear re-entry condition.",
+            "Cut aggressively, then move the supportive work into out of scope with a clear re-entry condition.",
         ),
         (
             "Content-Heavy Validation",
             "The MVP only works if future meta systems, content volume, or presentation arrive first.",
             "The smallest honest loop was never isolated.",
-            "Reduce the build to the repeatable loop that already produces the intended feeling.",
+            "Do not fake the entire game; reduce the build to the repeatable loop that already produces the intended feeling.",
         ),
         (
             "Premature Meta Systems",
@@ -993,7 +994,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
         "concept-to-mvp-pack": [
             {
                 "name": "proof_first",
-                "opening_frame": "Use this skill to decide what the first playable must prove, keep, cut, and package.",
+                "opening_frame": "Decide what the first playable must prove before it grows.",
                 "section_order": _ordered_sections(base_order, ["Quality Checks", "Cut Rules", "Output Format", "Failure Patterns and Fixes", "Worked Micro-Example", "Voice Rules", "Decision Rules"]),
                 "sentence_budgets": {"Overview": 1, "Core Principle": 1, "Default Workflow": 5, "Quality Checks": 4},
                 "workflow_mode": "validation_pressure",
@@ -1007,7 +1008,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "cut_first",
-                "opening_frame": "Use this skill to cut scope until the first playable stays honest.",
+                "opening_frame": "Cut scope early, then prove the smallest playable that survives.",
                 "section_order": _ordered_sections(base_order, ["Cut Rules", "Quality Checks", "Output Format", "Failure Patterns and Fixes", "Worked Micro-Example", "Voice Rules", "Decision Rules"]),
                 "sentence_budgets": {"Overview": 1, "Cut Rules": 4, "Default Workflow": 4},
                 "workflow_mode": "cut_pressure",
@@ -1021,7 +1022,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "package_ready",
-                "opening_frame": "Use this skill to turn the proof into a buildable first playable package.",
+                "opening_frame": "Turn the proof into a first-playable package that can actually be built next.",
                 "section_order": _ordered_sections(base_order, ["Output Format", "Worked Micro-Example", "Quality Checks", "Cut Rules", "Failure Patterns and Fixes", "Voice Rules", "Decision Rules"]),
                 "sentence_budgets": {"Overview": 2, "Output Format": 4, "Worked Micro-Example": 3},
                 "workflow_mode": "package_readiness",
@@ -1035,7 +1036,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "failure_pass",
-                "opening_frame": "Use this skill to run a failure pass before approving the first playable.",
+                "opening_frame": "Prove the first playable, then run a failure pass before approval.",
                 "section_order": _ordered_sections(base_order, ["Failure Patterns and Fixes", "Quality Checks", "Output Format", "Cut Rules", "Worked Micro-Example", "Voice Rules", "Decision Rules"]),
                 "sentence_budgets": {"Overview": 1, "Failure Patterns and Fixes": 5, "Quality Checks": 4},
                 "workflow_mode": "failure_pass",
@@ -1051,7 +1052,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
         "decision-loop-stress-test": [
             {
                 "name": "pressure_first",
-                "opening_frame": "Use this skill to stress a game loop across first-hour, midgame, and mastery pressure before adding content.",
+                "opening_frame": "Pressure-test the decision game before content smooths over weak structure.",
                 "section_order": _ordered_sections(base_order, ["Quality Checks", "Failure Patterns and Fixes", "Output Format", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Default Workflow": 5, "Quality Checks": 4},
                 "workflow_mode": "pressure_first",
@@ -1065,7 +1066,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "collapse_first",
-                "opening_frame": "Use this skill to find collapse points before suggesting new content or rewards.",
+                "opening_frame": "Find the collapse point before you propose new content or rewards.",
                 "section_order": _ordered_sections(base_order, ["Failure Patterns and Fixes", "Quality Checks", "Decision Rules", "Output Format", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Failure Patterns and Fixes": 5, "Default Workflow": 4},
                 "workflow_mode": "collapse_detection",
@@ -1079,7 +1080,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "repair_first",
-                "opening_frame": "Use this skill to identify structural repairs before adding more content.",
+                "opening_frame": "Name the structural repair before anyone reaches for more content.",
                 "section_order": _ordered_sections(base_order, ["Output Format", "Failure Patterns and Fixes", "Quality Checks", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Output Format": 4, "Failure Patterns and Fixes": 4},
                 "workflow_mode": "repair_priority",
@@ -1093,7 +1094,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "reinforcement_audit",
-                "opening_frame": "Use this skill to audit what the loop teaches and reinforces over time.",
+                "opening_frame": "Audit what mastery teaches before the wrong habit hardens.",
                 "section_order": _ordered_sections(base_order, ["Decision Rules", "Quality Checks", "Output Format", "Failure Patterns and Fixes", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Decision Rules": 4, "Quality Checks": 4},
                 "workflow_mode": "reinforcement_audit",
@@ -1109,7 +1110,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
         "simulation-resource-loop-design": [
             {
                 "name": "map_first",
-                "opening_frame": "Use this skill to map resource pressure into visible choices, feedback loops, recovery, and fantasy alignment.",
+                "opening_frame": "Map the pressure web before you balance any single resource in isolation.",
                 "section_order": _ordered_sections(base_order, ["Analysis Blocks", "Output Format", "Quality Checks", "Failure Patterns and Fixes", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Analysis Blocks": 5, "Output Format": 3},
                 "workflow_mode": "map_first",
@@ -1123,7 +1124,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "tension_first",
-                "opening_frame": "Use this skill to map tradeoffs before smoothing the system.",
+                "opening_frame": "Force visible tradeoffs before you optimize the system for smoothness.",
                 "section_order": _ordered_sections(base_order, ["Quality Checks", "Analysis Blocks", "Output Format", "Failure Patterns and Fixes", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Quality Checks": 4, "Analysis Blocks": 4},
                 "workflow_mode": "tension_first",
@@ -1137,7 +1138,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "loop_balance",
-                "opening_frame": "Use this skill to balance positive and negative feedback loops.",
+                "opening_frame": "Balance positive and negative loops without letting either side erase the decision game.",
                 "section_order": _ordered_sections(base_order, ["Output Format", "Analysis Blocks", "Quality Checks", "Failure Patterns and Fixes", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Output Format": 4, "Quality Checks": 4},
                 "workflow_mode": "loop_balance",
@@ -1151,7 +1152,7 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
             },
             {
                 "name": "recovery_cost",
-                "opening_frame": "Use this skill to design recovery that keeps cost, clarity, and fantasy alignment.",
+                "opening_frame": "Design recovery that preserves cost, clarity, and fantasy instead of flattening the system.",
                 "section_order": _ordered_sections(base_order, ["Failure Patterns and Fixes", "Output Format", "Analysis Blocks", "Quality Checks", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Failure Patterns and Fixes": 5, "Output Format": 4},
                 "workflow_mode": "recovery_cost",
@@ -1425,18 +1426,18 @@ def _section_variant_text(
     section_moves = _strategy_primary_moves(corpus=corpus, section_name=section_name, strategy_profile=strategy_profile)
     if section_name == "Overview":
         overview_lines = {
-            ("concept-to-mvp-pack", "proof_first"): "Use this skill to decide what the first playable must prove, keep, cut, and package.",
-            ("concept-to-mvp-pack", "cut_first"): "Use this skill to cut scope until the first playable stays honest.",
-            ("concept-to-mvp-pack", "package_ready"): "Use this skill to turn the proof into a buildable first playable package.",
-            ("concept-to-mvp-pack", "failure_pass"): "Use this skill to run a failure pass before approving the first playable.",
-            ("decision-loop-stress-test", "pressure_first"): "Use this skill to stress a game loop across first-hour, midgame, and mastery pressure before adding content.",
-            ("decision-loop-stress-test", "collapse_first"): "Use this skill to find collapse points before suggesting new content or rewards.",
-            ("decision-loop-stress-test", "repair_first"): "Use this skill to identify structural repairs before adding more content.",
-            ("decision-loop-stress-test", "reinforcement_audit"): "Use this skill to audit what the loop teaches and reinforces over time.",
-            ("simulation-resource-loop-design", "map_first"): "Use this skill to map resource pressure into visible choices, feedback loops, recovery, and fantasy alignment.",
-            ("simulation-resource-loop-design", "tension_first"): "Use this skill to map tradeoffs before smoothing the system.",
-            ("simulation-resource-loop-design", "loop_balance"): "Use this skill to balance positive and negative feedback loops.",
-            ("simulation-resource-loop-design", "recovery_cost"): "Use this skill to design recovery that keeps cost, clarity, and fantasy alignment.",
+            ("concept-to-mvp-pack", "proof_first"): "Start with a question that can fail, then shrink the playable until the proof is honest.",
+            ("concept-to-mvp-pack", "cut_first"): "Treat scope as suspect until the smallest surviving proof is clear.",
+            ("concept-to-mvp-pack", "package_ready"): "Lock the proof first, then shape the smallest build-ready pack around it.",
+            ("concept-to-mvp-pack", "failure_pass"): "Approve the first playable only after a failure pass says what would force a redesign in a greybox build with stubbed content.",
+            ("decision-loop-stress-test", "pressure_first"): "Stress each phase until the decision game produces pressure instead of novelty.",
+            ("decision-loop-stress-test", "collapse_first"): "Find the collapse point before you discuss more content, rewards, or pacing cover.",
+            ("decision-loop-stress-test", "repair_first"): "Name the structural fix before anyone suggests softer compensation.",
+            ("decision-loop-stress-test", "reinforcement_audit"): "Check what mastery teaches, then strip reward from the wrong habit.",
+            ("simulation-resource-loop-design", "map_first"): "Start by drawing the pressure web; only then judge balance inside it.",
+            ("simulation-resource-loop-design", "tension_first"): "Lead with tradeoffs that hurt in visible ways, not with resource lists.",
+            ("simulation-resource-loop-design", "loop_balance"): "Balance positive and negative loops so neither side erases the decision game.",
+            ("simulation-resource-loop-design", "recovery_cost"): "Recovery should preserve cost, visibility, and fantasy instead of flattening the system.",
         }
         overview = overview_lines.get((program.skill_name, strategy), str(plan.overview or "").strip())
         return [overview or str(strategy_profile.get("opening_frame") or plan.overview)]
@@ -1545,11 +1546,11 @@ def _render_output_fields(
     strategy_profile: dict[str, Any],
 ) -> list[str]:
     output_opening = {
-        "concept-to-mvp-pack": "Fill the template so the first-playable decision is explicit, reviewable, and ready to act on.",
+        "concept-to-mvp-pack": "Fill the template so a greybox or cardboard first playable can be greenlit or killed without rereading the pitch deck, wireframe notes, or telemetry plan.",
         "decision-loop-stress-test": "Fill the template so the collapse point, solved state, and repair can be acted on immediately.",
         "simulation-resource-loop-design": "Fill the template so the pressure web, recovery cost, and fantasy fit stay visible in one pass.",
     }.get(program.skill_name, "Fill the template so the next decision is explicit, testable, and ready to act on.")
-    fence_language = "markdown"
+    fence_language = "text" if program.skill_name == "concept-to-mvp-pack" else "markdown"
     lines = ["## Output Format", "", output_opening, "", f"```{fence_language}"]
     focus = [field for field in list(strategy_profile.get("output_focus") or []) if field in program.output_schema]
     ordered_fields = focus + [field for field in program.output_schema.keys() if field not in focus]
