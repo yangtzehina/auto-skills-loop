@@ -1,7 +1,7 @@
 {
   "severity": "pass",
   "skill_archetype": "methodology_guidance",
-  "fully_correct": true,
+  "fully_correct": false,
   "body_quality_status": "pass",
   "self_review_status": "pass",
   "domain_specificity_status": "pass",
