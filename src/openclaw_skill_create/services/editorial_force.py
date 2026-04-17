@@ -99,7 +99,10 @@ def build_skill_editorial_force_report(
         current_signature = style_signature_from_markdown(current_best)
         current_opening = str(current_signature.get('opening') or '')
         current_overlap = shared_opening_ratio(style_signature_from_markdown(skill_md).get('opening', ''), current_opening)
-        opening_distinctness = round(max(0.0, 1.0 - current_overlap), 4)
+        if current_overlap >= 0.95:
+            opening_distinctness = round(float(getattr(style_diversity, 'profile_specific_label_coverage', 0.0) or 0.0), 4)
+        else:
+            opening_distinctness = round(max(0.0, 1.0 - current_overlap), 4)
     else:
         opening_distinctness = round(float(getattr(style_diversity, 'profile_specific_label_coverage', 0.0) or 0.0), 4)
 
@@ -181,11 +184,17 @@ def build_skill_editorial_force_report(
     if realization_candidate_count and realization_candidate_count < 2:
         warnings.append('single_realization_candidate')
     promotion_status = str(getattr(promotion_decision, 'promotion_status', '') or '')
-    if promotion_decision is not None and promotion_status != 'promote':
+    promotion_reason = str(getattr(promotion_decision, 'reason', '') or '')
+    if (
+        promotion_decision is not None
+        and promotion_status != 'promote'
+        and promotion_reason != 'stable_but_no_breakthrough'
+    ):
         warnings.append('pairwise_promotion_not_promoted')
     if (
         pairwise_editorial is not None
         and promotion_status != 'promote'
+        and promotion_reason != 'stable_but_no_breakthrough'
         and float(getattr(pairwise_editorial, 'decision_pressure_delta', 0.0) or 0.0) <= 0
     ):
         warnings.append('pairwise_decision_delta_flat')

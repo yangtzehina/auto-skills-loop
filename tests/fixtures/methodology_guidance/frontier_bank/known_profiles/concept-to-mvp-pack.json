@@ -1,0 +1,41 @@
+{
+  "skill_name": "concept-to-mvp-pack",
+  "active_frontier_version": "frontier_v2",
+  "pressure_best_sections": {
+    "Overview": [
+      "Start with a validation question that can fail in a short playtest, then cut until the answer lives inside one honest loop."
+    ],
+    "Failure Patterns and Fixes": [
+      "If the question cannot kill the concept, the pack is still pitching instead of proving."
+    ]
+  },
+  "compactness_best_sections": {
+    "Overview": [
+      "Do not explain the whole product vision here; name the proof target and the cut line."
+    ],
+    "Output Format": [
+      "Keep the output field list fillable and remove any line that does not change kill, greenlight, or redesign."
+    ]
+  },
+  "quality_checks_best_sections": {
+    "Quality Checks": [
+      "Check whether the validation question can fail fast enough to trigger a redesign.",
+      "Check whether the smallest honest loop is playable after art, meta systems, and comfort features are stripped away.",
+      "Check whether the feature cut removes attractive work instead of protecting comfort.",
+      "Check whether the out-of-scope list blocks creep and keeps a clear kill list."
+    ],
+    "Failure Patterns and Fixes": [
+      "If support systems keep sneaking back in, move them to out of scope with a condition for re-entry and keep a kill list so this does not become a dream-expanding skill."
+    ]
+  },
+  "failure_repairs_best_sections": {
+    "Failure Patterns and Fixes": [
+      "Keep the failure pass anchored on scope creep, vertical slice drift, mood instead of loop, and content hiding uncertainty before approving the first playable."
+    ]
+  },
+  "output_format_best_sections": {
+    "Output Format": [
+      "Keep the field list explicit: validation goal, minimum honest loop, core features, minimum content scope, required systems, explicitly out of scope, main production risks, and build recommendation."
+    ]
+  }
+}

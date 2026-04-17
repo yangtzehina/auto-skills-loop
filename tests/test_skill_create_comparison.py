@@ -64,10 +64,12 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     assert report.coverage_non_regression_status in {'pass', 'fail'}
     assert report.compactness_non_regression_status in {'pass', 'fail'}
     assert report.frontier_dominance_status in {'pass', 'fail'}
+    assert report.active_frontier_status in {'pass', 'fail'}
     assert report.best_balance_not_beaten_count >= 0
     assert report.best_coverage_not_beaten_count >= 0
     assert report.current_best_not_beaten_count >= 0
     assert report.promotion_hold_count >= 0
+    assert report.residual_gap_count >= 0
     assert report.force_non_regression_status == 'pass'
     assert report.pairwise_promotion_gap_count >= 0
     assert report.program_fidelity_gap_count == 0
@@ -80,8 +82,15 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     assert all(item.auto_metrics.current_best_comparison_status in {'beaten', 'not_beaten', 'missing_current_best'} for item in report.cases)
     assert all(item.auto_metrics.best_balance_comparison_status in {'beaten', 'not_beaten'} for item in report.cases)
     assert all(item.auto_metrics.best_coverage_comparison_status in {'beaten', 'not_beaten'} for item in report.cases)
+    assert all(item.auto_metrics.active_frontier_status in {'matched', 'beaten', 'regressed'} for item in report.cases)
+    assert all(item.auto_metrics.quality_check_target_status in {'pass', 'fail', 'unknown'} for item in report.cases)
+    assert all(item.auto_metrics.pressure_target_status in {'pass', 'fail', 'unknown'} for item in report.cases)
+    assert all(item.auto_metrics.leakage_target_status in {'pass', 'fail', 'unknown'} for item in report.cases)
+    assert all(item.auto_metrics.false_fix_rejection_status in {'pass', 'fail', 'unknown'} for item in report.cases)
+    assert all(item.auto_metrics.residual_gap_count >= 0 for item in report.cases)
     assert all(len(item.auto_metrics.candidate_strategy_matrix) >= 4 for item in report.cases)
     if report.overall_status == 'stable_but_no_breakthrough':
+        assert report.gap_count == 0
         assert report.stable_but_no_breakthrough_count >= 1
     if report.overall_status == 'fail':
         assert (
@@ -98,7 +107,7 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
         assert any(item.auto_metrics.editorial_force_status in {'warn', 'fail'} for item in report.cases)
     if report.overall_status == 'pass':
         assert report.gap_count == 0
-    else:
+    elif report.overall_status == 'fail':
         assert report.gap_count >= 1
 
 
@@ -130,8 +139,10 @@ def test_skill_create_comparison_cli_writes_sidecar(tmp_path: Path):
     assert payload['coverage_non_regression_status'] in {'pass', 'fail'}
     assert payload['compactness_non_regression_status'] in {'pass', 'fail'}
     assert payload['frontier_dominance_status'] in {'pass', 'fail'}
+    assert payload['active_frontier_status'] in {'pass', 'fail'}
     assert payload['pairwise_promotion_gap_count'] >= 0
     assert payload['program_fidelity_gap_count'] == 0
+    assert payload['residual_gap_count'] >= 0
     assert payload['dna_authoring_status'] == 'pass'
     assert payload['program_authoring_status'] == 'pass'
     assert payload['usefulness_eval_status'] == 'pass'

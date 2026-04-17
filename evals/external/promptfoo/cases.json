@@ -1,0 +1,386 @@
+[
+  {
+    "description": "concept.validation-question-cannot-fail",
+    "vars": {
+      "skill_name": "concept-to-mvp-pack",
+      "task": "Evaluate an MVP pack where the validation question sounds attractive but could not actually fail in a short playtest.",
+      "expected_signals": [
+        "validation question can fail",
+        "kill list",
+        "redesign trigger"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "validation question can fail",
+          "kill list",
+          "redesign trigger"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Quality Check Coverage",
+          "Task Outcome",
+          "Generic Leakage"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "concept.support-system-masquerade",
+    "vars": {
+      "skill_name": "concept-to-mvp-pack",
+      "task": "Evaluate an MVP pack where support systems are being justified as must-have core features.",
+      "expected_signals": [
+        "scope creep",
+        "support systems",
+        "out of scope",
+        "re-entry condition"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "scope creep",
+          "support systems",
+          "out of scope",
+          "re-entry condition"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Quality Check Coverage",
+          "Editorial Force",
+          "Task Outcome"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "concept.no-kill-or-greenlight",
+    "vars": {
+      "skill_name": "concept-to-mvp-pack",
+      "task": "Evaluate an MVP pack that sounds complete but still cannot kill or greenlight the first playable.",
+      "expected_signals": [
+        "build recommendation",
+        "failure evidence",
+        "success criteria"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "build recommendation",
+          "failure evidence",
+          "success criteria"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Quality Check Coverage",
+          "Task Outcome",
+          "Program Fidelity"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "decision.novelty-masks-weak-choice",
+    "vars": {
+      "skill_name": "decision-loop-stress-test",
+      "task": "Audit a loop whose first-hour novelty hides the fact that the core choice is weak.",
+      "expected_signals": [
+        "first hour",
+        "surface excitement",
+        "weak pressure",
+        "collapse signal"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "first hour",
+          "surface excitement",
+          "weak pressure",
+          "collapse signal"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Decision Pressure",
+          "False Fix Rejection",
+          "Task Outcome"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "decision.midgame-autopilot",
+    "vars": {
+      "skill_name": "decision-loop-stress-test",
+      "task": "Audit a loop with lots of content where midgame still collapses into autopilot.",
+      "expected_signals": [
+        "midgame",
+        "autopilot",
+        "dominant strategy",
+        "structural fix"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "midgame",
+          "autopilot",
+          "dominant strategy",
+          "structural fix"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Decision Pressure",
+          "Task Outcome",
+          "Editorial Force"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "decision.fake-repair-by-content",
+    "vars": {
+      "skill_name": "decision-loop-stress-test",
+      "task": "Audit a loop where the proposed repair is just more content, events, or rewards instead of a pressure change.",
+      "expected_signals": [
+        "false fix",
+        "structural repair",
+        "pressure problem",
+        "reject content padding"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "false fix",
+          "structural repair",
+          "pressure problem",
+          "reject content padding"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Decision Pressure",
+          "False Fix Rejection",
+          "Editorial Force"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "decision.mastery-throughput-only",
+    "vars": {
+      "skill_name": "decision-loop-stress-test",
+      "task": "Audit a loop where mastery only improves throughput and never creates a new decision problem.",
+      "expected_signals": [
+        "mastery",
+        "throughput",
+        "new decision problem",
+        "solved state"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "mastery",
+          "throughput",
+          "new decision problem",
+          "solved state"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Decision Pressure",
+          "False Fix Rejection",
+          "Task Outcome"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "simulation.invisible-pressure",
+    "vars": {
+      "skill_name": "simulation-resource-loop-design",
+      "task": "Audit a resource loop where the pressure relationships exist but the player cannot read them early enough to plan.",
+      "expected_signals": [
+        "pressure web",
+        "visible pressure",
+        "player-facing tradeoffs"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "pressure web",
+          "visible pressure",
+          "player-facing tradeoffs"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Generic Leakage",
+          "Task Outcome",
+          "Editorial Force"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "simulation.cheap-recovery",
+    "vars": {
+      "skill_name": "simulation-resource-loop-design",
+      "task": "Audit a resource loop where recovery keeps no real cost and failure has no structural consequence.",
+      "expected_signals": [
+        "cheap recovery",
+        "costly recovery",
+        "lasting consequence"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "cheap recovery",
+          "costly recovery",
+          "lasting consequence"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Generic Leakage",
+          "False Fix Rejection",
+          "Task Outcome"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "simulation.dominant-currency-bypass",
+    "vars": {
+      "skill_name": "simulation-resource-loop-design",
+      "task": "Audit a resource loop where one dominant currency bypasses the intended tension web.",
+      "expected_signals": [
+        "dominant currency",
+        "counterpressure",
+        "tension web"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "dominant currency",
+          "counterpressure",
+          "tension web"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Generic Leakage",
+          "Editorial Force",
+          "Task Outcome"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "simulation.fantasy-detached",
+    "vars": {
+      "skill_name": "simulation-resource-loop-design",
+      "task": "Audit a resource loop whose pressure math is functional but detached from the intended emotional fantasy.",
+      "expected_signals": [
+        "fantasy fit",
+        "emotional fantasy",
+        "pressure relationship"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "fantasy fit",
+          "emotional fantasy",
+          "pressure relationship"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Generic Leakage",
+          "Editorial Force",
+          "Task Outcome"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  }
+]

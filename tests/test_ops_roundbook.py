@@ -97,10 +97,12 @@ def test_build_ops_roundbook_report_marks_pending_manual_work_as_caution():
     assert report.coverage_non_regression_status == 'pass'
     assert report.compactness_non_regression_status == 'pass'
     assert report.frontier_dominance_status == 'pass'
+    assert report.active_frontier_status == 'pass'
     assert report.candidate_separation_gap_count == 0
     assert report.best_balance_not_beaten_count == 0
     assert report.best_coverage_not_beaten_count == 0
     assert report.current_best_not_beaten_count == 0
+    assert report.residual_gap_count == 0
     assert report.program_authoring_status == 'pass'
     assert report.task_outcome_status == 'pass'
     assert report.breakthrough_status == 'pass'

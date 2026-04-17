@@ -113,6 +113,7 @@ class SkillCreateComparisonMetrics(BaseModel):
     candidate_separation_score: float = 0.0
     best_balance_comparison_status: str = "unknown"
     best_coverage_comparison_status: str = "unknown"
+    active_frontier_status: str = "unknown"
     force_non_regression_status: str = "unknown"
     coverage_non_regression_status: str = "unknown"
     compactness_non_regression_status: str = "unknown"
@@ -122,6 +123,12 @@ class SkillCreateComparisonMetrics(BaseModel):
     primary_force_win_count: int = 0
     promotion_hold_reason: str = ""
     stable_but_no_breakthrough: bool = False
+    quality_check_target_status: str = "unknown"
+    pressure_target_status: str = "unknown"
+    leakage_target_status: str = "unknown"
+    false_fix_rejection_status: str = "unknown"
+    residual_gap_count: int = 0
+    legacy_delta_summary: list[str] = Field(default_factory=list)
     candidate_strategy_matrix: list[dict[str, str]] = Field(default_factory=list)
     editorial_force_status: str = "unknown"
     cut_sharpness_score: float = 0.0
@@ -228,6 +235,8 @@ class SkillCreateComparisonReport(BaseModel):
     frontier_dominance_status: str = "pass"
     compression_gain_status: str = "pass"
     stable_but_no_breakthrough_count: int = 0
+    active_frontier_status: str = "pass"
+    residual_gap_count: int = 0
     generic_shell_gap_count: int = 0
     pairwise_similarity_gap_count: int = 0
     negative_case_resistance: float = 1.0

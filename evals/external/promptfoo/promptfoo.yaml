@@ -1,0 +1,6 @@
+description: frontier_v2 external eval export
+prompts:
+  - "{{task}}"
+providers:
+  - "openai:gpt-5.4"
+tests: file://cases.json

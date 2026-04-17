@@ -11,6 +11,8 @@ from openclaw_skill_create.models.plan import SkillPlan
 from openclaw_skill_create.models.request import SkillCreateRequestV6
 from openclaw_skill_create.services import expert_skill_studio as studio
 from openclaw_skill_create.services import (
+    build_profile_residual_targets,
+    build_residual_gap_report,
     build_program_candidate_review_batch_report,
     build_skill_realization_candidates,
     build_skill_program_authoring_pack,
@@ -39,6 +41,26 @@ def test_known_game_design_profile_builds_skill_program_ir():
     assert len(program.execution_spine) >= 6
     assert program.execution_spine[0].label == 'Define the Current Loop Shape'
     assert 'Reinforcement Check' in program.output_schema
+
+
+def test_profile_residual_targets_freeze_frontier_v2_priorities():
+    concept = build_profile_residual_targets('concept-to-mvp-pack')
+    decision = build_profile_residual_targets('decision-loop-stress-test')
+    simulation = build_profile_residual_targets('simulation-resource-loop-design')
+
+    assert concept.target_metrics['expert_pitfall_cluster_recall'] == 0.90
+    assert concept.target_metrics['output_field_guidance_coverage'] == 0.85
+    assert concept.allowed_sections == [
+        'Quality Checks',
+        'Failure Patterns and Fixes',
+        'Output Format',
+    ]
+    assert decision.target_metrics['decision_pressure_score'] == 0.96
+    assert 'Default Workflow' in decision.allowed_sections
+    assert decision.target_metrics['compression_without_loss'] == 0.78
+    assert simulation.target_metrics['generic_surface_leakage'] == 0.05
+    assert simulation.target_metrics['generic_skeleton_ratio'] == 0.20
+    assert 'Analysis Blocks' in simulation.allowed_sections
 
 
 def test_program_authoring_pack_surfaces_known_and_unknown_candidates():
@@ -106,6 +128,9 @@ def test_realization_candidates_support_pairwise_promotion_for_known_profile():
         'package_ready',
         'failure_pass',
     }
+    assert all(item.strategy_profile.get('active_frontier_version') == 'frontier_v2' for item in candidates)
+    assert all(item.strategy_profile.get('allowed_sections') for item in candidates)
+    assert {item.strategy_profile.get('target_focus') for item in candidates} <= {'quality_checks', 'failure_repairs', 'output_format', ''}
     assert sum(
         1 for item in candidates
         if item.strategy_profile.get('compression_stage') == 'post'
@@ -119,6 +144,65 @@ def test_realization_candidates_support_pairwise_promotion_for_known_profile():
     assert monotonic_report is not None
     assert monotonic_report.frontier_dominance_status in {'pass', 'fail'}
     assert promotion_decision.promotion_status in {'promote', 'hold'}
+
+
+def test_residual_gap_report_fails_for_known_frontier_weaknesses():
+    concept_report = build_residual_gap_report(
+        skill_name='concept-to-mvp-pack',
+        metrics={
+            'expert_pitfall_cluster_recall': 0.75,
+            'output_field_guidance_coverage': 0.75,
+            'generic_surface_leakage': 0.20,
+            'decision_pressure_score': 0.9467,
+            'cut_sharpness_score': 1.0,
+            'boundary_rule_coverage': 0.8,
+            'domain_move_coverage': 1.0,
+            'section_depth_score': 0.97,
+            'task_outcome_with_skill_average': 0.9398,
+        },
+    )
+    decision_report = build_residual_gap_report(
+        skill_name='decision-loop-stress-test',
+        metrics={
+            'decision_pressure_score': 0.8154,
+            'section_force_distinctness': 0.81,
+            'compression_without_loss': 0.7333,
+            'failure_repair_force': 1.0,
+            'stop_condition_coverage': 1.0,
+            'domain_move_coverage': 0.9285,
+            'section_depth_score': 0.9008,
+            'task_outcome_with_skill_average': 0.90,
+        },
+    )
+    simulation_report = build_residual_gap_report(
+        skill_name='simulation-resource-loop-design',
+        metrics={
+            'generic_surface_leakage': 0.0556,
+            'redundancy_ratio': 0.041,
+            'generic_skeleton_ratio': 0.24,
+            'failure_repair_force': 1.0,
+            'section_force_distinctness': 1.0,
+            'boundary_rule_coverage': 0.2,
+            'domain_move_coverage': 1.0,
+            'section_depth_score': 1.0,
+            'task_outcome_with_skill_average': 0.963,
+        },
+    )
+
+    assert concept_report.status == 'fail'
+    assert concept_report.quality_check_target_status == 'fail'
+    assert concept_report.leakage_target_status == 'fail'
+    assert concept_report.target_focus in {'failure_repairs', 'output_format'}
+
+    assert decision_report.status == 'fail'
+    assert decision_report.pressure_target_status == 'fail'
+    assert decision_report.false_fix_rejection_status == 'fail'
+    assert decision_report.target_focus == 'pressure'
+
+    assert simulation_report.status == 'fail'
+    assert simulation_report.leakage_target_status == 'fail'
+    assert simulation_report.pressure_target_status == 'pass'
+    assert simulation_report.target_focus == 'leakage'
 
 
 def test_pairwise_promotion_holds_when_primary_force_regresses(monkeypatch):
@@ -415,9 +499,102 @@ def test_monotonic_promotion_holds_when_only_stable_without_breakthrough(monkeyp
     )
 
     assert promotion_decision.promotion_status == 'hold'
-    assert promotion_decision.stable_but_no_breakthrough is True
-    assert promotion_decision.reason == 'stable_but_no_breakthrough'
-    assert monotonic_report.promotion_reason == 'hold_due_to_no_primary_win'
+    assert promotion_decision.stable_but_no_breakthrough is False
+    assert promotion_decision.reason == 'hold_due_to_force_regression'
+    assert promotion_decision.pressure_target_status == 'fail'
+    assert promotion_decision.residual_gap_count >= 1
+    assert monotonic_report.promotion_reason == 'hold_due_to_force_regression'
+
+
+def test_promotion_stays_stable_when_residual_targets_do_not_improve(monkeypatch):
+    candidates = [
+        SkillRealizationCandidate(
+            candidate_id='concept-to-mvp-pack:proof_first:1',
+            skill_name='concept-to-mvp-pack',
+            program_id='concept-to-mvp-pack:execution_spine',
+            realization_strategy='proof_first',
+            strategy_profile={
+                'compression_stage': 'pre',
+                'opening_frame': 'proof',
+                'section_order': 'Overview > Default Workflow > Output Format',
+                'sentence_budget_profile': 'Default Workflow:5',
+                'workflow_mode': 'validation_pressure',
+                'step_frame': 'proof_gate',
+                'output_focus': 'Core Validation Question,Smallest Honest Loop',
+                'quality_tone': 'proof-first',
+                'quality_mode': 'proof_gate',
+                'failure_style': 'redesign_trigger',
+                'failure_mode': 'kill_or_fix',
+            },
+            rendered_markdown='# proof',
+        ),
+        SkillRealizationCandidate(
+            candidate_id='concept-to-mvp-pack:cut_first:2',
+            skill_name='concept-to-mvp-pack',
+            program_id='concept-to-mvp-pack:execution_spine',
+            realization_strategy='cut_first',
+            strategy_profile={
+                'compression_stage': 'post',
+                'source_candidate_id': 'concept-to-mvp-pack:proof_first:1',
+                'opening_frame': 'cut',
+                'section_order': 'Overview > Default Workflow > Output Format',
+                'sentence_budget_profile': 'Default Workflow:4',
+                'workflow_mode': 'scope_cut',
+                'step_frame': 'cut_gate',
+                'output_focus': 'Out of Scope,Core Validation Question',
+                'quality_tone': 'cut-first',
+                'quality_mode': 'proof_gate',
+                'failure_style': 'scope_creep',
+                'failure_mode': 'scope_creep',
+            },
+            rendered_markdown='# cut',
+        ),
+    ]
+    metrics = {
+        'editorial_force': type('Force', (), {
+            'decision_pressure_score': 0.95,
+            'cut_sharpness_score': 1.0,
+            'failure_repair_force': 1.0,
+            'boundary_rule_coverage': 0.8,
+            'output_executability_score': 0.95,
+            'section_force_distinctness': 0.86,
+            'compression_without_loss': 0.80,
+            'stop_condition_coverage': 1.0,
+            'generic_surface_leakage': 0.20,
+        })(),
+        'editorial': type('Editorial', (), {'redundancy_ratio': 0.05})(),
+        'style': type('Style', (), {'domain_rhythm_score': 0.90})(),
+        'expert_structure': type('Structure', (), {'expert_quality_check_recall': 0.75})(),
+        'domain_expertise': type('Domain', (), {'domain_move_coverage': 1.0})(),
+        'depth': type('Depth', (), {'section_depth_score': 0.95})(),
+        'task_outcome': type('Outcome', (), {
+            'profile_results': [type('Profile', (), {'with_skill_average': 0.9398})()],
+        })(),
+        'domain_move_coverage': 1.0,
+        'section_depth_score': 0.95,
+        'task_outcome_with_skill_average': 0.9398,
+        'redundancy_ratio': 0.05,
+        'shared_opening_phrase_ratio': 0.0,
+        'cross_case_similarity': 0.22,
+        'compression_without_loss': 0.80,
+        'score': 0.99,
+    }
+    monkeypatch.setattr(studio, '_candidate_editorial_metrics', lambda **kwargs: metrics)
+    monkeypatch.setattr(studio, '_current_best_editorial_metrics', lambda skill_name, task: {'score': 0.90})
+
+    _, _, promotion_decision, monotonic_report = choose_skill_realization_candidate(
+        skill_name='concept-to-mvp-pack',
+        task='turn a concept into an honest first playable',
+        candidates=candidates,
+    )
+
+    assert promotion_decision.promotion_status == 'hold'
+    assert promotion_decision.stable_but_no_breakthrough is False
+    assert promotion_decision.reason == 'hold_due_to_candidate_separation'
+    assert promotion_decision.quality_check_target_status == 'fail'
+    assert promotion_decision.leakage_target_status == 'fail'
+    assert promotion_decision.residual_gap_count >= 1
+    assert monotonic_report.promotion_reason == 'hold_due_to_force_regression'
 
 
 def test_task_outcome_passes_for_known_profile_and_skips_unknown_without_probes():

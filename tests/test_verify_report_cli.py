@@ -41,11 +41,13 @@ def test_run_verify_report_cli_supports_quick(monkeypatch):
     assert payload['coverage_non_regression_status'] in {'pass', 'fail'}
     assert payload['compactness_non_regression_status'] in {'pass', 'fail'}
     assert payload['frontier_dominance_status'] in {'pass', 'fail'}
+    assert payload['active_frontier_status'] in {'pass', 'fail'}
     assert payload['program_fidelity_status'] == 'pass'
     assert payload['candidate_separation_gap_count'] == 0
     assert payload['best_balance_not_beaten_count'] >= 0
     assert payload['best_coverage_not_beaten_count'] >= 0
     assert payload['current_best_not_beaten_count'] >= 0
+    assert payload['residual_gap_count'] >= 0
     assert payload['task_outcome_status'] == 'pass'
     assert payload['program_authoring_status'] == 'pass'
     assert payload['breakthrough_status'] in {'pass', 'stable_but_no_breakthrough', 'fail'}
@@ -101,10 +103,12 @@ def test_run_verify_report_markdown_includes_decision_statuses(monkeypatch):
     assert '- coverage_non_regression_status=' in stdout
     assert '- compactness_non_regression_status=' in stdout
     assert '- frontier_dominance_status=' in stdout
+    assert '- active_frontier_status=' in stdout
     assert '- program_fidelity_status=pass' in stdout
     assert '- candidate_separation_gap_count=0' in stdout
     assert '- best_balance_not_beaten_count=' in stdout
     assert '- best_coverage_not_beaten_count=' in stdout
     assert '- current_best_not_beaten_count=' in stdout
+    assert '- residual_gap_count=' in stdout
     assert '- task_outcome_status=pass' in stdout
     assert '- breakthrough_status=' in stdout

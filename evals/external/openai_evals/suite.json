@@ -1,0 +1,336 @@
+{
+  "suite_version": "frontier_v2",
+  "format": "criteria-first",
+  "criteria": [
+    {
+      "criterion_id": "program_fidelity",
+      "label": "Program Fidelity",
+      "description": "Check whether the generated skill still preserves the expert execution spine, output schema, and repair logic.",
+      "mode": "rubric"
+    },
+    {
+      "criterion_id": "task_outcome",
+      "label": "Task Outcome",
+      "description": "Check whether using the skill improves task output quality over a no-skill baseline.",
+      "mode": "rubric"
+    },
+    {
+      "criterion_id": "editorial_force",
+      "label": "Editorial Force",
+      "description": "Check whether the wording keeps pressure, cut strength, and repair clarity instead of drifting into filler.",
+      "mode": "rubric"
+    },
+    {
+      "criterion_id": "non_regression",
+      "label": "Frontier Non-Regression",
+      "description": "Check whether the candidate does not regress relative to the active frontier on force, coverage, and compactness.",
+      "mode": "pass_fail"
+    },
+    {
+      "criterion_id": "quality_checks",
+      "label": "Quality Check Coverage",
+      "description": "Check whether the skill includes the domain-specific checks that should catch bad outputs early.",
+      "mode": "rubric"
+    },
+    {
+      "criterion_id": "pressure",
+      "label": "Decision Pressure",
+      "description": "Check whether the skill identifies collapse points, stop conditions, and false fixes instead of just adding content.",
+      "mode": "rubric"
+    },
+    {
+      "criterion_id": "leakage",
+      "label": "Generic Leakage",
+      "description": "Check whether the skill avoids generic surface writing and preserves profile-specific judgment.",
+      "mode": "rubric"
+    },
+    {
+      "criterion_id": "false_fix_rejection",
+      "label": "False Fix Rejection",
+      "description": "Check whether the skill rejects content padding when the real issue is structural.",
+      "mode": "pass_fail"
+    }
+  ],
+  "items": [
+    {
+      "probe_id": "concept.validation-question-cannot-fail",
+      "skill_name": "concept-to-mvp-pack",
+      "input": "Evaluate an MVP pack where the validation question sounds attractive but could not actually fail in a short playtest.",
+      "criteria": [
+        "quality_checks",
+        "task_outcome",
+        "leakage"
+      ],
+      "expected_signals": [
+        "validation question can fail",
+        "kill list",
+        "redesign trigger"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "concept.support-system-masquerade",
+      "skill_name": "concept-to-mvp-pack",
+      "input": "Evaluate an MVP pack where support systems are being justified as must-have core features.",
+      "criteria": [
+        "quality_checks",
+        "editorial_force",
+        "task_outcome"
+      ],
+      "expected_signals": [
+        "scope creep",
+        "support systems",
+        "out of scope",
+        "re-entry condition"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "concept.no-kill-or-greenlight",
+      "skill_name": "concept-to-mvp-pack",
+      "input": "Evaluate an MVP pack that sounds complete but still cannot kill or greenlight the first playable.",
+      "criteria": [
+        "quality_checks",
+        "task_outcome",
+        "program_fidelity"
+      ],
+      "expected_signals": [
+        "build recommendation",
+        "failure evidence",
+        "success criteria"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "decision.novelty-masks-weak-choice",
+      "skill_name": "decision-loop-stress-test",
+      "input": "Audit a loop whose first-hour novelty hides the fact that the core choice is weak.",
+      "criteria": [
+        "pressure",
+        "false_fix_rejection",
+        "task_outcome"
+      ],
+      "expected_signals": [
+        "first hour",
+        "surface excitement",
+        "weak pressure",
+        "collapse signal"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "decision.midgame-autopilot",
+      "skill_name": "decision-loop-stress-test",
+      "input": "Audit a loop with lots of content where midgame still collapses into autopilot.",
+      "criteria": [
+        "pressure",
+        "task_outcome",
+        "editorial_force"
+      ],
+      "expected_signals": [
+        "midgame",
+        "autopilot",
+        "dominant strategy",
+        "structural fix"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "decision.fake-repair-by-content",
+      "skill_name": "decision-loop-stress-test",
+      "input": "Audit a loop where the proposed repair is just more content, events, or rewards instead of a pressure change.",
+      "criteria": [
+        "pressure",
+        "false_fix_rejection",
+        "editorial_force"
+      ],
+      "expected_signals": [
+        "false fix",
+        "structural repair",
+        "pressure problem",
+        "reject content padding"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "decision.mastery-throughput-only",
+      "skill_name": "decision-loop-stress-test",
+      "input": "Audit a loop where mastery only improves throughput and never creates a new decision problem.",
+      "criteria": [
+        "pressure",
+        "false_fix_rejection",
+        "task_outcome"
+      ],
+      "expected_signals": [
+        "mastery",
+        "throughput",
+        "new decision problem",
+        "solved state"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "simulation.invisible-pressure",
+      "skill_name": "simulation-resource-loop-design",
+      "input": "Audit a resource loop where the pressure relationships exist but the player cannot read them early enough to plan.",
+      "criteria": [
+        "leakage",
+        "task_outcome",
+        "editorial_force"
+      ],
+      "expected_signals": [
+        "pressure web",
+        "visible pressure",
+        "player-facing tradeoffs"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "simulation.cheap-recovery",
+      "skill_name": "simulation-resource-loop-design",
+      "input": "Audit a resource loop where recovery keeps no real cost and failure has no structural consequence.",
+      "criteria": [
+        "leakage",
+        "false_fix_rejection",
+        "task_outcome"
+      ],
+      "expected_signals": [
+        "cheap recovery",
+        "costly recovery",
+        "lasting consequence"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "simulation.dominant-currency-bypass",
+      "skill_name": "simulation-resource-loop-design",
+      "input": "Audit a resource loop where one dominant currency bypasses the intended tension web.",
+      "criteria": [
+        "leakage",
+        "editorial_force",
+        "task_outcome"
+      ],
+      "expected_signals": [
+        "dominant currency",
+        "counterpressure",
+        "tension web"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "simulation.fantasy-detached",
+      "skill_name": "simulation-resource-loop-design",
+      "input": "Audit a resource loop whose pressure math is functional but detached from the intended emotional fantasy.",
+      "criteria": [
+        "leakage",
+        "editorial_force",
+        "task_outcome"
+      ],
+      "expected_signals": [
+        "fantasy fit",
+        "emotional fantasy",
+        "pressure relationship"
+      ],
+      "pass_expectation": "pass"
+    }
+  ],
+  "profiles": [
+    {
+      "skill_name": "concept-to-mvp-pack",
+      "active_frontier_version": "frontier_v2",
+      "current_frontier_metrics": {
+        "decision_pressure_score": 0.9467,
+        "failure_repair_force": 0.89,
+        "section_force_distinctness": 1.0,
+        "domain_move_coverage": 1.0,
+        "section_depth_score": 1.0,
+        "task_outcome_with_skill_average": 0.9398,
+        "redundancy_ratio": 0.0517,
+        "generic_surface_leakage": 0.0,
+        "expert_pitfall_cluster_recall": 1.0,
+        "output_field_guidance_coverage": 1.0,
+        "generic_skeleton_ratio": 0.3158,
+        "compression_without_loss": 0.7984
+      },
+      "residual_targets": {
+        "expert_pitfall_cluster_recall": 0.9,
+        "output_field_guidance_coverage": 0.85
+      },
+      "expected_signals": [
+        "expert_pitfall_cluster_recall>=0.9000",
+        "output_field_guidance_coverage>=0.8500"
+      ],
+      "probe_ids": [
+        "concept.validation-question-cannot-fail",
+        "concept.support-system-masquerade",
+        "concept.no-kill-or-greenlight"
+      ]
+    },
+    {
+      "skill_name": "decision-loop-stress-test",
+      "active_frontier_version": "frontier_v2",
+      "current_frontier_metrics": {
+        "decision_pressure_score": 0.9692,
+        "failure_repair_force": 1.0,
+        "section_force_distinctness": 1.0,
+        "domain_move_coverage": 0.9285,
+        "section_depth_score": 0.9563,
+        "task_outcome_with_skill_average": 0.8981,
+        "redundancy_ratio": 0.0072,
+        "generic_surface_leakage": 0.0,
+        "expert_pitfall_cluster_recall": 1.0,
+        "output_field_guidance_coverage": 0.8571,
+        "generic_skeleton_ratio": 0.3158,
+        "compression_without_loss": 0.7806
+      },
+      "residual_targets": {
+        "decision_pressure_score": 0.96,
+        "compression_without_loss": 0.78
+      },
+      "expected_signals": [
+        "decision_pressure_score>=0.9600",
+        "compression_without_loss>=0.7800"
+      ],
+      "probe_ids": [
+        "decision.novelty-masks-weak-choice",
+        "decision.midgame-autopilot",
+        "decision.fake-repair-by-content",
+        "decision.mastery-throughput-only"
+      ]
+    },
+    {
+      "skill_name": "simulation-resource-loop-design",
+      "active_frontier_version": "frontier_v2",
+      "current_frontier_metrics": {
+        "decision_pressure_score": 0.9385,
+        "failure_repair_force": 1.0,
+        "section_force_distinctness": 1.0,
+        "domain_move_coverage": 0.9643,
+        "section_depth_score": 1.0,
+        "task_outcome_with_skill_average": 1.0,
+        "redundancy_ratio": 0.0141,
+        "generic_surface_leakage": 0.0,
+        "expert_pitfall_cluster_recall": 1.0,
+        "output_field_guidance_coverage": 1.0,
+        "generic_skeleton_ratio": 0.2,
+        "compression_without_loss": 0.8204
+      },
+      "residual_targets": {
+        "generic_surface_leakage": 0.05,
+        "redundancy_ratio": 0.04,
+        "generic_skeleton_ratio": 0.2
+      },
+      "expected_signals": [
+        "generic_surface_leakage<=0.0500",
+        "redundancy_ratio<=0.0400",
+        "generic_skeleton_ratio<=0.2000"
+      ],
+      "probe_ids": [
+        "simulation.invisible-pressure",
+        "simulation.cheap-recovery",
+        "simulation.dominant-currency-bypass",
+        "simulation.fantasy-detached"
+      ]
+    }
+  ]
+}

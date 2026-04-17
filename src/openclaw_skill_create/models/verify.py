@@ -68,6 +68,7 @@ class VerifyReport(BaseModel):
     compactness_non_regression_status: str = 'pass'
     frontier_dominance_status: str = 'pass'
     compression_gain_status: str = 'pass'
+    active_frontier_status: str = 'pass'
     program_fidelity_status: str = 'pass'
     program_fidelity_fail_count: int = 0
     program_fidelity_warn_count: int = 0
@@ -77,6 +78,7 @@ class VerifyReport(BaseModel):
     best_coverage_not_beaten_count: int = 0
     current_best_not_beaten_count: int = 0
     stable_but_no_breakthrough_count: int = 0
+    residual_gap_count: int = 0
     dna_authoring_status: str = 'pass'
     candidate_dna_count: int = 0
     program_authoring_status: str = 'pass'
@@ -163,6 +165,7 @@ class OpsRoundbookReport(BaseModel):
     compactness_non_regression_status: str = 'pass'
     frontier_dominance_status: str = 'pass'
     compression_gain_status: str = 'pass'
+    active_frontier_status: str = 'pass'
     program_fidelity_status: str = 'pass'
     program_fidelity_fail_count: int = 0
     program_fidelity_warn_count: int = 0
@@ -172,6 +175,7 @@ class OpsRoundbookReport(BaseModel):
     best_coverage_not_beaten_count: int = 0
     current_best_not_beaten_count: int = 0
     stable_but_no_breakthrough_count: int = 0
+    residual_gap_count: int = 0
     dna_authoring_status: str = 'pass'
     candidate_dna_count: int = 0
     program_authoring_status: str = 'pass'

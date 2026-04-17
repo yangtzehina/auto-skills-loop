@@ -1,0 +1,41 @@
+{
+  "skill_name": "simulation-resource-loop-design",
+  "active_frontier_version": "frontier_v2",
+  "pressure_best_sections": {
+    "Analysis Blocks": [
+      "Keep only tensions that visibly change player behavior; decorative mappings are noise."
+    ],
+    "Failure Patterns and Fixes": [
+      "If one currency bypasses the web, add a cost, dependency, or brake before tuning anything else."
+    ]
+  },
+  "compactness_best_sections": {
+    "Overview": [
+      "Frame the system as a visible tension web with costly recovery, upkeep drag, overflow risk, stockpile pressure, and hoarding traps, not as a long list of resources."
+    ],
+    "Analysis Blocks": [
+      "Cut repeated map framing and keep only the pressure relationship the player can read and act on.",
+      "Reduce the model to a few strong tensions, stockpiles, warehousing, and upkeep drag; only include a variable if it changes player behavior.",
+      "Prefer stockpiles, warehousing, spoilage, and upkeep drag over anonymous penalty meters."
+    ],
+    "Output Format": [
+      "Prefer a short field set that forces variable role, key tension, dominant risk, and recovery cost."
+    ]
+  },
+  "quality_checks_best_sections": {
+    "Quality Checks": [
+      "Split the checks into visible pressure, costly recovery, dominant-currency guard, and fantasy fit so the loop does not slide back into a generic template.",
+      "Use extra non-generic headings only when they tighten pressure readability and compactness at the same time."
+    ]
+  },
+  "failure_repairs_best_sections": {
+    "Failure Patterns and Fixes": [
+      "Keep cheap recovery and hidden pressure as first-class failures, then repair readability and cost before adding new variables."
+    ]
+  },
+  "output_format_best_sections": {
+    "Output Format": [
+      "End with fields that reveal the key currencies, stockpile traps, main tension, dominant failure mode, and the cost of recovery."
+    ]
+  }
+}

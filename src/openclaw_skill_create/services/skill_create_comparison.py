@@ -26,6 +26,7 @@ from .domain_specificity import build_skill_domain_specificity_report
 from .expert_dna_authoring import build_expert_dna_authoring_pack
 from .expert_dna import move_signature_from_markdown
 from .expert_skill_studio import (
+    build_residual_gap_report,
     build_program_candidate_review_batch_report,
     build_skill_realization_candidates,
     build_skill_program_authoring_pack,
@@ -246,6 +247,7 @@ def _metrics_from_reports(
         candidate_separation_score=float(getattr(pairwise_editorial, 'candidate_separation_score', 0.0) or 0.0),
         best_balance_comparison_status=str(getattr(promotion_decision, 'best_balance_comparison_status', 'unknown') or 'unknown'),
         best_coverage_comparison_status=str(getattr(promotion_decision, 'best_coverage_comparison_status', 'unknown') or 'unknown'),
+        active_frontier_status=str(getattr(promotion_decision, 'active_frontier_status', 'unknown') or 'unknown'),
         force_non_regression_status=str(getattr(promotion_decision, 'force_non_regression_status', 'unknown') or 'unknown'),
         coverage_non_regression_status=str(getattr(promotion_decision, 'coverage_non_regression_status', 'unknown') or 'unknown'),
         compactness_non_regression_status=str(getattr(promotion_decision, 'compactness_non_regression_status', 'unknown') or 'unknown'),
@@ -255,6 +257,12 @@ def _metrics_from_reports(
         primary_force_win_count=int(getattr(promotion_decision, 'primary_force_win_count', 0) or 0),
         promotion_hold_reason=str(getattr(promotion_decision, 'promotion_hold_reason', '') or ''),
         stable_but_no_breakthrough=bool(getattr(promotion_decision, 'stable_but_no_breakthrough', False)),
+        quality_check_target_status=str(getattr(promotion_decision, 'quality_check_target_status', 'unknown') or 'unknown'),
+        pressure_target_status=str(getattr(promotion_decision, 'pressure_target_status', 'unknown') or 'unknown'),
+        leakage_target_status=str(getattr(promotion_decision, 'leakage_target_status', 'unknown') or 'unknown'),
+        false_fix_rejection_status=str(getattr(promotion_decision, 'false_fix_rejection_status', 'unknown') or 'unknown'),
+        residual_gap_count=int(getattr(promotion_decision, 'residual_gap_count', 0) or 0),
+        legacy_delta_summary=list(getattr(monotonic_improvement, 'legacy_delta_summary', []) or []),
         candidate_strategy_matrix=list(getattr(pairwise_editorial, 'candidate_strategy_matrix', []) or []),
         editorial_force_status=str(getattr(editorial_force, 'status', 'unknown') or 'unknown'),
         cut_sharpness_score=float(getattr(editorial_force, 'cut_sharpness_score', 0.0) or 0.0),
@@ -723,6 +731,11 @@ def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_n
     )
     metrics.best_balance_comparison_status = 'beaten' if balance_beaten else 'not_beaten'
     metrics.best_coverage_comparison_status = 'beaten' if coverage_beaten else 'not_beaten'
+    metrics.active_frontier_status = (
+        'regressed'
+        if force_regression or coverage_regression or compactness_regression
+        else ('beaten' if balance_beaten and coverage_beaten else 'matched')
+    )
     metrics.force_non_regression_status = 'fail' if force_regression else 'pass'
     metrics.coverage_non_regression_status = 'fail' if coverage_regression else 'pass'
     metrics.compactness_non_regression_status = 'fail' if compactness_regression else 'pass'
@@ -751,6 +764,36 @@ def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_n
     metrics.compression_gain_status = 'pass' if compactness_gain else 'fail'
     metrics.primary_force_win_count = primary_force_win_count
     metrics.current_best_comparison_status = 'beaten' if (balance_beaten and coverage_beaten) else 'not_beaten'
+    legacy_delta_summary: list[str] = []
+    for label, snapshot_key in (
+        ('legacy_balance', 'legacy_balance_snapshot'),
+        ('legacy_coverage', 'legacy_coverage_snapshot'),
+    ):
+        snapshot = bundle.get(snapshot_key) or {}
+        better_force = sum(
+            1
+            for metric, baseline in dict(snapshot.get('primary_force_metrics') or {}).items()
+            if float(getattr(metrics, metric, 0.0) or 0.0) > float(baseline) + 0.01
+        )
+        better_coverage = sum(
+            1
+            for metric, baseline in dict(snapshot.get('coverage_metrics') or {}).items()
+            if float(getattr(metrics, metric, 0.0) or 0.0) > float(baseline) + 0.01
+        )
+        better_compactness = sum(
+            1
+            for metric, baseline in dict(snapshot.get('compactness_metrics') or {}).items()
+            if float(getattr(metrics, metric, 0.0) or 0.0) + compactness_tol < float(baseline)
+        )
+        if snapshot:
+            legacy_delta_summary.append(f'{label}=force+{better_force}/coverage+{better_coverage}/compactness+{better_compactness}')
+    metrics.legacy_delta_summary = legacy_delta_summary
+    residual_report = build_residual_gap_report(skill_name=skill_name, metrics=metrics.model_dump())
+    metrics.quality_check_target_status = residual_report.quality_check_target_status
+    metrics.pressure_target_status = residual_report.pressure_target_status
+    metrics.leakage_target_status = residual_report.leakage_target_status
+    metrics.false_fix_rejection_status = residual_report.false_fix_rejection_status
+    metrics.residual_gap_count = residual_report.residual_gap_count
     if metrics.force_non_regression_status != 'pass':
         metrics.promotion_hold_reason = 'hold_due_to_force_regression'
         metrics.pairwise_promotion_status = 'hold'
@@ -766,11 +809,16 @@ def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_n
         metrics.pairwise_promotion_status = 'hold'
         metrics.pairwise_promotion_reason = 'hold_due_to_compactness_regression'
         metrics.stable_but_no_breakthrough = False
-    elif balance_beaten and coverage_beaten:
+    elif balance_beaten and coverage_beaten and residual_report.status == 'pass':
         metrics.promotion_hold_reason = ''
         metrics.pairwise_promotion_status = 'promote'
         metrics.pairwise_promotion_reason = 'breakthrough'
         metrics.stable_but_no_breakthrough = False
+    elif residual_report.status != 'pass':
+        metrics.promotion_hold_reason = 'stable_but_no_breakthrough'
+        metrics.pairwise_promotion_status = 'hold'
+        metrics.pairwise_promotion_reason = 'stable_but_no_breakthrough'
+        metrics.stable_but_no_breakthrough = True
     else:
         metrics.promotion_hold_reason = 'stable_but_no_breakthrough'
         metrics.pairwise_promotion_status = 'hold'
@@ -780,6 +828,12 @@ def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_n
 
 def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateComparisonMetrics) -> list[str]:
     issues: list[str] = []
+    stable_frontier_reproduction = (
+        auto.active_frontier_status in {'matched', 'beaten'}
+        and auto.residual_gap_count == 0
+        and auto.force_non_regression_status == 'pass'
+        and auto.coverage_non_regression_status == 'pass'
+    )
     if auto.body_lines < 40 and reference.body_lines > 150:
         issues.append('auto_body_much_shorter_than_reference')
     if 'workflow' in reference.required_sections_present and 'workflow' not in auto.required_sections_present:
@@ -902,11 +956,11 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_compactness_non_regression_not_pass')
     if auto.frontier_dominance_status != 'pass':
         issues.append('auto_frontier_dominance_not_pass')
-    if auto.current_best_comparison_status == 'not_beaten':
+    if auto.current_best_comparison_status == 'not_beaten' and not stable_frontier_reproduction:
         issues.append('auto_current_best_not_beaten')
-    if auto.best_balance_comparison_status == 'not_beaten':
+    if auto.best_balance_comparison_status == 'not_beaten' and not stable_frontier_reproduction:
         issues.append('auto_best_balance_not_beaten')
-    if auto.best_coverage_comparison_status == 'not_beaten':
+    if auto.best_coverage_comparison_status == 'not_beaten' and not stable_frontier_reproduction:
         issues.append('auto_best_coverage_not_beaten')
     if auto.pairwise_promotion_status != 'promote' and not auto.stable_but_no_breakthrough:
         issues.append('auto_pairwise_promotion_not_promoted')
@@ -994,10 +1048,12 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         f'- compactness_non_regression_status={report.compactness_non_regression_status}',
         f'- frontier_dominance_status={report.frontier_dominance_status}',
         f'- compression_gain_status={report.compression_gain_status}',
+        f'- active_frontier_status={report.active_frontier_status}',
         f'- best_balance_not_beaten_count={report.best_balance_not_beaten_count}',
         f'- best_coverage_not_beaten_count={report.best_coverage_not_beaten_count}',
         f'- current_best_not_beaten_count={report.current_best_not_beaten_count}',
         f'- stable_but_no_breakthrough_count={report.stable_but_no_breakthrough_count}',
+        f'- residual_gap_count={report.residual_gap_count}',
         f'- promotion_hold_count={report.promotion_hold_count}',
         f'- pairwise_promotion_gap_count={report.pairwise_promotion_gap_count}',
         f'- program_fidelity_gap_count={report.program_fidelity_gap_count}',
@@ -1079,6 +1135,7 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_candidate_separation_score={case.auto_metrics.candidate_separation_score:.2f}')
         lines.append(f'- auto_best_balance_comparison_status={case.auto_metrics.best_balance_comparison_status}')
         lines.append(f'- auto_best_coverage_comparison_status={case.auto_metrics.best_coverage_comparison_status}')
+        lines.append(f'- auto_active_frontier_status={case.auto_metrics.active_frontier_status}')
         lines.append(f'- auto_force_non_regression_status={case.auto_metrics.force_non_regression_status}')
         lines.append(f'- auto_coverage_non_regression_status={case.auto_metrics.coverage_non_regression_status}')
         lines.append(f'- auto_compactness_non_regression_status={case.auto_metrics.compactness_non_regression_status}')
@@ -1087,8 +1144,15 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_current_best_comparison_status={case.auto_metrics.current_best_comparison_status}')
         lines.append(f'- auto_primary_force_win_count={case.auto_metrics.primary_force_win_count}')
         lines.append(f'- auto_stable_but_no_breakthrough={case.auto_metrics.stable_but_no_breakthrough}')
+        lines.append(f'- auto_quality_check_target_status={case.auto_metrics.quality_check_target_status}')
+        lines.append(f'- auto_pressure_target_status={case.auto_metrics.pressure_target_status}')
+        lines.append(f'- auto_leakage_target_status={case.auto_metrics.leakage_target_status}')
+        lines.append(f'- auto_false_fix_rejection_status={case.auto_metrics.false_fix_rejection_status}')
+        lines.append(f'- auto_residual_gap_count={case.auto_metrics.residual_gap_count}')
         if case.auto_metrics.promotion_hold_reason:
             lines.append(f'- auto_promotion_hold_reason={case.auto_metrics.promotion_hold_reason}')
+        if case.auto_metrics.legacy_delta_summary:
+            lines.append(f'- auto_legacy_delta_summary={case.auto_metrics.legacy_delta_summary}')
         lines.append(f'- auto_editorial_force={case.auto_metrics.editorial_force_status}')
         lines.append(f'- auto_cut_sharpness_score={case.auto_metrics.cut_sharpness_score:.2f}')
         lines.append(f'- auto_failure_repair_force={case.auto_metrics.failure_repair_force:.2f}')
@@ -1673,6 +1737,15 @@ def build_skill_create_comparison_report(
         for item in cases
         if item.auto_metrics.stable_but_no_breakthrough
     )
+    residual_gap_count = sum(
+        int(item.auto_metrics.residual_gap_count or 0)
+        for item in cases
+    )
+    active_frontier_status = (
+        'fail'
+        if any(item.auto_metrics.active_frontier_status == 'regressed' for item in cases)
+        else 'pass'
+    )
     generic_shell_gap_count = sum(
         1
         for item in cases
@@ -1722,6 +1795,7 @@ def build_skill_create_comparison_report(
         and best_balance_not_beaten_count == 0
         and best_coverage_not_beaten_count == 0
         and stable_but_no_breakthrough_count == 0
+        and residual_gap_count == 0
     )
     stable_but_no_breakthrough = (
         not breakthrough_ready
@@ -1735,6 +1809,7 @@ def build_skill_create_comparison_report(
         and coverage_non_regression_status == 'pass'
         and compactness_non_regression_status == 'pass'
         and frontier_dominance_status == 'pass'
+        and active_frontier_status == 'pass'
     )
     report = SkillCreateComparisonReport(
         cases=cases,
@@ -1782,6 +1857,8 @@ def build_skill_create_comparison_report(
         frontier_dominance_status=frontier_dominance_status,
         compression_gain_status=compression_gain_status,
         stable_but_no_breakthrough_count=stable_but_no_breakthrough_count,
+        active_frontier_status=active_frontier_status,
+        residual_gap_count=residual_gap_count,
         generic_shell_gap_count=generic_shell_gap_count,
         pairwise_similarity_gap_count=pairwise_similarity_gap_count,
         negative_case_resistance=negative_case_resistance,
@@ -1811,9 +1888,11 @@ def build_skill_create_comparison_report(
             f'coverage_non_regression={coverage_non_regression_status} '
             f'compactness_non_regression={compactness_non_regression_status} '
             f'frontier_dominance={frontier_dominance_status} '
+            f'active_frontier_status={active_frontier_status} '
             f'best_balance_not_beaten={best_balance_not_beaten_count} '
             f'best_coverage_not_beaten={best_coverage_not_beaten_count} '
             f'current_best_not_beaten={current_best_not_beaten_count} '
+            f'residual_gaps={residual_gap_count} '
             f'pairwise_promotion_gaps={pairwise_promotion_gap_count} '
             f'program_fidelity_gaps={program_fidelity_gap_count} '
             f'dna_candidates={authoring_pack.candidate_dna_count} '

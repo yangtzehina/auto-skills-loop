@@ -156,10 +156,10 @@ EXPERT_SKILL_PROFILES: dict[str, ExpertSkillProfile] = {
             "emotionless resource loop",
         ],
         quality_checks=[
-            "variables have player-facing roles",
-            "positive and negative loops both exist",
-            "failure recovery keeps consequences",
-            "emotional fantasy matches resource math",
+            "pressure is visible before commitment",
+            "recovery keeps a cost",
+            "one resource can bypass the intended tension web",
+            "emotional fantasy still matches the pressure math",
         ],
     ),
 }

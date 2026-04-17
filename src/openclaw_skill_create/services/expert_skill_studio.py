@@ -18,8 +18,11 @@ from ..models.expert_studio import (
     MonotonicImprovementReport,
     PairwiseEditorialReport,
     ProfileBaselineBundle,
+    ProfileBaselineSnapshot,
+    ProfileResidualTargets,
     ProgramCandidateReviewBatchReport,
     ProgramCandidateReviewReport,
+    ResidualGapReport,
     SectionCompressionPlan,
     SectionCompressionResult,
     SectionRealizationSpec,
@@ -40,6 +43,7 @@ from .editorial_quality import build_skill_editorial_quality_report
 from .editorial_force import build_skill_editorial_force_report
 from .move_quality import build_skill_move_quality_report
 from .style_diversity import build_skill_style_diversity_report
+from .expert_structure import build_skill_expert_structure_report
 from ..models.artifacts import ArtifactFile, Artifacts
 from ..models.plan import SkillPlan
 from ..models.request import SkillCreateRequestV6
@@ -53,11 +57,12 @@ ROOT = Path(__file__).resolve().parents[3]
 EXPERT_DEPTH_GOLDEN_ROOT = ROOT / "tests" / "fixtures" / "methodology_guidance" / "expert_depth_golden"
 CURRENT_BEST_GOLDEN_ROOT = ROOT / "tests" / "fixtures" / "methodology_guidance" / "golden"
 DUAL_BASELINE_ROOT = ROOT / "tests" / "fixtures" / "methodology_guidance" / "dual_baselines"
+FRONTIER_BANK_ROOT = ROOT / "tests" / "fixtures" / "methodology_guidance" / "frontier_bank" / "known_profiles"
 
 PROFILE_FRONTMATTER_DESCRIPTIONS: dict[str, str] = {
-    "concept-to-mvp-pack": "Game-design workflow for proving a first playable, cutting scope, and packaging an honest MVP.",
+    "concept-to-mvp-pack": "Proof-driven brief for deciding the first playable, the hard cuts, and the first build target.",
     "decision-loop-stress-test": "Phase-by-phase audit for finding collapse points, dominant routes, and reward-training mistakes.",
-    "simulation-resource-loop-design": "Systems workflow for mapping currencies, bottlenecks, counterweights, and costly comeback paths.",
+    "simulation-resource-loop-design": "Systems brief for visible tradeoffs, counterpressure, costly recovery, and fantasy fit.",
 }
 
 PROFILE_QUALITY_GATE_LINES: dict[str, str] = {
@@ -69,10 +74,11 @@ PROFILE_QUALITY_GATE_LINES: dict[str, str] = {
 PROFILE_QUALITY_CHECK_LINES: dict[str, list[str]] = {
     "concept-to-mvp-pack": [
         "Check whether the validation question can fail in a short playtest.",
-        "Check whether the smallest honest loop is already playable without future systems or spectacle.",
-        "Check whether the feature cut removes supportive work instead of protecting comfort.",
+        "Check whether the smallest honest loop is playable without future systems or spectacle.",
+        "Check whether the feature cut removes attractive work instead of protecting comfort.",
         "Check whether the content scope is just enough to prove the loop.",
-        "Check whether the out-of-scope list blocks scope creep instead of sounding polite.",
+        "Check whether the out-of-scope list blocks creep instead of sounding polite.",
+        "Check whether the pack keeps a kill list so this does not turn into a dream-expanding skill.",
         "Check whether the MVP pack names the next build and the next playtest signal.",
         "Check whether the build recommendation and success criteria are explicit enough to approve the first playable.",
         "Check whether the pack stays prototype first instead of drifting into a mini vertical slice.",
@@ -87,6 +93,8 @@ PROFILE_QUALITY_CHECK_LINES: dict[str, list[str]] = {
         "Check whether variation changes decisions rather than surface decoration.",
         "Check whether reinforcement teaches intended behavior instead of efficient repetition.",
         "Check whether the repair changes pressure inside the decision loop instead of adding softer content.",
+        "Check whether mastery only improves throughput without creating a new decision problem.",
+        "Check whether any proposed repair adds events, rewards, or content layers without changing the decision landscape.",
         "Check whether the review stays on decision quality instead of greenlighting the theme.",
         "Check whether detailed numeric balancing or MVP scope cutting is being used to dodge a structural break.",
     ],
@@ -99,9 +107,9 @@ PROFILE_QUALITY_CHECK_LINES: dict[str, list[str]] = {
         "Check whether one dominant currency can still bypass the intended tension web.",
         "Check whether the feedback loops create rhythm instead of runaway snowball or pure punishment.",
         "Check whether you can reduce currencies until only a few strong tensions remain and every variable changes player behavior.",
+        "Check whether the loop is not just one simple currency, not isolated meters, and not mostly content writing.",
         "Check whether recovery avoids a consequence-free reset, makes pressure visible early, and keeps tradeoffs costly.",
-        "Check whether the system is not just one simple currency or a stack of isolated meters.",
-        "Check whether the design stops at the pressure web instead of drifting into mostly content writing.",
+        "Check whether you only include a variable if it changes player behavior inside the pressure web.",
     ],
 }
 
@@ -120,22 +128,22 @@ PROFILE_FAILURE_ENTRIES: dict[str, list[tuple[str, str, str, str]]] = {
             "Cut aggressively, then move the supportive work into out of scope with a clear re-entry condition.",
         ),
         (
-            "Content-Heavy Validation",
+            "Content Hiding Uncertainty",
             "The MVP only works if future meta systems, content volume, or presentation arrive first.",
-            "The smallest honest loop was never isolated.",
+            "The smallest honest loop was never isolated, so content is hiding uncertainty instead of proving the idea.",
             "Do not fake the entire game; reduce the build to the repeatable loop that already produces the intended feeling.",
         ),
         (
-            "Premature Meta Systems",
-            "Progression, unlocks, or retention layers are doing the proof work for the loop.",
-            "Validation was outsourced to future structure instead of the first playable.",
-            "Strip back to the smallest honest loop and test the fantasy before adding meta structure.",
+            "Mood Instead of Loop",
+            "The package sells fantasy, tone, or mood, but it still does not say which repeatable loop proves the concept.",
+            "The handoff is carrying aspiration instead of a smallest honest loop.",
+            "Rewrite the pack around the repeatable loop, then cut any line that is only mood instead of loop.",
         ),
         (
-            "Success Criteria Missing",
-            "The handoff sounds polished but still does not say what would count as proof or failure.",
-            "Packaging happened before the pass/fail evidence was locked.",
-            "End with explicit playtest evidence, build target, and redesign trigger.",
+            "Vertical Slice Drift",
+            "The first build quietly grows into a mini vertical slice with polish, onboarding, and support systems doing proof work.",
+            "The feature cut stopped protecting the prototype-first boundary and the pack drifted toward a vertical slice.",
+            "Return to the proof target, restore the kill list, and keep only the work required to validate the loop.",
         ),
     ],
     "decision-loop-stress-test": [
@@ -219,6 +227,12 @@ PROFILE_FAILURE_ENTRIES: dict[str, list[tuple[str, str, str, str]]] = {
             "Signals were treated as bookkeeping instead of decision surfaces.",
             "Make pressure visible before the player commits so the cost, risk, or bottleneck can actually shape the next move.",
         ),
+        (
+            "Cheap Recovery",
+            "Recovery resets pressure so cleanly that failure loses most of its cost, memory, or structural consequence.",
+            "The loop is protecting comfort instead of preserving the meaning of failure and recovery.",
+            "Keep recovery playable, but attach a visible cost, lost position, or delayed opportunity before tuning anything else.",
+        ),
     ],
 }
 
@@ -246,6 +260,327 @@ def _dual_baseline_bundle(skill_name: str) -> ProfileBaselineBundle | None:
     except (OSError, json.JSONDecodeError):
         return None
     return ProfileBaselineBundle.model_validate(payload)
+
+
+def _frontier_bank_entry(skill_name: str) -> dict[str, Any]:
+    path = FRONTIER_BANK_ROOT / f"{skill_name}.json"
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _profile_residual_targets(skill_name: str) -> ProfileResidualTargets:
+    targets: dict[str, ProfileResidualTargets] = {
+        "concept-to-mvp-pack": ProfileResidualTargets(
+            skill_name=skill_name,
+            target_metrics={
+                "expert_pitfall_cluster_recall": 0.90,
+                "output_field_guidance_coverage": 0.85,
+            },
+            allowed_sections=[
+                "Quality Checks",
+                "Failure Patterns and Fixes",
+                "Output Format",
+            ],
+            protected_metrics={
+                "domain_move_coverage": 1.0,
+                "section_depth_score": 0.97,
+                "task_outcome_with_skill_average": 0.9398,
+                "decision_pressure_score": 0.9467,
+                "cut_sharpness_score": 1.0,
+                "boundary_rule_coverage": 0.8,
+                "generic_surface_leakage": 0.05,
+            },
+            summary=[
+                "target expert_pitfall_cluster_recall >= 0.90",
+                "target output_field_guidance_coverage >= 0.85",
+            ],
+        ),
+        "decision-loop-stress-test": ProfileResidualTargets(
+            skill_name=skill_name,
+            target_metrics={
+                "decision_pressure_score": 0.96,
+                "compression_without_loss": 0.78,
+            },
+            allowed_sections=[
+                "Overview",
+                "Default Workflow",
+                "Quality Checks",
+                "Failure Patterns and Fixes",
+            ],
+            protected_metrics={
+                "domain_move_coverage": 0.9285,
+                "section_depth_score": 0.9008,
+                "task_outcome_with_skill_average": 0.90,
+                "failure_repair_force": 1.0,
+                "stop_condition_coverage": 1.0,
+                "section_force_distinctness": 0.84,
+            },
+            summary=[
+                "target decision_pressure_score >= 0.96",
+                "target compression_without_loss >= 0.78",
+                "target false_fix_rejection_status = pass",
+            ],
+        ),
+        "simulation-resource-loop-design": ProfileResidualTargets(
+            skill_name=skill_name,
+            target_metrics={
+                "generic_surface_leakage": 0.05,
+                "redundancy_ratio": 0.04,
+                "generic_skeleton_ratio": 0.20,
+            },
+            allowed_sections=[
+                "Analysis Blocks",
+                "Output Format",
+                "Failure Patterns and Fixes",
+            ],
+            protected_metrics={
+                "domain_move_coverage": 1.0,
+                "section_depth_score": 1.0,
+                "task_outcome_with_skill_average": 0.96,
+                "failure_repair_force": 1.0,
+                "section_force_distinctness": 1.0,
+                "boundary_rule_coverage": 0.2,
+            },
+            summary=[
+                "target generic_surface_leakage <= 0.05",
+                "target redundancy_ratio <= 0.04",
+                "target generic_skeleton_ratio <= 0.20",
+            ],
+        ),
+    }
+    return targets.get(skill_name, ProfileResidualTargets(skill_name=skill_name))
+
+
+def build_profile_residual_targets(skill_name: str) -> ProfileResidualTargets:
+    return _profile_residual_targets(skill_name)
+
+
+def _active_frontier_snapshot(skill_name: str) -> ProfileBaselineSnapshot | None:
+    bundle = _dual_baseline_bundle(skill_name)
+    if bundle is None:
+        return None
+    return bundle.best_balance_snapshot
+
+
+def _raw_metric(metrics: dict[str, Any], name: str) -> float:
+    editorial_force = metrics.get("editorial_force")
+    editorial = metrics.get("editorial")
+    domain_expertise = metrics.get("domain_expertise")
+    depth = metrics.get("depth")
+    expert_structure = metrics.get("expert_structure")
+    task_outcome = metrics.get("task_outcome")
+    profile_result = next(iter(list(getattr(task_outcome, "profile_results", []) or [])), None) if task_outcome is not None else None
+    mapping = {
+        "expert_quality_check_recall": lambda: float(getattr(metrics.get("expert_structure"), "expert_quality_check_recall", 0.0) or 0.0),
+        "expert_pitfall_cluster_recall": lambda: float(getattr(expert_structure, "expert_pitfall_cluster_recall", 0.0) or 0.0),
+        "generic_surface_leakage": lambda: float(getattr(editorial_force, "generic_surface_leakage", 0.0) or 0.0),
+        "decision_pressure_score": lambda: float(getattr(editorial_force, "decision_pressure_score", 0.0) or 0.0),
+        "cut_sharpness_score": lambda: float(getattr(editorial_force, "cut_sharpness_score", 0.0) or 0.0),
+        "boundary_rule_coverage": lambda: float(getattr(editorial_force, "boundary_rule_coverage", 0.0) or 0.0),
+        "section_force_distinctness": lambda: float(getattr(editorial_force, "section_force_distinctness", 0.0) or 0.0),
+        "compression_without_loss": lambda: float(getattr(editorial_force, "compression_without_loss", 0.0) or 0.0),
+        "redundancy_ratio": lambda: float(getattr(editorial, "redundancy_ratio", 0.0) or 0.0),
+        "generic_skeleton_ratio": lambda: float(getattr(expert_structure, "generic_skeleton_ratio", 0.0) or 0.0),
+        "failure_repair_force": lambda: float(getattr(editorial_force, "failure_repair_force", 0.0) or 0.0),
+        "stop_condition_coverage": lambda: float(getattr(editorial_force, "stop_condition_coverage", 0.0) or 0.0),
+        "domain_move_coverage": lambda: float(getattr(domain_expertise, "domain_move_coverage", 0.0) or 0.0),
+        "section_depth_score": lambda: float(getattr(depth, "section_depth_score", 0.0) or 0.0),
+        "output_field_guidance_coverage": lambda: float(getattr(depth, "output_field_guidance_coverage", 0.0) or 0.0),
+        "task_outcome_with_skill_average": lambda: float(getattr(profile_result, "with_skill_average", 0.0) or 0.0),
+    }
+    if name in metrics:
+        return float(metrics.get(name, 0.0) or 0.0)
+    getter = mapping.get(name)
+    return round(float(getter() if getter is not None else 0.0), 4)
+
+
+def _residual_gap_report(skill_name: str, metrics: dict[str, Any]) -> ResidualGapReport:
+    targets = _profile_residual_targets(skill_name)
+    values = {metric: _raw_metric(metrics, metric) for metric in set(targets.target_metrics) | set(targets.protected_metrics)}
+    quality_status = "pass"
+    pressure_status = "pass"
+    leakage_status = "pass"
+    false_fix_status = "pass"
+    if skill_name == "concept-to-mvp-pack":
+        quality_status = (
+            "pass"
+            if (
+                values.get("expert_pitfall_cluster_recall", 0.0) >= targets.target_metrics.get("expert_pitfall_cluster_recall", 0.0)
+                and values.get("output_field_guidance_coverage", 0.0) >= targets.target_metrics.get("output_field_guidance_coverage", 0.0)
+            )
+            else "fail"
+        )
+        leakage_status = "pass" if values.get("generic_surface_leakage", 1.0) <= targets.protected_metrics.get("generic_surface_leakage", 1.0) else "fail"
+        pressure_status = "pass" if values.get("decision_pressure_score", 0.0) >= targets.protected_metrics.get("decision_pressure_score", 0.0) else "fail"
+        false_fix_status = (
+            "pass"
+            if (
+                values.get("cut_sharpness_score", _raw_metric(metrics, "cut_sharpness_score")) >= targets.protected_metrics.get("cut_sharpness_score", 0.0)
+                and values.get("boundary_rule_coverage", _raw_metric(metrics, "boundary_rule_coverage")) >= targets.protected_metrics.get("boundary_rule_coverage", 0.0)
+            )
+            else "fail"
+        )
+    elif skill_name == "decision-loop-stress-test":
+        quality_status = "pass"
+        pressure_status = (
+            "pass"
+            if (
+                values.get("decision_pressure_score", 0.0) >= targets.target_metrics.get("decision_pressure_score", 0.0)
+                and values.get("compression_without_loss", 0.0) >= targets.target_metrics.get("compression_without_loss", 0.0)
+            )
+            else "fail"
+        )
+        leakage_status = "pass"
+        false_fix_status = (
+            "pass"
+            if (
+                values.get("failure_repair_force", 0.0) >= targets.protected_metrics.get("failure_repair_force", 0.0)
+                and values.get("stop_condition_coverage", 0.0) >= targets.protected_metrics.get("stop_condition_coverage", 0.0)
+                and values.get("section_force_distinctness", 0.0) >= targets.protected_metrics.get("section_force_distinctness", 0.0)
+            )
+            else "fail"
+        )
+    elif skill_name == "simulation-resource-loop-design":
+        quality_status = "pass"
+        pressure_status = "pass" if values.get("failure_repair_force", 0.0) >= targets.protected_metrics.get("failure_repair_force", 0.0) else "fail"
+        leakage_status = (
+            "pass"
+            if (
+                values.get("generic_surface_leakage", 1.0) <= targets.target_metrics.get("generic_surface_leakage", 1.0)
+                and values.get("redundancy_ratio", 1.0) <= targets.target_metrics.get("redundancy_ratio", 1.0)
+                and values.get("generic_skeleton_ratio", 1.0) <= targets.target_metrics.get("generic_skeleton_ratio", 1.0)
+            )
+            else "fail"
+        )
+        false_fix_status = (
+            "pass"
+            if (
+                values.get("section_force_distinctness", 0.0) >= targets.protected_metrics.get("section_force_distinctness", 0.0)
+                and values.get("boundary_rule_coverage", 0.0) >= targets.protected_metrics.get("boundary_rule_coverage", 0.0)
+            )
+            else "fail"
+        )
+    gaps = []
+    deficits: list[tuple[str, float]] = []
+    for metric, threshold in targets.target_metrics.items():
+        value = values.get(metric, 0.0)
+        if metric in {"generic_surface_leakage", "redundancy_ratio"}:
+            gap = max(0.0, value - threshold)
+        else:
+            gap = max(0.0, threshold - value)
+        deficits.append((metric, round(gap, 4)))
+    target_focus = ""
+    if deficits:
+        metric_name, gap_value = max(deficits, key=lambda item: item[1])
+        if gap_value > 0:
+            target_focus = {
+                "expert_quality_check_recall": "quality_checks",
+                "expert_pitfall_cluster_recall": "failure_repairs",
+                "output_field_guidance_coverage": "output_format",
+                "decision_pressure_score": "pressure",
+                "section_force_distinctness": "pressure",
+                "compression_without_loss": "pressure",
+                "generic_surface_leakage": "leakage",
+                "redundancy_ratio": "compactness",
+                "generic_skeleton_ratio": "compactness",
+            }.get(metric_name, metric_name)
+    for label, status in (
+        ("quality_checks", quality_status),
+        ("pressure", pressure_status),
+        ("leakage", leakage_status),
+        ("false_fix_rejection", false_fix_status),
+    ):
+        if status != "pass":
+            gaps.append(label)
+    status = "pass" if not gaps else "fail"
+    return ResidualGapReport(
+        skill_name=skill_name,
+        target_focus=target_focus,
+        quality_check_target_status=quality_status,
+        pressure_target_status=pressure_status,
+        leakage_target_status=leakage_status,
+        false_fix_rejection_status=false_fix_status,
+        residual_gap_count=len(gaps),
+        status=status,
+        summary=[
+            f"target_focus={target_focus or 'none'}",
+            f"quality_check_target_status={quality_status}",
+            f"pressure_target_status={pressure_status}",
+            f"leakage_target_status={leakage_status}",
+            f"false_fix_rejection_status={false_fix_status}",
+            f"residual_gap_count={len(gaps)}",
+        ],
+    )
+
+
+def build_residual_gap_report(*, skill_name: str, metrics: dict[str, Any]) -> ResidualGapReport:
+    return _residual_gap_report(skill_name, metrics)
+
+
+def _target_focus_for_skill(skill_name: str) -> str:
+    snapshot = _active_frontier_snapshot(skill_name)
+    if snapshot is None:
+        return ""
+    metrics: dict[str, Any] = {}
+    metrics.update(dict(snapshot.primary_force_metrics or {}))
+    metrics.update(dict(snapshot.coverage_metrics or {}))
+    metrics.update(dict(snapshot.compactness_metrics or {}))
+    metrics.update(dict(snapshot.target_metrics or {}))
+    report = _residual_gap_report(skill_name, metrics)
+    if report.target_focus:
+        return str(report.target_focus)
+    return {
+        "decision-loop-stress-test": "pressure",
+        "concept-to-mvp-pack": "quality_checks",
+        "simulation-resource-loop-design": "compactness",
+    }.get(skill_name, "")
+
+
+def _frontier_section_lines(
+    *,
+    skill_name: str,
+    target_focus: str,
+    section_name: str,
+) -> list[str]:
+    bank = _frontier_bank_entry(skill_name)
+    if not bank:
+        return []
+    focus_to_bucket = {
+        "pressure": "pressure_best_sections",
+        "quality_checks": "quality_checks_best_sections",
+        "leakage": "compactness_best_sections",
+        "compactness": "compactness_best_sections",
+        "false_fix_rejection": "failure_repairs_best_sections",
+        "output_format": "output_format_best_sections",
+    }
+    bucket_names: list[str] = []
+    if target_focus:
+        bucket = focus_to_bucket.get(target_focus, "")
+        if bucket:
+            bucket_names.append(bucket)
+    section_fallback_buckets = {
+        "Quality Checks": "quality_checks_best_sections",
+        "Failure Patterns and Fixes": "failure_repairs_best_sections",
+        "Output Format": "output_format_best_sections",
+    }
+    fallback_bucket = section_fallback_buckets.get(section_name, "")
+    if fallback_bucket and fallback_bucket not in bucket_names:
+        bucket_names.append(fallback_bucket)
+    lines: list[str] = []
+    for bucket_name in bucket_names:
+        section_map = bank.get(bucket_name)
+        if not isinstance(section_map, dict):
+            continue
+        for item in list(section_map.get(section_name) or []):
+            text = str(item).strip()
+            if text and text not in lines:
+                lines.append(text)
+    return lines
 
 
 def _section_corpus(
@@ -863,12 +1198,12 @@ def _surface_label_profile(skill_name: str) -> dict[str, str]:
             "pitfalls": "Failure Patterns and Fixes",
         },
         "decision-loop-stress-test": {
-            "decision": "Stress",
-            "action": "Run",
-            "output": "Report",
-            "failure": "Breaks If",
+            "decision": "Stress Test",
+            "action": "Check",
+            "output": "Write",
+            "failure": "Reject If",
             "fix": "Repair",
-            "write": "Report",
+            "write": "Write",
             "good": "Strong",
             "weak": "Weak",
             "pitfalls": "Collapse Patterns and Repairs",
@@ -1266,6 +1601,11 @@ def _candidate_editorial_metrics(
         skill_plan=plan,
         artifacts=artifacts,
     )
+    expert_structure = build_skill_expert_structure_report(
+        request=request,
+        skill_plan=plan,
+        artifacts=artifacts,
+    )
     depth = build_skill_depth_quality_report(
         request=request,
         skill_plan=plan,
@@ -1319,6 +1659,7 @@ def _candidate_editorial_metrics(
         "body": body,
         "domain_specificity": domain_specificity,
         "domain_expertise": domain_expertise,
+        "expert_structure": expert_structure,
         "depth": depth,
         "editorial": editorial,
         "editorial_force": editorial_force,
@@ -1332,6 +1673,14 @@ def _candidate_editorial_metrics(
         "shared_opening_phrase_ratio": float(getattr(style, "shared_opening_phrase_ratio", 0.0) or 0.0),
         "cross_case_similarity": 0.0,
         "compression_without_loss": float(getattr(editorial_force, "compression_without_loss", 0.0) or 0.0),
+        "expert_quality_check_recall": float(getattr(expert_structure, "expert_quality_check_recall", 0.0) or 0.0),
+        "generic_surface_leakage": float(getattr(editorial_force, "generic_surface_leakage", 0.0) or 0.0),
+        "decision_pressure_score": float(getattr(editorial_force, "decision_pressure_score", 0.0) or 0.0),
+        "section_force_distinctness": float(getattr(editorial_force, "section_force_distinctness", 0.0) or 0.0),
+        "failure_repair_force": float(getattr(editorial_force, "failure_repair_force", 0.0) or 0.0),
+        "stop_condition_coverage": float(getattr(editorial_force, "stop_condition_coverage", 0.0) or 0.0),
+        "cut_sharpness_score": float(getattr(editorial_force, "cut_sharpness_score", 0.0) or 0.0),
+        "boundary_rule_coverage": float(getattr(editorial_force, "boundary_rule_coverage", 0.0) or 0.0),
         "score": round(score, 4),
     }
 
@@ -1421,9 +1770,11 @@ def _section_variant_text(
     output_focus = list(strategy_profile.get("output_focus") or [])
     quality_tone = str(strategy_profile.get("quality_tone") or "")
     failure_style = str(strategy_profile.get("failure_style") or "")
+    target_focus = str(strategy_profile.get("target_focus") or "")
     rewrite_pairs = _strategy_rewrite_pairs(corpus=corpus, strategy_profile=strategy_profile)
     failure_cases = _strategy_failure_cases(corpus=corpus, strategy_profile=strategy_profile)
     section_moves = _strategy_primary_moves(corpus=corpus, section_name=section_name, strategy_profile=strategy_profile)
+    frontier_lines = _frontier_section_lines(skill_name=program.skill_name, target_focus=target_focus, section_name=section_name)
     if section_name == "Overview":
         overview_lines = {
             ("concept-to-mvp-pack", "proof_first"): "Start with a question that can fail, then shrink the playable until the proof is honest.",
@@ -1439,7 +1790,7 @@ def _section_variant_text(
             ("simulation-resource-loop-design", "loop_balance"): "Balance positive and negative loops so neither side erases the decision game.",
             ("simulation-resource-loop-design", "recovery_cost"): "Recovery should preserve cost, visibility, and fantasy instead of flattening the system.",
         }
-        overview = overview_lines.get((program.skill_name, strategy), str(plan.overview or "").strip())
+        overview = frontier_lines[0] if frontier_lines else overview_lines.get((program.skill_name, strategy), str(plan.overview or "").strip())
         return [overview or str(strategy_profile.get("opening_frame") or plan.overview)]
     if section_name == "Core Principle":
         lines = [str(getattr(plan.dna, "core_thesis", "") or "")]
@@ -1451,6 +1802,8 @@ def _section_variant_text(
             lines.append(corpus.expert_notes[min(1, len(corpus.expert_notes) - 1)])
         return lines
     if section_name == "Quality Checks":
+        if frontier_lines:
+            return frontier_lines[:2]
         if quality_tone == "pressure":
             lines = ["Force a structural answer before anyone reaches for softer compensation."]
         elif quality_tone == "scope_enforcement":
@@ -1465,6 +1818,8 @@ def _section_variant_text(
             lines.append(f"Keep the checks anchored on {', '.join(section_moves[:2])}.")
         return lines[:2]
     if section_name == "Failure Patterns and Fixes":
+        if frontier_lines:
+            return frontier_lines[:1]
         if failure_style == "solved_state":
             return ["Treat solved states and fake variation as structure failures, not balance trivia."]
         if failure_style == "cheap_recovery":
@@ -1477,6 +1832,8 @@ def _section_variant_text(
             return [failure_cases[0].why_it_fails]
         return []
     if section_name == "Output Format" and output_focus:
+        if frontier_lines:
+            return frontier_lines[:2]
         lines = [f"Lead with `{output_focus[0]}` and keep the rest of the output subordinate to that decision."]
         if len(output_focus) > 1:
             lines.append(f"Secondary emphasis: {', '.join(output_focus[1:3])}.")
@@ -1504,9 +1861,42 @@ def _render_quality_checks(
     corpus: ExpertSkillCorpusEntry | None,
 ) -> list[str]:
     lines = ["## Quality Checks", ""]
+    target_focus = str(strategy_profile.get("target_focus") or "")
+    frontier_lines = _frontier_section_lines(
+        skill_name=skill_name,
+        target_focus=target_focus,
+        section_name="Quality Checks",
+    )
     gate_line = PROFILE_QUALITY_GATE_LINES.get(skill_name, "")
     if gate_line:
         lines.append(f"- Gate: {gate_line}")
+    for item in frontier_lines[:2]:
+        lines.append(f"- {item}")
+    if skill_name == "simulation-resource-loop-design":
+        grouped_checks = {
+            "Visible Pressure": [
+                "Check whether pressure is visible before commitment and early enough for planning.",
+                "Check whether pressure relationships create readable tradeoffs instead of hidden bookkeeping.",
+            ],
+            "Costly Recovery": [
+                "Check whether failure recovery keeps a cost instead of collapsing into a flat reset.",
+                "Check whether recovery preserves consequence, readability, and fantasy at the same time.",
+            ],
+            "Dominant Currency Guard": [
+                "Check whether one resource can bypass the intended tension web.",
+                "Check whether positive and negative loops counterweight each other instead of feeding one dominant route.",
+            ],
+            "Fantasy Fit": [
+                "Check whether emotional fantasy still matches the pressure math.",
+                "Check whether every kept variable still changes player behavior inside the pressure web.",
+            ],
+        }
+        for heading, items in grouped_checks.items():
+            lines.extend([f"### {heading}"])
+            for item in items:
+                lines.append(f"- {item}")
+            lines.append("")
+        return lines
     for item in PROFILE_QUALITY_CHECK_LINES.get(skill_name, []):
         lines.append(f"- {item}")
     lines.append("")
@@ -1521,7 +1911,7 @@ def _failure_entries(
     entries = list(PROFILE_FAILURE_ENTRIES.get(skill_name, []))
     if entries:
         if skill_name == "simulation-resource-loop-design":
-            return entries[:6]
+            return entries[:8]
         return entries[:5]
     if corpus is None:
         return []
@@ -1545,21 +1935,62 @@ def _render_output_fields(
     strategy: str,
     strategy_profile: dict[str, Any],
 ) -> list[str]:
+    target_focus = str(strategy_profile.get("target_focus") or "")
+    frontier_lines = _frontier_section_lines(
+        skill_name=program.skill_name,
+        target_focus=target_focus,
+        section_name="Output Format",
+    )
     output_opening = {
         "concept-to-mvp-pack": "Fill the template so a greybox or cardboard first playable can be greenlit or killed without rereading the pitch deck, wireframe notes, or telemetry plan.",
         "decision-loop-stress-test": "Fill the template so the collapse point, solved state, and repair can be acted on immediately.",
         "simulation-resource-loop-design": "Fill the template so the pressure web, recovery cost, and fantasy fit stay visible in one pass.",
     }.get(program.skill_name, "Fill the template so the next decision is explicit, testable, and ready to act on.")
+    if frontier_lines:
+        output_opening = frontier_lines[0]
     fence_language = "text" if program.skill_name == "concept-to-mvp-pack" else "markdown"
-    lines = ["## Output Format", "", output_opening, "", f"```{fence_language}"]
+    lines = ["## Output Format", "", output_opening]
+    if program.skill_name == "concept-to-mvp-pack":
+        lines.extend(
+            [
+                "",
+                "Keep the field list explicit: validation goal, minimum honest loop, core features, minimum content scope, required systems, explicitly out of scope, main production risks, and build recommendation.",
+            ]
+        )
+    lines.extend(["", f"```{fence_language}"])
     focus = [field for field in list(strategy_profile.get("output_focus") or []) if field in program.output_schema]
     ordered_fields = focus + [field for field in program.output_schema.keys() if field not in focus]
     quality_mode = str(strategy_profile.get("quality_mode") or "")
+    concept_aliases = {
+        "Core Validation Question": "validation goal with success criteria and failure evidence",
+        "Smallest Honest Loop": "minimum honest loop with player input, system response, visible feedback, and repeat trigger",
+        "Feature Cut": "core features, support, defer, and cut for now",
+        "Minimum Content Package": "minimum content scope, required systems, and the prototype first target",
+        "Out of Scope": "explicitly out of scope with re-entry condition",
+        "MVP Package": "build recommendation, main production risks, and redesign trigger",
+    }
     for field in ordered_fields:
         guidance_lines = program.output_schema.get(field, [])
         lines.append(f"## {field}")
         write_line = _strip_guidance_prefix(guidance_lines[0], labels["write"]) if guidance_lines else "<fill in>"
+        if program.skill_name == "concept-to-mvp-pack":
+            alias = concept_aliases.get(field, "")
+            if alias and alias.lower() not in write_line.lower():
+                write_line = f"{write_line.rstrip('.')}; keep the {alias} explicit."
         lines.append(f"- {labels['write']}: {write_line}")
+        if program.skill_name == "simulation-resource-loop-design":
+            compact_guardrail = {
+                "Variable Web": "Keep only variables that change player behavior or reveal visible pressure.",
+                "Pressure Relationships": "Show the cost, warning, and tradeoff before the player commits.",
+                "Primary Decision Tensions": "Name what the player cannot maximize all at once.",
+                "Positive and Negative Loops": "Show what compounds and what brakes it in the same read.",
+                "Failure Recovery": "Keep recovery playable, but preserve cost and consequence.",
+                "Emotional Fantasy Alignment": "Tie the intended feeling to the actual pressure math.",
+            }.get(field, "")
+            if compact_guardrail:
+                lines.append(f"- Guardrail: {compact_guardrail}")
+            lines.append("")
+            continue
         if len(guidance_lines) > 1:
             lines.append(f"- {labels['good']}: {_strip_guidance_prefix(guidance_lines[1], labels['good'])}")
         if len(guidance_lines) > 2:
@@ -1594,6 +2025,7 @@ def _render_workflow(
     lines = ["## Default Workflow", ""]
     workflow_mode = str(strategy_profile.get("workflow_mode") or "")
     step_frame = str(strategy_profile.get("step_frame") or "")
+    target_focus = str(strategy_profile.get("target_focus") or "")
     workflow_orders = {
         "validation_pressure": ["decision", "action", "output", "failure", "fix"],
         "cut_pressure": ["decision", "failure", "action", "output", "fix"],
@@ -1630,9 +2062,20 @@ def _render_workflow(
         "failure": lambda move: f"   - {labels['failure']}: {move.failure_signal}",
         "fix": lambda move: f"   - {labels['fix']}: {move.fix}",
     }
+    if skill_name == "decision-loop-stress-test" and target_focus == "pressure":
+        lines.extend(
+            [
+                "- Keep the audit on first-hour, midgame, late-game, solved state, dominant strategy, variation quality, reinforcement, and structural fixes.",
+                "- Watch the first collapse signal and reinforce the intended behavior before anyone reaches for more content.",
+                "- Reject surface excitement, content padding, MVP scope cutting, and detailed numeric balancing before proposing more content.",
+                "",
+            ]
+        )
     for index, move in enumerate(program.execution_spine, start=1):
         decision_text = move.decision
         action_text = move.action
+        extra_pressure_line = ""
+        workflow_opener = step_openers.get(step_frame, "")
         if skill_name == "decision-loop-stress-test":
             if move.label == "Test Late-Game Expansion or Mutation":
                 decision_text = "Test whether lategame mastery reveals a deeper problem or solves the game away."
@@ -1641,9 +2084,36 @@ def _render_workflow(
             elif move.label == "Audit Variation and Reinforcement":
                 decision_text = "Test whether variation quality changes read, tradeoff, consequence, or adaptation."
                 action_text = "Audit variation quality and reinforcement so the decision loop trains the intended behavior."
+            if target_focus == "pressure":
+                if move.label in {"Test the First-Hour Hook", "Test Midgame Sustainability"}:
+                    decision_text = _append_sentence(decision_text, "Name the stop condition before proposing more content.")
+                if move.label == "Test the First-Hour Hook":
+                    extra_pressure_line = "   - Check: Reject surface excitement if the first-hour pressure still feels weak."
+                elif move.label == "Test Midgame Sustainability":
+                    extra_pressure_line = "   - Check: Name the dominant strategy or autopilot risk before adding content."
+                elif move.label in {"Look for Solved States", "Audit Variation and Reinforcement"}:
+                    action_text = _append_sentence(action_text, "Reject any fix that only widens content without changing pressure.")
+                    if move.label == "Look for Solved States":
+                        extra_pressure_line = "   - Check: Break the dominant strategy with structural fixes, not softer compensation."
+                    else:
+                        extra_pressure_line = "   - Check: Reinforce the intended behavior and reject content padding or fake variation."
+                elif move.label == "Test Late-Game Expansion or Mutation":
+                    extra_pressure_line = "   - Check: Confirm late-game mastery creates a new decision problem instead of pure throughput."
+        elif skill_name == "simulation-resource-loop-design" and target_focus in {"leakage", "compactness"}:
+            workflow_opener = {
+                1: "Use this step to map the visible pressure before tuning any single variable.",
+                2: "Use this step to give every kept variable a player-facing role.",
+                3: "Use this step to expose cause, effect, and warning before commitment.",
+                4: "Use this step to name the tradeoff the player cannot optimize away.",
+                5: "Use this step to pair compounding force with a visible brake.",
+                6: "Use this step to keep recovery costly without making it hopeless.",
+                7: "Use this step to make the pressure web reinforce the intended fantasy.",
+            }.get(index, workflow_opener)
+            if move.label == "Map the Variable Web":
+                extra_pressure_line = "   - Check: Confirm the pressure web is not just one simple currency with nicer labels."
         lines.append(f"{index}. **{move.label}**")
-        if step_frame in step_openers:
-            lines.append(f"   - Frame: {step_openers[step_frame]}")
+        if workflow_opener:
+            lines.append(f"   - Frame: {workflow_opener}")
         for key in order:
             if key == "decision":
                 lines.append(f"   - {labels['decision']}: {decision_text}")
@@ -1651,6 +2121,8 @@ def _render_workflow(
                 lines.append(f"   - {labels['action']}: {action_text}")
             else:
                 lines.append(render_fields[key](move))
+        if extra_pressure_line:
+            lines.append(extra_pressure_line)
         if strategy_profile.get("quality_tone") not in {"pressure", "collapse", "repair", "recovery_cost"} and move.must_include_terms:
             lines.append(f"   - Must include: {', '.join(move.must_include_terms[:5])}.")
         lines.append("")
@@ -1662,6 +2134,14 @@ def _render_analysis_blocks(program: SkillProgramIR, strategy_profile: dict[str,
         return []
     lines = ["## Analysis Blocks", ""]
     quality_tone = str(strategy_profile.get("quality_tone") or "")
+    target_focus = str(strategy_profile.get("target_focus") or "")
+    frontier_lines = _frontier_section_lines(
+        skill_name=program.skill_name,
+        target_focus=target_focus,
+        section_name="Analysis Blocks",
+    )
+    for item in frontier_lines[:2]:
+        lines.append(f"- {item}")
     lead_prefix = {
         "mapping": "Signal",
         "tension": "Tension",
@@ -1776,9 +2256,9 @@ def _render_candidate_markdown(
                 if fix and fix not in repair_moves:
                     repair_moves.append(fix)
             profile_preface = {
-                "concept-to-mvp-pack": "Use these failure patterns to pressure-test the feature cut, out-of-scope line, and first playable package.",
+                "concept-to-mvp-pack": "Use these failure patterns to pressure-test the feature cut, out-of-scope line, and first playable package against scope creep, vertical slice drift, mood instead of loop, and content hiding uncertainty.",
                 "decision-loop-stress-test": "Use these failure patterns to pressure-test lategame, variation quality, solved state, and reinforcement before adding content.",
-                "simulation-resource-loop-design": "Use these failure patterns to check variable web clarity, pressure relationships, and failure recovery without collapsing into one simple currency, isolated meters, mostly content writing, or anything weaker than a few strong tensions.",
+                "simulation-resource-loop-design": "Use these failure patterns to check variable web clarity, pressure relationships, and failure recovery without collapsing into one simple currency, isolated meters, mostly content writing, or anything weaker than a few strong tensions; only include a variable if it changes player behavior.",
             }.get(skill_name, "")
             if profile_preface:
                 lines.append(f"- {profile_preface}")
@@ -1829,10 +2309,17 @@ def build_skill_realization_candidates(
     if program is None:
         return None, None, []
     spec = build_skill_realization_spec(skill_name=skill_name, task=task, program=program)
+    residual_targets = _profile_residual_targets(skill_name)
+    target_focus = _target_focus_for_skill(skill_name)
+    frontier_bundle = _dual_baseline_bundle(skill_name)
     strategies = _pressure_strategy_family(skill_name, program.workflow_surface, list(spec.section_order or []))
     base_candidates: list[SkillRealizationCandidate] = []
     for index, strategy_profile in enumerate(strategies, start=1):
         strategy = str(strategy_profile.get("name") or f"variant_{index}")
+        strategy_profile = dict(strategy_profile)
+        strategy_profile["target_focus"] = target_focus
+        strategy_profile["allowed_sections"] = ",".join(list(residual_targets.allowed_sections or []))
+        strategy_profile["active_frontier_version"] = str(getattr(frontier_bundle, "active_frontier_version", "") or "")
         strategy_spec = _spec_for_strategy(base_spec=spec, strategy_profile=strategy_profile)
         base_candidates.append(
             SkillRealizationCandidate(
@@ -1853,6 +2340,9 @@ def build_skill_realization_candidates(
                     "quality_mode": str(strategy_profile.get("quality_mode") or ""),
                     "failure_style": str(strategy_profile.get("failure_style") or ""),
                     "failure_mode": str(strategy_profile.get("failure_mode") or ""),
+                    "target_focus": str(strategy_profile.get("target_focus") or ""),
+                    "allowed_sections": str(strategy_profile.get("allowed_sections") or ""),
+                    "active_frontier_version": str(strategy_profile.get("active_frontier_version") or ""),
                 },
                 rendered_markdown=_render_candidate_markdown(
                     program=program,
@@ -2086,6 +2576,9 @@ def _coverage_rank_key(skill_name: str, metrics: dict[str, Any]) -> tuple[float,
 
 
 def _compressible_section_names(skill_name: str) -> set[str]:
+    targets = _profile_residual_targets(skill_name)
+    if targets.allowed_sections:
+        return set(targets.allowed_sections)
     names = {"Overview", "Output Format", "Quality Checks", "Failure Patterns and Fixes"}
     if skill_name == "simulation-resource-loop-design":
         names.add("Analysis Blocks")
@@ -2137,6 +2630,16 @@ def _compression_plans(
             compression_rules=common_rules + ["keep symptom/cause/correction structure intact"],
         ),
     ]
+    if "Default Workflow" in _compressible_section_names(skill_name):
+        plans.append(
+            SectionCompressionPlan(
+                section_name="Default Workflow",
+                max_sentence_budget=1,
+                protected_terms=list(decision_terms),
+                forbidden_removals=list(decision_terms),
+                compression_rules=common_rules + ["preserve numbered workflow spine and decision/failure/fix bullets"],
+            )
+        )
     if skill_name == "simulation-resource-loop-design":
         plans.append(
             SectionCompressionPlan(
@@ -2221,6 +2724,18 @@ def _compression_opening(skill_name: str, strategy_profile: dict[str, str]) -> s
         "simulation-resource-loop-design": "Map the pressure web, keep the tradeoffs visible, and preserve recovery cost.",
     }
     return defaults.get(skill_name, "")
+
+
+def _append_sentence(base: str, extra: str) -> str:
+    left = str(base or "").strip()
+    right = str(extra or "").strip()
+    if not left:
+        return right
+    if not right:
+        return left
+    if left.endswith((".", "!", "?")):
+        return f"{left} {right}"
+    return f"{left}. {right}"
 
 
 def _compress_section_lines(
@@ -2492,6 +3007,7 @@ def _compare_to_dual_baselines(
     if bundle is None:
         return MonotonicImprovementReport(
             skill_name=skill_name,
+            active_frontier_status="missing",
             best_balance_comparison_status="missing",
             best_coverage_comparison_status="missing",
             force_non_regression_status="pass",
@@ -2525,6 +3041,9 @@ def _compare_to_dual_baselines(
         for metric, value in dict(bundle.compactness_ceiling or {}).items()
         if winner_compactness.get(metric, 0.0) > float(value) + compactness_tol
     ]
+    force_non_regression_status = "fail" if force_regressions else "pass"
+    coverage_non_regression_status = "fail" if coverage_regressions else "pass"
+    compactness_non_regression_status = "fail" if compactness_regressions else "pass"
 
     def _baseline_force_win(snapshot_name: str) -> int:
         snapshot = getattr(bundle, snapshot_name)
@@ -2540,9 +3059,15 @@ def _compare_to_dual_baselines(
 
     best_balance_comparison_status = "beaten" if best_balance_force_win_count >= 1 else "not_beaten"
     best_coverage_comparison_status = "beaten" if best_coverage_force_win_count >= 1 else "not_beaten"
-    force_non_regression_status = "fail" if force_regressions else "pass"
-    coverage_non_regression_status = "fail" if coverage_regressions else "pass"
-    compactness_non_regression_status = "fail" if compactness_regressions else "pass"
+    active_frontier_status = (
+        "regressed"
+        if (
+            force_non_regression_status == "fail"
+            or coverage_non_regression_status == "fail"
+            or compactness_non_regression_status == "fail"
+        )
+        else ("beaten" if best_balance_force_win_count >= 1 and best_coverage_force_win_count >= 1 else "matched")
+    )
     frontier_dominance_status = (
         "pass"
         if (
@@ -2592,8 +3117,35 @@ def _compare_to_dual_baselines(
         promotion_status = "hold"
         promotion_reason = "hold_due_to_no_primary_win"
 
+    legacy_delta_summary: list[str] = []
+    for label, snapshot in (
+        ("legacy_balance", bundle.legacy_balance_snapshot),
+        ("legacy_coverage", bundle.legacy_coverage_snapshot),
+    ):
+        if snapshot is None:
+            continue
+        better_force = sum(
+            1
+            for metric, baseline in dict(snapshot.primary_force_metrics or {}).items()
+            if winner_force.get(metric, 0.0) > float(baseline) + 0.01
+        )
+        better_coverage = sum(
+            1
+            for metric, baseline in dict(snapshot.coverage_metrics or {}).items()
+            if winner_coverage.get(metric, 0.0) > float(baseline) + 0.01
+        )
+        better_compactness = sum(
+            1
+            for metric, baseline in dict(snapshot.compactness_metrics or {}).items()
+            if winner_compactness.get(metric, 0.0) + compactness_tol < float(baseline)
+        )
+        legacy_delta_summary.append(
+            f"{label}=force+{better_force}/coverage+{better_coverage}/compactness+{better_compactness}"
+        )
+
     return MonotonicImprovementReport(
         skill_name=skill_name,
+        active_frontier_status=active_frontier_status,
         best_balance_comparison_status=best_balance_comparison_status,
         best_coverage_comparison_status=best_coverage_comparison_status,
         force_non_regression_status=force_non_regression_status,
@@ -2606,7 +3158,9 @@ def _compare_to_dual_baselines(
         primary_force_win_count=primary_force_win_count,
         protected_regressions=protected_regressions,
         compactness_gains=compactness_gains,
+        legacy_delta_summary=legacy_delta_summary,
         summary=[
+            f"active_frontier_status={active_frontier_status}",
             f"best_balance_comparison_status={best_balance_comparison_status}",
             f"best_coverage_comparison_status={best_coverage_comparison_status}",
             f"force_non_regression_status={force_non_regression_status}",
@@ -2615,6 +3169,7 @@ def _compare_to_dual_baselines(
             f"compression_gain_status={compression_gain_status}",
             f"primary_force_win_count={primary_force_win_count}",
             f"promotion_reason={promotion_reason}",
+            *legacy_delta_summary,
         ],
     )
 
@@ -2653,6 +3208,7 @@ def choose_skill_realization_candidate(
         source_metrics=source_metrics,
         bundle=_dual_baseline_bundle(skill_name),
     )
+    residual_gap_report = _residual_gap_report(skill_name, winner_metrics)
     force_non_regression_status = monotonic_report.force_non_regression_status
     current_best_comparison_status = (
         "beaten"
@@ -2735,13 +3291,20 @@ def choose_skill_realization_candidate(
             frontier_dominance_status=monotonic_if_missing.frontier_dominance_status,
             compression_gain_status=monotonic_if_missing.compression_gain_status,
             current_best_comparison_status="missing_current_best",
+            active_frontier_status=monotonic_if_missing.active_frontier_status,
             primary_force_win_count=0,
             promotion_hold_reason="" if promote_without_best else "hold_due_to_candidate_separation",
             stable_but_no_breakthrough=not promote_without_best,
+            quality_check_target_status=residual_gap_report.quality_check_target_status,
+            pressure_target_status=residual_gap_report.pressure_target_status,
+            leakage_target_status=residual_gap_report.leakage_target_status,
+            false_fix_rejection_status=residual_gap_report.false_fix_rejection_status,
+            residual_gap_count=residual_gap_report.residual_gap_count,
             summary=[
                 f"promotion_status={'promote' if promote_without_best else 'hold'}",
                 f"reason={'no_current_best_snapshot' if promote_without_best else 'hold_due_to_candidate_separation'}",
                 f"candidate_separation_status={candidate_separation_status}",
+                *residual_gap_report.summary,
             ],
         ), monotonic_if_missing
     winner_score = float(winner_metrics["score"])
@@ -2750,12 +3313,15 @@ def choose_skill_realization_candidate(
         candidate_separation_status == "pass"
         and monotonic_report.frontier_dominance_status == "pass"
         and monotonic_report.promotion_status == "promote"
+        and residual_gap_report.status == "pass"
     )
     stable_but_no_breakthrough = (
         candidate_separation_status == "pass"
         and monotonic_report.frontier_dominance_status == "pass"
-        and monotonic_report.promotion_status != "promote"
-        and monotonic_report.promotion_reason == "hold_due_to_no_primary_win"
+        and (
+            (monotonic_report.promotion_status != "promote" and monotonic_report.promotion_reason == "hold_due_to_no_primary_win")
+            or residual_gap_report.status != "pass"
+        )
     )
     promotion_reason = (
         "breakthrough"
@@ -2785,13 +3351,20 @@ def choose_skill_realization_candidate(
         frontier_dominance_status=monotonic_report.frontier_dominance_status,
         compression_gain_status=monotonic_report.compression_gain_status,
         current_best_comparison_status=current_best_comparison_status,
+        active_frontier_status=monotonic_report.active_frontier_status,
         primary_force_win_count=primary_force_win_count,
         promotion_hold_reason="" if promote else promotion_reason,
         stable_but_no_breakthrough=stable_but_no_breakthrough,
+        quality_check_target_status=residual_gap_report.quality_check_target_status,
+        pressure_target_status=residual_gap_report.pressure_target_status,
+        leakage_target_status=residual_gap_report.leakage_target_status,
+        false_fix_rejection_status=residual_gap_report.false_fix_rejection_status,
+        residual_gap_count=residual_gap_report.residual_gap_count,
         summary=[
             f"winner_score={winner_score:.4f}",
             f"current_best_score={current_score:.4f}",
             f"candidate_separation_status={candidate_separation_status}",
+            f"active_frontier_status={monotonic_report.active_frontier_status}",
             f"force_non_regression_status={force_non_regression_status}",
             f"coverage_non_regression_status={monotonic_report.coverage_non_regression_status}",
             f"compactness_non_regression_status={monotonic_report.compactness_non_regression_status}",
@@ -2800,6 +3373,7 @@ def choose_skill_realization_candidate(
             f"current_best_comparison_status={current_best_comparison_status}",
             f"primary_force_win_count={primary_force_win_count}",
             f"promotion_status={'promote' if promote else 'hold'}",
+            *residual_gap_report.summary,
         ],
     ), monotonic_report
 

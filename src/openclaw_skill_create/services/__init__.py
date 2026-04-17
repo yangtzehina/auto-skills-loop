@@ -14,8 +14,10 @@ from .expert_dna_authoring import (
 )
 from .expert_skill_studio import (
     build_expert_evidence_gap_report,
+    build_profile_residual_targets,
     build_program_candidate_review_batch_report,
     build_program_candidate_review_report,
+    build_residual_gap_report,
     build_skill_realization_candidates,
     build_skill_realization_spec,
     build_skill_program_authoring_pack,
@@ -124,6 +126,15 @@ from .verify import (
     render_ops_roundbook_markdown,
     render_verify_report_markdown,
 )
+from .external_eval_export import (
+    build_external_eval_export_bundle,
+    build_normalized_eval_suite,
+    render_external_eval_export_markdown,
+)
+from .frontier_stability import (
+    build_frontier_stability_report,
+    render_frontier_stability_markdown,
+)
 from .runtime_replay import (
     build_runtime_replay_baseline,
     build_runtime_replay_gate_result,
@@ -164,7 +175,9 @@ __all__ = [
     'build_skill_program_authoring_candidate',
     'build_skill_program_authoring_pack',
     'build_expert_evidence_gap_report',
+    'build_profile_residual_targets',
     'render_skill_program_authoring_pack_markdown',
+    'build_residual_gap_report',
     'build_program_candidate_review_report',
     'build_program_candidate_review_batch_report',
     'render_program_candidate_review_markdown',
@@ -255,6 +268,11 @@ __all__ = [
     'build_verify_report',
     'render_ops_roundbook_markdown',
     'render_verify_report_markdown',
+    'build_normalized_eval_suite',
+    'build_external_eval_export_bundle',
+    'render_external_eval_export_markdown',
+    'build_frontier_stability_report',
+    'render_frontier_stability_markdown',
     'build_runtime_replay_scenario_report',
     'build_runtime_replay_report',
     'build_runtime_replay_baseline',

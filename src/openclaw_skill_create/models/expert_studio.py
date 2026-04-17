@@ -137,18 +137,44 @@ class ProfileBaselineSnapshot(BaseModel):
     primary_force_metrics: dict[str, float] = Field(default_factory=dict)
     coverage_metrics: dict[str, float] = Field(default_factory=dict)
     compactness_metrics: dict[str, float] = Field(default_factory=dict)
+    target_metrics: dict[str, float] = Field(default_factory=dict)
     summary: list[str] = Field(default_factory=list)
 
 
 class ProfileBaselineBundle(BaseModel):
     schema_version: str = "1.0.0"
     skill_name: str
+    active_frontier_version: str = ""
     best_balance_snapshot: ProfileBaselineSnapshot
     best_coverage_snapshot: ProfileBaselineSnapshot
+    legacy_balance_snapshot: ProfileBaselineSnapshot | None = None
+    legacy_coverage_snapshot: ProfileBaselineSnapshot | None = None
     force_floor: dict[str, float] = Field(default_factory=dict)
     coverage_floor: dict[str, float] = Field(default_factory=dict)
     compactness_ceiling: dict[str, float] = Field(default_factory=dict)
     tolerance: dict[str, float] = Field(default_factory=dict)
+    summary: list[str] = Field(default_factory=list)
+
+
+class ProfileResidualTargets(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str
+    target_metrics: dict[str, float] = Field(default_factory=dict)
+    allowed_sections: list[str] = Field(default_factory=list)
+    protected_metrics: dict[str, float] = Field(default_factory=dict)
+    summary: list[str] = Field(default_factory=list)
+
+
+class ResidualGapReport(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str
+    target_focus: str = ""
+    quality_check_target_status: str = "pass"
+    pressure_target_status: str = "pass"
+    leakage_target_status: str = "pass"
+    false_fix_rejection_status: str = "pass"
+    residual_gap_count: int = 0
+    status: str = "pass"
     summary: list[str] = Field(default_factory=list)
 
 
@@ -256,9 +282,15 @@ class SkillPromotionDecision(BaseModel):
     frontier_dominance_status: str = "unknown"
     compression_gain_status: str = "unknown"
     current_best_comparison_status: str = "unknown"
+    active_frontier_status: str = "unknown"
     primary_force_win_count: int = 0
     promotion_hold_reason: str = ""
     stable_but_no_breakthrough: bool = False
+    quality_check_target_status: str = "unknown"
+    pressure_target_status: str = "unknown"
+    leakage_target_status: str = "unknown"
+    false_fix_rejection_status: str = "unknown"
+    residual_gap_count: int = 0
     summary: list[str] = Field(default_factory=list)
 
 
@@ -272,11 +304,13 @@ class MonotonicImprovementReport(BaseModel):
     compactness_non_regression_status: str = "unknown"
     frontier_dominance_status: str = "unknown"
     compression_gain_status: str = "unknown"
+    active_frontier_status: str = "unknown"
     promotion_status: str = "hold"
     promotion_reason: str = ""
     primary_force_win_count: int = 0
     protected_regressions: list[str] = Field(default_factory=list)
     compactness_gains: list[str] = Field(default_factory=list)
+    legacy_delta_summary: list[str] = Field(default_factory=list)
     summary: list[str] = Field(default_factory=list)
 
 

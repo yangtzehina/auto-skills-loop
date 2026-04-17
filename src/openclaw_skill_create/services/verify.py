@@ -91,6 +91,7 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- compactness_non_regression_status={report.compactness_non_regression_status}',
         f'- frontier_dominance_status={report.frontier_dominance_status}',
         f'- compression_gain_status={report.compression_gain_status}',
+        f'- active_frontier_status={report.active_frontier_status}',
         f'- program_fidelity_status={report.program_fidelity_status}',
         f'- program_fidelity_fail_count={report.program_fidelity_fail_count}',
         f'- program_fidelity_warn_count={report.program_fidelity_warn_count}',
@@ -100,6 +101,7 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         f'- best_coverage_not_beaten_count={report.best_coverage_not_beaten_count}',
         f'- current_best_not_beaten_count={report.current_best_not_beaten_count}',
         f'- stable_but_no_breakthrough_count={report.stable_but_no_breakthrough_count}',
+        f'- residual_gap_count={report.residual_gap_count}',
         f'- dna_authoring_status={report.dna_authoring_status}',
         f'- candidate_dna_count={report.candidate_dna_count}',
         f'- program_authoring_status={report.program_authoring_status}',
@@ -271,6 +273,7 @@ def build_verify_report(
     compactness_non_regression_status = str(comparison_report.compactness_non_regression_status or 'pass')
     frontier_dominance_status = str(comparison_report.frontier_dominance_status or 'pass')
     compression_gain_status = str(comparison_report.compression_gain_status or 'pass')
+    active_frontier_status = str(comparison_report.active_frontier_status or 'pass')
     program_fidelity_status = (
         'fail'
         if any(item.auto_metrics.program_fidelity_status == 'fail' for item in list(comparison_report.cases or []))
@@ -407,6 +410,7 @@ def build_verify_report(
         compactness_non_regression_status=compactness_non_regression_status,
         frontier_dominance_status=frontier_dominance_status,
         compression_gain_status=compression_gain_status,
+        active_frontier_status=active_frontier_status,
         program_fidelity_status=program_fidelity_status,
         program_fidelity_fail_count=sum(
             1
@@ -424,6 +428,7 @@ def build_verify_report(
         best_coverage_not_beaten_count=int(comparison_report.best_coverage_not_beaten_count or 0),
         current_best_not_beaten_count=int(comparison_report.current_best_not_beaten_count or 0),
         stable_but_no_breakthrough_count=int(comparison_report.stable_but_no_breakthrough_count or 0),
+        residual_gap_count=int(comparison_report.residual_gap_count or 0),
         dna_authoring_status=str(comparison_report.dna_authoring_status or 'pass'),
         candidate_dna_count=int(comparison_report.candidate_dna_count or 0),
         program_authoring_status=str(comparison_report.program_authoring_status or 'pass'),
@@ -464,11 +469,13 @@ def build_verify_report(
             f'coverage_non_regression={coverage_non_regression_status} '
             f'compactness_non_regression={compactness_non_regression_status} '
             f'frontier_dominance={frontier_dominance_status} '
+            f'active_frontier_status={active_frontier_status} '
             f'pairwise_promotion={pairwise_promotion_status} '
             f'candidate_separation_gaps={comparison_report.candidate_separation_gap_count} '
             f'best_balance_not_beaten={comparison_report.best_balance_not_beaten_count} '
             f'best_coverage_not_beaten={comparison_report.best_coverage_not_beaten_count} '
             f'current_best_not_beaten={comparison_report.current_best_not_beaten_count} '
+            f'residual_gaps={comparison_report.residual_gap_count} '
             f'program_fidelity={program_fidelity_status} '
             f'dna_authoring={comparison_report.dna_authoring_status} '
             f'program_authoring={comparison_report.program_authoring_status} '
@@ -598,6 +605,7 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- compactness_non_regression_status={report.compactness_non_regression_status}')
     lines.append(f'- frontier_dominance_status={report.frontier_dominance_status}')
     lines.append(f'- compression_gain_status={report.compression_gain_status}')
+    lines.append(f'- active_frontier_status={report.active_frontier_status}')
     lines.append(f'- program_fidelity_status={report.program_fidelity_status}')
     lines.append(f'- program_fidelity_fail_count={report.program_fidelity_fail_count}')
     lines.append(f'- program_fidelity_warn_count={report.program_fidelity_warn_count}')
@@ -607,6 +615,7 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- best_coverage_not_beaten_count={report.best_coverage_not_beaten_count}')
     lines.append(f'- current_best_not_beaten_count={report.current_best_not_beaten_count}')
     lines.append(f'- stable_but_no_breakthrough_count={report.stable_but_no_breakthrough_count}')
+    lines.append(f'- residual_gap_count={report.residual_gap_count}')
     lines.append(f'- dna_authoring_status={report.dna_authoring_status}')
     lines.append(f'- candidate_dna_count={report.candidate_dna_count}')
     lines.append(f'- program_authoring_status={report.program_authoring_status}')
@@ -814,6 +823,7 @@ def build_ops_roundbook_report(
         compactness_non_regression_status=verify_report.compactness_non_regression_status,
         frontier_dominance_status=verify_report.frontier_dominance_status,
         compression_gain_status=verify_report.compression_gain_status,
+        active_frontier_status=verify_report.active_frontier_status,
         program_fidelity_status=verify_report.program_fidelity_status,
         program_fidelity_fail_count=verify_report.program_fidelity_fail_count,
         program_fidelity_warn_count=verify_report.program_fidelity_warn_count,
@@ -823,6 +833,7 @@ def build_ops_roundbook_report(
         best_coverage_not_beaten_count=verify_report.best_coverage_not_beaten_count,
         current_best_not_beaten_count=verify_report.current_best_not_beaten_count,
         stable_but_no_breakthrough_count=verify_report.stable_but_no_breakthrough_count,
+        residual_gap_count=verify_report.residual_gap_count,
         dna_authoring_status=verify_report.dna_authoring_status,
         candidate_dna_count=verify_report.candidate_dna_count,
         program_authoring_status=verify_report.program_authoring_status,
@@ -860,11 +871,13 @@ def build_ops_roundbook_report(
             f'coverage_non_regression={verify_report.coverage_non_regression_status} '
             f'compactness_non_regression={verify_report.compactness_non_regression_status} '
             f'frontier_dominance={verify_report.frontier_dominance_status} '
+            f'active_frontier_status={verify_report.active_frontier_status} '
             f'pairwise_promotion={verify_report.pairwise_promotion_status} '
             f'candidate_separation_gaps={verify_report.candidate_separation_gap_count} '
             f'best_balance_not_beaten={verify_report.best_balance_not_beaten_count} '
             f'best_coverage_not_beaten={verify_report.best_coverage_not_beaten_count} '
             f'current_best_not_beaten={verify_report.current_best_not_beaten_count} '
+            f'residual_gaps={verify_report.residual_gap_count} '
             f'program_fidelity={verify_report.program_fidelity_status} '
             f'dna_authoring={verify_report.dna_authoring_status} '
             f'program_authoring={verify_report.program_authoring_status} '

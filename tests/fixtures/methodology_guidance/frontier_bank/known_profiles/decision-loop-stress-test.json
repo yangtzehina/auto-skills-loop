@@ -1,0 +1,44 @@
+{
+  "skill_name": "decision-loop-stress-test",
+  "active_frontier_version": "frontier_v2",
+  "pressure_best_sections": {
+    "Overview": [
+      "Stress the loop until you can name where the decision collapses, not where the content runs out."
+    ],
+    "Default Workflow": [
+      "Each step should name the collapse signal, stop condition, dominant strategy risk, or reinforcement break before it explains the rest of the audit."
+    ],
+    "Quality Checks": [
+      "Reject fixes that only add content, rewards, or softer compensation; keep only the ones that change the pressure problem.",
+      "Call out mastery that only improves throughput and still fails to create a new decision problem."
+    ],
+    "Failure Patterns and Fixes": [
+      "If mastery removes the decision, the repair must alter pressure, not reward players with more throughput."
+    ]
+  },
+  "compactness_best_sections": {
+    "Overview": [
+      "Do not sell the method; state the pressure test and move straight into the audit."
+    ],
+    "Quality Checks": [
+      "Keep only checks that reveal collapse, autopilot, or wrong reinforcement."
+    ]
+  },
+  "quality_checks_best_sections": {
+    "Quality Checks": [
+      "Check whether first-hour novelty is masking a weak decision.",
+      "Check whether midgame creates a new constraint instead of a larger number problem.",
+      "Check whether solved-state detection is explicit enough to trigger structural change."
+    ]
+  },
+  "failure_repairs_best_sections": {
+    "Failure Patterns and Fixes": [
+      "If the proposed repair only adds events, rewards, or content layers, reject it until it changes the decision landscape and the collapse signal."
+    ]
+  },
+  "output_format_best_sections": {
+    "Output Format": [
+      "Keep the deliverable focused on collapse point, solved state, repair move, and the next pressure test."
+    ]
+  }
+}

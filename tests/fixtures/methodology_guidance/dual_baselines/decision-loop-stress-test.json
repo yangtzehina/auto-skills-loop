@@ -1,73 +1,139 @@
 {
   "schema_version": "1.0.0",
   "skill_name": "decision-loop-stress-test",
+  "active_frontier_version": "frontier_v2",
   "best_balance_snapshot": {
-    "label": "rerun4",
+    "label": "frontier_v2",
     "primary_force_metrics": {
-      "decision_pressure_score": 0.8154,
-      "failure_repair_force": 0.89,
+      "decision_pressure_score": 0.9692,
+      "failure_repair_force": 1.0,
       "stop_condition_coverage": 1.0
     },
     "coverage_metrics": {
-      "domain_move_coverage": 0.7357,
-      "section_depth_score": 0.8934,
-      "task_outcome_with_skill_average": 0.8611
+      "domain_move_coverage": 0.9285,
+      "section_depth_score": 0.9563,
+      "task_outcome_with_skill_average": 0.8981
     },
     "compactness_metrics": {
-      "redundancy_ratio": 0.0584,
+      "redundancy_ratio": 0.0072,
       "shared_opening_phrase_ratio": 0.0,
-      "cross_case_similarity": 0.25,
-      "compression_without_loss": 0.7259
+      "cross_case_similarity": 0.2382,
+      "compression_without_loss": 0.7806
+    },
+    "target_metrics": {
+      "decision_pressure_score": 0.9692,
+      "compression_without_loss": 0.7806
     },
     "summary": [
-      "best_balance=rerun4",
-      "leaner and less shared than rerun5"
+      "active_frontier=frontier_v2",
+      "current HEAD establishes the new active frontier"
     ]
   },
   "best_coverage_snapshot": {
-    "label": "rerun5",
+    "label": "frontier_v2",
     "primary_force_metrics": {
-      "decision_pressure_score": 0.8154,
-      "failure_repair_force": 0.89,
+      "decision_pressure_score": 0.9692,
+      "failure_repair_force": 1.0,
       "stop_condition_coverage": 1.0
     },
     "coverage_metrics": {
-      "domain_move_coverage": 0.7571,
-      "section_depth_score": 0.9008,
-      "task_outcome_with_skill_average": 0.8611
+      "domain_move_coverage": 0.9285,
+      "section_depth_score": 0.9563,
+      "task_outcome_with_skill_average": 0.8981
     },
     "compactness_metrics": {
-      "redundancy_ratio": 0.0909,
-      "shared_opening_phrase_ratio": 0.0526,
-      "cross_case_similarity": 0.2571,
-      "compression_without_loss": 0.7369
+      "redundancy_ratio": 0.0072,
+      "shared_opening_phrase_ratio": 0.0,
+      "cross_case_similarity": 0.2382,
+      "compression_without_loss": 0.7806
+    },
+    "target_metrics": {
+      "decision_pressure_score": 0.9692,
+      "compression_without_loss": 0.7806
     },
     "summary": [
-      "best_coverage=rerun5",
-      "thicker and slightly higher move/depth coverage than rerun4"
+      "active_frontier=frontier_v2",
+      "current HEAD establishes the new active frontier"
+    ]
+  },
+  "legacy_balance_snapshot": {
+    "label": "rerun6",
+    "primary_force_metrics": {
+      "decision_pressure_score": 0.8154,
+      "failure_repair_force": 1.0,
+      "stop_condition_coverage": 1.0
+    },
+    "coverage_metrics": {
+      "domain_move_coverage": 0.9285,
+      "section_depth_score": 0.9008,
+      "task_outcome_with_skill_average": 0.8981
+    },
+    "compactness_metrics": {
+      "redundancy_ratio": 0.0444,
+      "shared_opening_phrase_ratio": 0.0,
+      "cross_case_similarity": 0.2516,
+      "compression_without_loss": 0.7333
+    },
+    "target_metrics": {
+      "decision_pressure_score": 0.8154,
+      "section_force_distinctness": 0.81,
+      "compression_without_loss": 0.7333
+    },
+    "summary": [
+      "active_frontier=rerun6",
+      "current best is shorter, fuller, and less redundant"
+    ]
+  },
+  "legacy_coverage_snapshot": {
+    "label": "rerun6",
+    "primary_force_metrics": {
+      "decision_pressure_score": 0.8154,
+      "failure_repair_force": 1.0,
+      "stop_condition_coverage": 1.0
+    },
+    "coverage_metrics": {
+      "domain_move_coverage": 0.9285,
+      "section_depth_score": 0.9008,
+      "task_outcome_with_skill_average": 0.8981
+    },
+    "compactness_metrics": {
+      "redundancy_ratio": 0.0444,
+      "shared_opening_phrase_ratio": 0.0,
+      "cross_case_similarity": 0.2516,
+      "compression_without_loss": 0.7333
+    },
+    "target_metrics": {
+      "decision_pressure_score": 0.8154,
+      "section_force_distinctness": 0.81,
+      "compression_without_loss": 0.7333
+    },
+    "summary": [
+      "active_frontier=rerun6",
+      "rerun6 now defines both balance and coverage fronts"
     ]
   },
   "force_floor": {
-    "decision_pressure_score": 0.8154,
-    "failure_repair_force": 0.89,
-    "stop_condition_coverage": 1.0
+    "decision_pressure_score": 0.9492,
+    "failure_repair_force": 0.98,
+    "stop_condition_coverage": 0.98
   },
   "coverage_floor": {
-    "domain_move_coverage": 0.7571,
-    "section_depth_score": 0.9008,
-    "task_outcome_with_skill_average": 0.8611
+    "domain_move_coverage": 0.9085,
+    "section_depth_score": 0.9363,
+    "task_outcome_with_skill_average": 0.8781
   },
   "compactness_ceiling": {
-    "redundancy_ratio": 0.0584,
-    "shared_opening_phrase_ratio": 0.0,
-    "cross_case_similarity": 0.25
+    "redundancy_ratio": 0.0272,
+    "shared_opening_phrase_ratio": 0.06,
+    "cross_case_similarity": 0.2682,
+    "compression_without_loss": 0.7806
   },
   "tolerance": {
-    "score_metric": 0.01,
-    "compactness_metric": 0.01
+    "score_metric": 0.02,
+    "compactness_metric": 0.06
   },
   "summary": [
-    "freeze best_balance=rerun4",
-    "freeze best_coverage=rerun5"
+    "freeze active_frontier=frontier_v2",
+    "retain rerun6 as legacy reference point"
   ]
 }
