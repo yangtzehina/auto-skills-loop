@@ -140,6 +140,17 @@ def build_skill_editorial_force_report(
 
     blocking: list[str] = []
     warnings: list[str] = []
+    outcome_only_breakthrough = bool(
+        skill_name == 'decision-loop-stress-test'
+        and promotion_decision is not None
+        and str(getattr(promotion_decision, 'outcome_only_reranker_status', '') or '') == 'pass'
+        and str(getattr(promotion_decision, 'outcome_only_frontier_comparison_status', '') or '') == 'beaten'
+        and int(getattr(promotion_decision, 'outcome_only_probe_count', 0) or 0) > 0
+        and int(getattr(promotion_decision, 'outcome_only_probe_pass_count', 0) or 0)
+        >= int(getattr(promotion_decision, 'outcome_only_probe_count', 0) or 0)
+        and int(getattr(promotion_decision, 'outcome_only_improved_probe_count', 0) or 0) >= 2
+        and int(getattr(promotion_decision, 'residual_gap_count', 1) or 0) == 0
+    )
     profile_thresholds = {
         'concept-to-mvp-pack': {
             'decision_pressure_score': 0.72,
@@ -188,12 +199,14 @@ def build_skill_editorial_force_report(
     if (
         promotion_decision is not None
         and promotion_status != 'promote'
+        and not outcome_only_breakthrough
         and promotion_reason != 'stable_but_no_breakthrough'
     ):
         warnings.append('pairwise_promotion_not_promoted')
     if (
         pairwise_editorial is not None
         and promotion_status != 'promote'
+        and not outcome_only_breakthrough
         and promotion_reason != 'stable_but_no_breakthrough'
         and float(getattr(pairwise_editorial, 'decision_pressure_delta', 0.0) or 0.0) <= 0
     ):

@@ -111,15 +111,19 @@ def test_profile_residual_targets_freeze_frontier_v3_priorities():
 
 def test_decision_loop_probe_expanded_specs_include_future_adversarial_set():
     specs = studio._decision_loop_outcome_probe_specs(mode='probe_expanded_v4')
+    specs_v7 = studio._decision_loop_outcome_probe_specs(mode='probe_expanded_v7')
 
     assert len(specs) == 8
+    assert len(specs_v7) == 8
     probe_ids = {item['probe_id'] for item in specs}
+    probe_ids_v7 = {item['probe_id'] for item in specs_v7}
     assert {
         'decision.solved-state-numeric-only-repair',
         'decision.variation-without-read-change',
         'decision.reinforcement-without-habit-mapping',
         'decision.stop-condition-without-collapse-witness',
     } <= probe_ids
+    assert probe_ids == probe_ids_v7
 
 
 def test_decision_loop_probe_expanded_upgrade_requires_two_improved_probes():
@@ -1164,6 +1168,175 @@ def test_outcome_only_reranker_counts_stronger_witness_bundle_as_improved(monkey
         'decision.reinforcement-without-habit-mapping',
         'decision.solved-state-numeric-only-repair',
     } <= set(report.improved_probe_ids)
+
+
+def test_outcome_only_reranker_counts_stronger_section_bundle_as_improved_in_v7(monkeypatch):
+    frontier_markdown = (
+        "# Frontier\n\n"
+        "## Default Workflow\n\n"
+        "- Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, names what old answer stops working, what new answer becomes correct, and which reward loop currently trains the wrong habit.\n\n"
+        "## Quality Checks\n\n"
+        "- Check whether variation changes read, tradeoff, or consequence instead of just renaming content.\n"
+        "- Check whether reinforcement explicitly maps the wrong habit to the right habit the loop should train.\n"
+        "- Check whether solved-state repair changes the decision landscape instead of leaving the same read, tradeoff, or consequence alive.\n\n"
+        "## Common Pitfalls: Collapse Patterns and Repairs\n\n"
+        "### Variety Without Strategic Consequence\n"
+        "- Correction: Keep only the variants that force a new read, tradeoff, or consequence.\n"
+    )
+    candidate = SkillRealizationCandidate(
+        candidate_id='decision-loop-stress-test:fake_fix_rejection_v2:1',
+        skill_name='decision-loop-stress-test',
+        program_id='decision-loop-stress-test:execution_spine',
+        realization_strategy='fake_fix_rejection_v2',
+        strategy_profile={},
+        rendered_markdown=(
+            "# Candidate\n\n"
+            "## Default Workflow\n\n"
+            "- Demand a structural fix that names the dominant line, what old answer stops working, what new answer becomes correct, and what reward, information, or cost changed to cause that shift.\n"
+            "- Map the wrong habit to the right habit, say which reward loop currently trains the wrong habit, say what player behavior must disappear, and say what replacement behavior must become optimal.\n"
+            "- Reject repairs that are not just numeric tuning when they keep the same dominant line, the same read, the same consequence structure, and the same decision landscape.\n\n"
+            "## Quality Checks\n\n"
+            "- Hard fail variation named but same dominant line, same read, or same consequence under a new label.\n"
+            "- Hard fail habit mapping named but reward loop unchanged.\n"
+            "- Hard fail solved-state repair named but decision landscape unchanged.\n"
+            "- Hard fail numeric-only, content-only, pacing-only, or throughput-only fixes.\n\n"
+            "## Common Pitfalls: Collapse Patterns and Repairs\n\n"
+            "### Variety Without Strategic Consequence\n"
+            "- Fake version: fake variation keeps the same dominant line and the same read.\n"
+            "- Structural replacement: change reward, information, or cost so the old answer stops working and a new answer becomes correct.\n"
+            "### Wrong Behavior Training\n"
+            "- Fake version: fake reinforcement loop keeps rewarding the same safe behavior.\n"
+            "- Structural replacement: name the reward loop currently training the wrong habit and make the replacement behavior become optimal.\n"
+            "### Numeric-Only Repair\n"
+            "- Fake version: numeric-only fake fix keeps the same dominant line, the same read, and the same consequence structure alive.\n"
+            "- Structural replacement: change the decision landscape first so the old answer stops working.\n"
+        ),
+    )
+    monkeypatch.setattr(studio, '_current_best_markdown', lambda skill_name: frontier_markdown)
+    original_probe_specs = studio._decision_loop_outcome_probe_specs
+
+    def _filtered_probe_specs(*, mode: str = 'probe_expanded_v4'):
+        if mode != 'probe_expanded_v7':
+            return list(original_probe_specs(mode=mode))
+        return [
+            {
+                'probe_id': 'decision.variation-without-read-change',
+                'pressure_terms': ['dominant line', 'old answer stops working', 'new answer becomes correct', 'read'],
+                'false_fix_terms': ['structural replacement', 'reward, information, or cost', 'same consequence'],
+            },
+            {
+                'probe_id': 'decision.reinforcement-without-habit-mapping',
+                'pressure_terms': ['wrong habit', 'right habit', 'reward loop currently trains', 'behavior'],
+                'false_fix_terms': ['structural replacement', 'replacement behavior', 'reward loop unchanged'],
+            },
+            {
+                'probe_id': 'decision.solved-state-numeric-only-repair',
+                'pressure_terms': ['not just numeric tuning', 'same dominant line', 'same read', 'decision landscape'],
+                'false_fix_terms': ['structural replacement', 'numeric-only fake fix', 'decision landscape unchanged'],
+            },
+        ]
+
+    monkeypatch.setattr(studio, '_decision_loop_outcome_probe_specs', _filtered_probe_specs)
+
+    def _metrics(**kwargs):
+        return {
+            'editorial': type('Editorial', (), {'redundancy_ratio': 0.05})(),
+            'editorial_force': type('Force', (), {})(),
+        }
+
+    monkeypatch.setattr(studio, '_candidate_editorial_metrics', _metrics)
+
+    report = studio._build_outcome_only_reranker_report(
+        skill_name='decision-loop-stress-test',
+        scored_candidates=[(candidate, {'editorial': type('Editorial', (), {'redundancy_ratio': 0.05})()})],
+        probe_mode='probe_expanded_v7',
+    )
+
+    assert report is not None
+    assert report.frontier_comparison_status == 'beaten'
+    assert {
+        'decision.variation-without-read-change',
+        'decision.reinforcement-without-habit-mapping',
+        'decision.solved-state-numeric-only-repair',
+    } <= set(report.improved_probe_ids)
+
+
+def test_outcome_only_reranker_counts_frontier_equivalent_section_bundle_as_matched_in_v7(monkeypatch):
+    candidate_markdown = (
+        "# Candidate\n\n"
+        "## Default Workflow\n\n"
+        "- Demand a structural fix that names the dominant line, what old answer stops working, what new answer becomes correct, and what reward, information, or cost changed to cause that shift.\n"
+        "- Map the wrong habit to the right habit, say which reward loop currently trains the wrong habit, say what player behavior must disappear, and say what replacement behavior must become optimal.\n"
+        "- Reject repairs that are not just numeric tuning when they keep the same dominant line, the same read, the same consequence structure, and the same decision landscape.\n\n"
+        "## Quality Checks\n\n"
+        "- Hard fail variation named but same dominant line, same read, or same consequence under a new label.\n"
+        "- Hard fail habit mapping named but reward loop unchanged.\n"
+        "- Hard fail solved-state repair named but decision landscape unchanged.\n"
+        "- Hard fail numeric-only, content-only, pacing-only, or throughput-only fixes.\n\n"
+        "## Common Pitfalls: Collapse Patterns and Repairs\n\n"
+        "### Variety Without Strategic Consequence\n"
+        "- Fake version: fake variation keeps the same dominant line and the same read.\n"
+        "- Structural replacement: change reward, information, or cost so the old answer stops working and a new answer becomes correct.\n"
+        "### Wrong Behavior Training\n"
+        "- Fake version: fake reinforcement loop keeps rewarding the same safe behavior.\n"
+        "- Structural replacement: name the reward loop currently training the wrong habit and make the replacement behavior become optimal.\n"
+        "### Numeric-Only Repair\n"
+        "- Fake version: numeric-only fake fix keeps the same dominant line, the same read, and the same consequence structure alive.\n"
+        "- Structural replacement: change the decision landscape first so the old answer stops working.\n"
+    )
+    candidate = SkillRealizationCandidate(
+        candidate_id='decision-loop-stress-test:pressure_audit_v2:1',
+        skill_name='decision-loop-stress-test',
+        program_id='decision-loop-stress-test:execution_spine',
+        realization_strategy='pressure_audit_v2',
+        strategy_profile={},
+        rendered_markdown=candidate_markdown,
+    )
+    monkeypatch.setattr(studio, '_current_best_markdown', lambda skill_name: candidate_markdown)
+    original_probe_specs = studio._decision_loop_outcome_probe_specs
+
+    def _filtered_probe_specs(*, mode: str = 'probe_expanded_v4'):
+        if mode != 'probe_expanded_v7':
+            return list(original_probe_specs(mode=mode))
+        return [
+            {
+                'probe_id': 'decision.variation-without-read-change',
+                'pressure_terms': ['dominant line', 'old answer stops working', 'new answer becomes correct', 'read'],
+                'false_fix_terms': ['structural replacement', 'reward, information, or cost', 'same consequence'],
+            },
+            {
+                'probe_id': 'decision.reinforcement-without-habit-mapping',
+                'pressure_terms': ['wrong habit', 'right habit', 'reward loop currently trains', 'behavior'],
+                'false_fix_terms': ['structural replacement', 'replacement behavior', 'reward loop unchanged'],
+            },
+            {
+                'probe_id': 'decision.solved-state-numeric-only-repair',
+                'pressure_terms': ['not just numeric tuning', 'same dominant line', 'same read', 'decision landscape'],
+                'false_fix_terms': ['structural replacement', 'numeric-only fake fix', 'decision landscape unchanged'],
+            },
+        ]
+
+    monkeypatch.setattr(studio, '_decision_loop_outcome_probe_specs', _filtered_probe_specs)
+
+    def _metrics(**kwargs):
+        return {
+            'editorial': type('Editorial', (), {'redundancy_ratio': 0.05})(),
+            'editorial_force': type('Force', (), {})(),
+        }
+
+    monkeypatch.setattr(studio, '_candidate_editorial_metrics', _metrics)
+
+    report = studio._build_outcome_only_reranker_report(
+        skill_name='decision-loop-stress-test',
+        scored_candidates=[(candidate, {'editorial': type('Editorial', (), {'redundancy_ratio': 0.05})()})],
+        probe_mode='probe_expanded_v7',
+    )
+
+    assert report is not None
+    assert report.status == 'pass'
+    assert report.frontier_comparison_status == 'matched'
+    assert report.blocked_probe_ids == []
+    assert report.improved_probe_ids == []
 
 
 def test_promotion_stays_stable_when_residual_targets_do_not_improve(monkeypatch):

@@ -108,3 +108,22 @@ def test_run_ops_roundbook_cli_supports_markdown(monkeypatch):
     assert code == 0
     assert stderr == ''
     assert stdout.startswith('# Ops Roundbook')
+
+
+def test_run_ops_roundbook_cli_reports_stage_failure(monkeypatch):
+    module = load_script_module(SCRIPT_PATH, 'skill_create_run_ops_roundbook_stage_failure')
+    monkeypatch.setattr(
+        module,
+        'build_verify_report',
+        lambda **kwargs: (_ for _ in ()).throw(RuntimeError('comparison timed out')),
+    )
+
+    code, stdout, stderr = invoke_main(
+        module,
+        ['run_ops_roundbook.py', '--mode', 'quick', '--format', 'markdown'],
+        monkeypatch,
+    )
+
+    assert code == 1
+    assert stdout == ''
+    assert 'roundbook_stage=build_verify_report RuntimeError: comparison timed out' in stderr

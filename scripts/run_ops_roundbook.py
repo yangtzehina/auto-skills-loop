@@ -128,35 +128,72 @@ def _parse_args(argv: list[str]) -> tuple[str, str, bool, Path, Path]:
     return mode, output_format, include_live_curation, round_report, approval_manifest
 
 
-def main(argv: list[str]) -> int:
+def _run_roundbook_stage(stage: str, builder):
     try:
-        mode, output_format, include_live_curation, round_report_path, approval_manifest_path = _parse_args(argv)
-        approval_state = load_ops_approval_state(approval_manifest_path)
-        verify_report = build_verify_report(mode=mode, include_live_curation=include_live_curation)
-        create_seed_pack = build_runtime_create_seed_proposal_pack(
+        return builder()
+    except Exception as exc:  # pragma: no cover - exercised via CLI path
+        raise RuntimeError(f'roundbook_stage={stage} {type(exc).__name__}: {exc}') from exc
+
+
+def _build_cli_roundbook_report(
+    *,
+    mode: str,
+    include_live_curation: bool,
+    round_report_path: Path,
+    approval_manifest_path: Path,
+):
+    approval_state = _run_roundbook_stage(
+        'load_approval_state',
+        lambda: load_ops_approval_state(approval_manifest_path),
+    )
+    verify_report = _run_roundbook_stage(
+        'build_verify_report',
+        lambda: build_verify_report(mode=mode, include_live_curation=include_live_curation),
+    )
+    create_seed_pack = _run_roundbook_stage(
+        'build_create_seed_pack',
+        lambda: build_runtime_create_seed_proposal_pack(
             source_path=DEFAULT_CREATE_SEED_SOURCE,
             policy=OpenSpaceObservationPolicy(enabled=False),
-        )
-        prior_pilot_report = _load_prior_pilot_report(DEFAULT_PRIOR_SOURCE)
-        prior_pilot_exercise = build_runtime_prior_pilot_exercise_report(
+        ),
+    )
+    prior_pilot_report = _run_roundbook_stage(
+        'load_prior_pilot_report',
+        lambda: _load_prior_pilot_report(DEFAULT_PRIOR_SOURCE),
+    )
+    prior_pilot_exercise = _run_roundbook_stage(
+        'build_prior_pilot_exercise',
+        lambda: build_runtime_prior_pilot_exercise_report(
             pilot_report=prior_pilot_report,
             family='hf-trainer',
             approval_state=approval_state,
-        )
-        round_report = load_public_source_curation_round_report(round_report_path)
-        source_promotion_pack = build_public_source_promotion_pack(
+        ),
+    )
+    round_report = _run_roundbook_stage(
+        'load_source_round_report',
+        lambda: load_public_source_curation_round_report(round_report_path),
+    )
+    source_promotion_pack = _run_roundbook_stage(
+        'build_source_promotion_pack',
+        lambda: build_public_source_promotion_pack(
             round_report=round_report,
             repo_full_name='alirezarezvani/claude-skills',
             approval_state=approval_state,
-        )
-        decision_pack = build_runtime_ops_decision_pack(
+        ),
+    )
+    decision_pack = _run_roundbook_stage(
+        'build_runtime_ops_decision_pack',
+        lambda: build_runtime_ops_decision_pack(
             create_seed_pack=create_seed_pack,
             prior_pilot_report=prior_pilot_report,
             source_curation_round=round_report,
             verify_report=verify_report,
             approval_state=approval_state,
-        )
-        report = build_ops_roundbook_report(
+        ),
+    )
+    return _run_roundbook_stage(
+        'build_ops_roundbook_report',
+        lambda: build_ops_roundbook_report(
             verify_report=verify_report,
             runtime_ops_decision_pack=decision_pack,
             prior_pilot_exercise=prior_pilot_exercise,
@@ -164,11 +201,26 @@ def main(argv: list[str]) -> int:
             create_seed_pack=create_seed_pack,
             prior_pilot_report=prior_pilot_report,
             source_curation_round=round_report,
+        ),
+    )
+
+
+def main(argv: list[str]) -> int:
+    try:
+        mode, output_format, include_live_curation, round_report_path, approval_manifest_path = _parse_args(argv)
+        report = _build_cli_roundbook_report(
+            mode=mode,
+            include_live_curation=include_live_curation,
+            round_report_path=round_report_path,
+            approval_manifest_path=approval_manifest_path,
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         print(_usage(), file=sys.stderr)
         return 2
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
 
     if output_format == 'markdown':
         print(report.markdown_summary)

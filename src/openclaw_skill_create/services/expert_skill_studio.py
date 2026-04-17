@@ -107,6 +107,9 @@ PROFILE_QUALITY_CHECK_LINES: dict[str, list[str]] = {
         "Check whether the variation audit changes read, tradeoff, consequence, or dominant line instead of renaming the same answer.",
         "Check whether reinforcement maps wrong habit to right habit, names the intended behavior shift, and rejects throughput-only mastery.",
         "Check whether the stop condition, collapse witness, and break point appear together as the structural witness for repair.",
+        "Check whether variation named but same dominant line, same read, or same consequence is being falsely accepted as strategic change.",
+        "Check whether habit mapping is named while the reward loop currently trains the same behavior and no replacement behavior becomes optimal.",
+        "Check whether the repair recommendation claims a solved-state fix while the decision landscape stays unchanged.",
     ],
     "simulation-resource-loop-design": [
         "Check whether variables have player-facing roles before any balancing work starts.",
@@ -173,13 +176,13 @@ PROFILE_FAILURE_ENTRIES: dict[str, list[tuple[str, str, str, str]]] = {
             "Progression Without New Problems",
             "Progression adds throughput or spectacle while the underlying choice stays solved.",
             "Expansion arrived without a new pressure problem.",
-            "Add a new constraint or pressure relationship before adding more content or reward layers, reject content-only or numeric-only repair, and change the decision landscape instead of polishing the same answer.",
+            "Add a new constraint or pressure relationship before adding more content or reward layers, reject content-only or numeric-only repair, and change the decision landscape instead of polishing the same answer so the old answer stops working and a new answer becomes correct.",
         ),
         (
             "Variety Without Strategic Consequence",
             "The game offers more variants, but they do not change read, tradeoff, or consequence.",
             "Variation was used as surface freshness instead of decision mutation.",
-            "Cut cosmetic variation, call fake variation by name, reject any variation that does not change decisions or keeps the same read, same consequence, or dominant line, say what old answer stops working and what new answer becomes required, and keep only the variants that force a new read, tradeoff, or consequence.",
+            "Cut cosmetic variation, call fake variation by name, reject any variation that does not change decisions or keeps the same read, same consequence, or dominant line, say what old answer stops working, what new answer becomes required, and what reward, information, or cost changed, and keep only the variants that force a new read, tradeoff, or consequence.",
         ),
         (
             "Mastery Removes the Game",
@@ -191,13 +194,13 @@ PROFILE_FAILURE_ENTRIES: dict[str, list[tuple[str, str, str, str]]] = {
             "Wrong Behavior Training",
             "The reward structure favors autopilot even though the design claims expression or adaptation.",
             "Reinforcement was tuned for throughput rather than the intended behavior.",
-            "Map the wrong habit to the right habit, name the intended behavior shift, state which reward loop currently trains the wrong behavior, say what player behavior must disappear, say what replacement behavior must become optimal, move rewards onto that right habit, and strip reward from throughput-only or safe dominant routines.",
+            "Map the wrong habit to the right habit, name the intended behavior shift, state which reward loop currently trains the wrong behavior, say what player behavior must disappear, say what replacement behavior must become optimal, say what reward, information, or cost shift causes that behavior shift, move rewards onto that right habit, and strip reward from throughput-only or safe dominant routines.",
         ),
         (
             "Numeric-Only Repair",
             "The loop identifies a solved state, then proposes softer numbers or reward tuning while the same decision still wins.",
             "The repair changed intensity instead of changing the pressure relationship.",
-            "Reject numeric-only or content-only fixes, write a structural repair recommendation, call out when numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure, and rewrite the fix so the decision landscape changes before balance values are tuned.",
+            "Reject numeric-only or content-only fixes, write a structural repair recommendation, call out when numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure, and rewrite the fix so the decision landscape changes before balance values are tuned and the old answer stops working.",
         ),
         (
             "Stop Condition Without Witness",
@@ -1846,10 +1849,10 @@ def _section_variant_text(
             ("concept-to-mvp-pack", "cut_first"): "Treat scope as suspect until the smallest surviving proof is clear.",
             ("concept-to-mvp-pack", "package_ready"): "Lock the proof first, then shape the smallest build-ready pack around it.",
             ("concept-to-mvp-pack", "failure_pass"): "Approve the first playable only after a failure pass says what would force a redesign in a greybox build with stubbed content.",
-            ("decision-loop-stress-test", "collapse_first_v2"): "Find the collapse witness and the break point before you discuss more content, and reject any repair recommendation that is not just numeric tuning, not just more content, still keeps the same dominant line, and still lets the old answer survive with the same read, tradeoff, or same consequence.",
-            ("decision-loop-stress-test", "stop_condition_first_v2"): "Name the stop condition, collapse witness, break point, and structural witness before phase explanation, then reject any repair recommendation that keeps the same dominant line, the same read, the same consequence, or lets the old answer keep working.",
-            ("decision-loop-stress-test", "fake_fix_rejection_v2"): "Reject repairs that are not just numeric tuning, not just more content, not just pacing cover, and not just throughput-only mastery; if variation does not change decisions, keeps the same dominant line, or lets the old answer keep working, it is still broken.",
-            ("decision-loop-stress-test", "pressure_audit_v2"): "Audit what mastery teaches, which reward loop still trains the wrong habit, what right habit should replace it, what behavior shift must happen, and whether the repair recommendation is a structural fix.",
+            ("decision-loop-stress-test", "collapse_first_v2"): "Find the collapse witness and the break point before you discuss more content, and reject any repair recommendation that is not just numeric tuning, not just more content, still keeps the same dominant line, still keeps the same read or same consequence, and still lets the old answer survive instead of forcing a new answer.",
+            ("decision-loop-stress-test", "stop_condition_first_v2"): "Name the stop condition, collapse witness, break point, and structural witness before phase explanation, then reject any repair recommendation that keeps the same dominant line, the same read, the same consequence, or lets the old answer keep working without making a new answer become correct.",
+            ("decision-loop-stress-test", "fake_fix_rejection_v2"): "Reject repairs that are not just numeric tuning, not just more content, not just pacing cover, and not just throughput-only mastery; if variation does not change decisions, keeps the same dominant line, keeps the same read or same consequence, or lets the old answer keep working, it is still broken.",
+            ("decision-loop-stress-test", "pressure_audit_v2"): "Audit what mastery teaches, which reward loop currently trains the wrong habit, what player behavior must disappear, what right habit should replace it, what replacement behavior must become optimal, what behavior shift must happen, and whether the repair recommendation is a structural fix.",
             ("simulation-resource-loop-design", "map_first"): "Start by drawing the pressure web; only then judge balance inside it.",
             ("simulation-resource-loop-design", "tension_first"): "Lead with tradeoffs that hurt in visible ways, not with resource lists.",
             ("simulation-resource-loop-design", "loop_balance"): "Balance positive and negative loops so neither side erases the decision game.",
@@ -1872,9 +1875,9 @@ def _section_variant_text(
         if skill_name == "decision-loop-stress-test" and target_focus == "pressure":
             return [
                 "Hard fail any repair recommendation that is not just numeric tuning, not just more content, not just phase explanation, not just pacing cover, not just throughput-only mastery, or still leaves the old answer working.",
-                "Hard fail any solved-state repair that keeps the same dominant line, the same read, the same consequence structure, or the old answer alive inside the same decision landscape before balance values are tuned.",
-                "Hard fail any variation pass that names variation but keeps the same dominant line, the same read, the same consequence, or never says what old answer stops working and what new answer is required.",
-                "Hard fail any reinforcement pass that names wrong habit to right habit but never states which reward loop trains the wrong behavior, what player behavior must disappear, what replacement behavior must become optimal, or what reward, information, or cost shift causes the behavior shift.",
+                "Hard fail any solved-state repair that keeps the same dominant line, the same read, the same consequence structure, or the old answer alive inside the same decision landscape before balance values are tuned, and hard fail any numeric-only, content-only, pacing-only, or throughput-only fix.",
+                "Hard fail any variation pass that names variation but keeps the same dominant line, keeps the same read or same consequence under a new label, or never says what old answer stops working, what new answer becomes correct, and what reward, information, or cost changed.",
+                "Hard fail any reinforcement pass that names wrong habit to right habit but never states which reward loop currently trains the wrong behavior, what player behavior must disappear, what replacement behavior must become optimal, or what reward, information, or cost shift causes the behavior shift.",
                 "Hard fail any stop condition that names a break point without naming the collapse witness the player can actually observe.",
             ]
         if frontier_lines:
@@ -1897,8 +1900,8 @@ def _section_variant_text(
             strategy_specific = {
                 "collapse_first_v2": "Treat any loop without a collapse witness or break point, or any repair recommendation that still keeps the same read, tradeoff, same consequence, dominant line, or old answer alive, as unshippable until the structural fix is explicit.",
                 "stop_condition_first_v2": "Treat missing stop conditions, missing collapse witnesses, break point labels with no observable witness, and repair recommendations that keep the old answer working as structure failures until the structural witness is explicit.",
-                "fake_fix_rejection_v2": "Treat numeric-only tuning, content-only padding, pacing-only relief, reward inflation, and fake variation that keeps the same dominant line, same read, same consequence, or old answer as false fixes unless the repair recommendation names a structural fix.",
-                "pressure_audit_v2": "Treat reinforcement that leaves the wrong habit alive, keeps the same read or dominant line, never says which reward loop trains it, or never names the replacement behavior and behavior shift as a failed repair.",
+                "fake_fix_rejection_v2": "Treat numeric-only tuning, content-only padding, pacing-only relief, reward inflation, and fake variation that keeps the same dominant line, same read, same consequence, or old answer as false fixes unless the repair recommendation names a structural fix and the structural replacement.",
+                "pressure_audit_v2": "Treat reinforcement that leaves the wrong habit alive, keeps the same read or dominant line, never says which reward loop currently trains it, or never names the replacement behavior and behavior shift as a failed repair.",
             }.get(strategy, "")
             if strategy_specific:
                 return [strategy_specific, *frontier_lines[:1]]
@@ -1990,7 +1993,7 @@ def _render_quality_checks(
             "collapse_first_v2": "Check whether the first named collapse witness appears before phase explanation, pacing cover, or reward pacing.",
             "stop_condition_first_v2": "Check whether the stop condition names the specific collapse witness instead of only naming the phase boundary.",
             "fake_fix_rejection_v2": "Check whether the repair changes read, tradeoff, or consequence instead of only tuning numbers, widening rewards, widening content, or preserving the same dominant line.",
-            "pressure_audit_v2": "Check whether the audit maps the wrong habit to the intended right habit instead of only praising faster throughput or keeping the same read.",
+            "pressure_audit_v2": "Check whether the audit maps the wrong habit to the intended right habit, names the current reward loop, and states what player behavior must disappear instead of only praising faster throughput or keeping the same read.",
         }.get(strategy_name, "")
     for item in PROFILE_QUALITY_CHECK_LINES.get(skill_name, []):
         lines.append(f"- {item}")
@@ -2003,6 +2006,8 @@ def _render_quality_checks(
             "Check whether variation changes read, tradeoff, or consequence instead of just renaming content.",
             "Check whether variation does not change decisions, keeps the same dominant line, or preserves the same read under a new label.",
             "Check whether reinforcement explicitly maps the wrong habit to the right habit the loop should train.",
+            "Check whether reinforcement names what reward loop currently trains the wrong behavior and what replacement behavior must become optimal.",
+            "Check whether solved-state repair says numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure.",
             "Check whether every repair recommendation names a structural fix instead of numeric-only tuning, content-only padding, pacing-only relief, or throughput-only mastery.",
         ]:
             lines.append(f"- {item}")
@@ -2193,7 +2198,7 @@ def _render_workflow(
                 "- Put the collapse signal, collapse witness, stop condition, break point, and structural witness before explanation, then reject surface excitement, first-hour novelty, not just phase explanation, and not just pacing cover.",
                 "- Treat not MVP scope cutting and not detailed numeric balancing as guardrails, not excuses for a weak decision.",
                 "- Keep weak decision, midgame autopilot, fake variation, shallow reward inflation, the same dominant line, and the same read visible enough to reject them as false fixes in the decision landscape.",
-                "- Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, names what old answer stops working, what new answer becomes correct, which reward loop currently trains the wrong habit, what right habit should replace it, and what reward, information, or cost shift causes that behavior shift before you call the loop fixed.",
+                "- Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, names what old answer stops working, what new answer becomes correct, which reward loop currently trains the wrong habit, what player behavior must disappear, what right habit should replace it, what replacement behavior must become optimal, and what reward, information, or cost changed to cause that behavior shift before you call the loop fixed.",
                 "",
             ]
         )
@@ -2217,14 +2222,14 @@ def _render_workflow(
                     extra_pressure_line = "   - Check: Reject surface excitement, first-hour novelty, and not greenlighting the loop if the first-hour pressure still hides a weak decision; name the collapse witness before phase explanation or pacing cover."
                 elif move.label == "Test Midgame Sustainability":
                     action_text = _append_sentence(action_text, "Name the counterpressure, variation audit, read shift, tradeoff change, and adaptation test before content gets added.")
-                    extra_pressure_line = "   - Check: Name the dominant strategy, the midgame autopilot risk, the missing counterpressure, and whether the variation audit changes read, tradeoff, or consequence; if it keeps the same read, the same dominant line, or the same consequence, or if the old answer still works and no new answer is required, reject it as fake variation."
+                    extra_pressure_line = "   - Check: Name the dominant strategy, the midgame autopilot risk, the missing counterpressure, and whether the variation audit changes read, tradeoff, or consequence; if it keeps the same read, the same dominant line, or the same consequence, or if the old answer still works and no new answer is required, reject it as fake variation until a reward, information, or cost change makes the old answer stop working and a new answer become correct."
                 elif move.label in {"Look for Solved States", "Audit Variation and Reinforcement"}:
                     action_text = _append_sentence(action_text, "Reject any fix that only widens content, only tunes numbers, only softens pacing, or keeps the same dominant line without changing pressure.")
                     if move.label == "Look for Solved States":
-                        extra_pressure_line = "   - Check: Break the dominant strategy with a structural fix and repair recommendation, reject numeric-only tuning or content-only padding, call out when numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure, then change the decision landscape before balance values are tuned."
+                        extra_pressure_line = "   - Check: Break the dominant strategy with a structural fix and repair recommendation, reject numeric-only tuning or content-only padding, call out when numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure, and change the decision landscape before balance values are tuned so the old answer stops working and a new answer becomes correct."
                     else:
                         action_text = _append_sentence(action_text, "Call out variation that does not change decisions, keeps the same read, preserves the same dominant line, or hides the missing behavior shift.")
-                        extra_pressure_line = "   - Check: Reinforce the intended behavior, map wrong habit to right habit, name the behavior shift, say which reward loop currently trains the wrong habit, say what player behavior must disappear, say what replacement behavior must become optimal, reject fake variation, reject variation that does not change decisions, keeps the same dominant line, keeps the same read, or leaves the old answer working, and reject any repair that only improves throughput."
+                        extra_pressure_line = "   - Check: Reinforce the intended behavior, map wrong habit to right habit, name the behavior shift, say which reward loop currently trains the wrong habit, say what player behavior must disappear, say what replacement behavior must become optimal, say what reward, information, or cost changed to cause that shift, reject fake variation, reject variation that does not change decisions, keeps the same dominant line, keeps the same read, or leaves the old answer working, and reject any repair that only improves throughput."
                 elif move.label == "Test Late-Game Expansion or Mutation":
                     extra_pressure_line = "   - Check: Confirm late-game mastery creates a new decision problem instead of pure throughput, pacing cover, reward inflation, or a solved-state witness with no structural response and no right-habit replacement."
         elif skill_name == "simulation-resource-loop-design" and target_focus in {"leakage", "compactness"}:
@@ -2401,6 +2406,26 @@ def _render_candidate_markdown(
                 lines.append(f"- Symptom: {symptom}")
                 lines.append(f"- Cause: {cause}")
                 lines.append(f"- Correction: {correction}")
+                if skill_name == "decision-loop-stress-test":
+                    structural_pairs = {
+                        "Variety Without Strategic Consequence": (
+                            "Variation named, but the same dominant line, the same read, and the same consequence still survive under a new label.",
+                            "Change reward, information, or cost so the old answer stops working, a new answer becomes required, and the variation changes read, tradeoff, or consequence.",
+                        ),
+                        "Wrong Behavior Training": (
+                            "A fake reinforcement loop keeps rewarding the same safe behavior, so the wrong habit survives even though the review names the right habit.",
+                            "Name the reward loop currently training the wrong habit, remove reward from that behavior, and make the replacement behavior become optimal under the new pressure.",
+                        ),
+                        "Numeric-Only Repair": (
+                            "Numeric-only fake fix: softer numbers still keep the same dominant line, the same read, and the same consequence structure alive.",
+                            "Structural replacement: change the decision landscape first so the old answer stops working, then tune balance values after the new answer becomes correct.",
+                        ),
+                    }
+                    fake_version, structural_replacement = structural_pairs.get(title, ("", ""))
+                    if fake_version:
+                        lines.append(f"- Fake version: {fake_version}")
+                    if structural_replacement:
+                        lines.append(f"- Structural replacement: {structural_replacement}")
                 lines.append("")
         elif section_name == "Worked Micro-Example":
             lines.extend(["## Worked Micro-Example", ""])
@@ -2777,6 +2802,99 @@ def _probe_signal_group_hit_count(text: str, signal_groups: list[list[str]]) -> 
     return hits
 
 
+def _canonical_probe_section_name(section_name: str) -> str:
+    heading = str(section_name or "").strip()
+    if heading.startswith("Common Pitfalls:"):
+        return "Failure Patterns and Fixes"
+    return heading
+
+
+def _markdown_section_bodies(text: str) -> dict[str, str]:
+    sections: dict[str, list[str]] = {}
+    current_section = ""
+    for raw_line in str(text or "").splitlines():
+        stripped = raw_line.strip()
+        if stripped.startswith("## "):
+            current_section = _canonical_probe_section_name(stripped[3:].strip())
+            sections.setdefault(current_section, [])
+            continue
+        if current_section:
+            sections.setdefault(current_section, []).append(raw_line)
+    return {
+        name: "\n".join(lines).strip()
+        for name, lines in sections.items()
+    }
+
+
+def _decision_loop_section_improvement_bundles(probe_id: str) -> dict[str, list[list[str]]]:
+    bundles = {
+        "decision.variation-without-read-change": {
+            "Default Workflow": [
+                ["dominant line"],
+                ["old answer stops working"],
+                ["new answer becomes correct", "new answer is required"],
+                ["reward, information, or cost changed", "reward, information, or cost shift"],
+            ],
+            "Quality Checks": [
+                ["variation named but same dominant line"],
+                ["same read", "same consequence", "same consequence structure"],
+            ],
+            "Failure Patterns and Fixes": [
+                ["fake variation"],
+                ["structural replacement"],
+            ],
+        },
+        "decision.reinforcement-without-habit-mapping": {
+            "Default Workflow": [
+                ["wrong habit"],
+                ["right habit"],
+                ["reward loop currently trains"],
+                ["behavior shift"],
+            ],
+            "Quality Checks": [
+                ["habit mapping named but reward loop unchanged"],
+            ],
+            "Failure Patterns and Fixes": [
+                ["fake reinforcement loop"],
+                ["structural replacement"],
+            ],
+        },
+        "decision.solved-state-numeric-only-repair": {
+            "Default Workflow": [
+                ["not just numeric tuning"],
+                ["same dominant line"],
+                ["same read"],
+                ["same consequence structure", "same consequence"],
+                ["decision landscape"],
+            ],
+            "Quality Checks": [
+                ["numeric only", "content only", "pacing only", "throughput only"],
+                ["decision landscape unchanged"],
+            ],
+            "Failure Patterns and Fixes": [
+                ["numeric only fake fix"],
+                ["structural replacement"],
+            ],
+        },
+    }
+    return bundles.get(probe_id, {})
+
+
+def _probe_section_bundle_hit_count(text: str, section_bundles: dict[str, list[list[str]]]) -> int:
+    if not section_bundles:
+        return 0
+    section_bodies = _markdown_section_bodies(text)
+    hits = 0
+    for section_name, signal_groups in section_bundles.items():
+        section_body = section_bodies.get(section_name, "")
+        if (
+            section_body
+            and _probe_signal_group_hit_count(section_body, signal_groups) == len(signal_groups)
+        ):
+            hits += 1
+    return hits
+
+
 def _decision_loop_outcome_probe_specs(*, mode: str = "frontier_v3") -> list[dict[str, Any]]:
     base_specs = [
         {
@@ -2841,7 +2959,7 @@ def _decision_loop_outcome_probe_specs(*, mode: str = "frontier_v3") -> list[dic
             ],
         },
     ]
-    if mode != "probe_expanded_v4":
+    if mode not in {"probe_expanded_v4", "probe_expanded_v7"}:
         return base_specs
     return base_specs + [
         {
@@ -2907,7 +3025,7 @@ def _decision_loop_outcome_probe_specs(*, mode: str = "frontier_v3") -> list[dic
     ]
 
 
-def _decision_loop_probe_expanded_v4_ready(
+def _decision_loop_probe_expanded_ready(
     report: OutcomeOnlyRerankerReport | None,
     *,
     required_probe_count: int = 8,
@@ -2921,6 +3039,34 @@ def _decision_loop_probe_expanded_v4_ready(
         and report.probe_pass_count >= required_probe_count
         and report.frontier_comparison_status == "beaten"
         and report.improved_probe_count >= required_improved_probe_count
+    )
+
+
+def _decision_loop_probe_clean_pass(
+    report: OutcomeOnlyRerankerReport | None,
+    *,
+    required_probe_count: int = 8,
+) -> bool:
+    if report is None:
+        return False
+    return (
+        report.status == "pass"
+        and report.probe_count >= required_probe_count
+        and report.probe_pass_count >= required_probe_count
+        and report.blocked_probe_count == 0
+    )
+
+
+def _decision_loop_probe_expanded_v4_ready(
+    report: OutcomeOnlyRerankerReport | None,
+    *,
+    required_probe_count: int = 8,
+    required_improved_probe_count: int = 2,
+) -> bool:
+    return _decision_loop_probe_expanded_ready(
+        report,
+        required_probe_count=required_probe_count,
+        required_improved_probe_count=required_improved_probe_count,
     )
 
 
@@ -2982,14 +3128,21 @@ def _build_outcome_only_reranker_report(
             frontier_false_fix = _probe_term_coverage(frontier_markdown, list(spec.get("false_fix_terms") or []))
             probe_id = str(spec.get("probe_id") or "")
             signal_groups = _decision_loop_improvement_signal_groups(probe_id)
+            section_bundles = (
+                _decision_loop_section_improvement_bundles(probe_id)
+                if probe_mode == "probe_expanded_v7"
+                else {}
+            )
             candidate_signal_hits = _probe_signal_group_hit_count(candidate.rendered_markdown, signal_groups)
             frontier_signal_hits = _probe_signal_group_hit_count(frontier_markdown, signal_groups)
+            candidate_section_bundle_hits = _probe_section_bundle_hit_count(candidate.rendered_markdown, section_bundles)
+            frontier_section_bundle_hits = _probe_section_bundle_hit_count(frontier_markdown, section_bundles)
             candidate_score = round((0.50 * candidate_pressure) + (0.35 * candidate_false_fix) + (0.15 * candidate_compression), 4)
             frontier_score = round((0.50 * frontier_pressure) + (0.35 * frontier_false_fix) + (0.15 * frontier_compression), 4)
             pressure_delta = round(candidate_pressure - frontier_pressure, 4)
             false_fix_delta = round(candidate_false_fix - frontier_false_fix, 4)
             compression_delta = round(candidate_compression - frontier_compression, 4)
-            probe_improved = (
+            probe_improved_by_score = (
                 (
                     candidate_score > frontier_score + 0.02
                     and pressure_delta >= 0.0
@@ -3005,13 +3158,23 @@ def _build_outcome_only_reranker_report(
                 )
             )
             probe_matched = (
-                not probe_improved
+                not probe_improved_by_score
                 and candidate_score + 0.02 >= frontier_score
                 and candidate_pressure + 0.01 >= frontier_pressure
                 and candidate_false_fix + 0.01 >= frontier_false_fix
                 and max(candidate_pressure, frontier_pressure) >= 0.50
                 and max(candidate_false_fix, frontier_false_fix) >= 0.25
             )
+            probe_improved_by_section_bundle = bool(
+                probe_mode == "probe_expanded_v7"
+                and section_bundles
+                and probe_matched
+                and candidate_section_bundle_hits == len(section_bundles)
+                and candidate_section_bundle_hits > frontier_section_bundle_hits
+            )
+            probe_improved = probe_improved_by_score or probe_improved_by_section_bundle
+            if probe_improved and not probe_improved_by_score and probe_improved_by_section_bundle:
+                probe_matched = False
             win_status = "pass" if (probe_improved or probe_matched) else "hold"
             if win_status == "pass":
                 pass_count += 1
@@ -3047,6 +3210,12 @@ def _build_outcome_only_reranker_report(
                             f"frontier_signal_hits={frontier_signal_hits}/{len(signal_groups)}"
                             if signal_groups else
                             "signal_hits=not_applicable"
+                        ),
+                        (
+                            f"section_bundle_hits={candidate_section_bundle_hits}/{len(section_bundles)} "
+                            f"frontier_section_bundle_hits={frontier_section_bundle_hits}/{len(section_bundles)}"
+                            if section_bundles else
+                            "section_bundle_hits=not_applicable"
                         ),
                     ],
                 )
@@ -3141,7 +3310,7 @@ def _build_outcome_only_reranker_report(
     winner_row = ranking_rows[0] if ranking_rows else ("", 0, 0, 0.0, 0.0, 0.0, 0.0)
     all_probes_pass = bool(winner and int(winner_row[1]) == len(probe_specs))
     improved_probe_count = int(winner_row[2]) if winner else 0
-    required_improvement_count = 2 if probe_mode == "probe_expanded_v4" else 1
+    required_improvement_count = 2 if probe_mode in {"probe_expanded_v4", "probe_expanded_v7"} else 1
     frontier_beaten = bool(all_probes_pass and improved_probe_count >= required_improvement_count)
     frontier_matched = bool(all_probes_pass and not frontier_beaten)
     frontier_blocked = not all_probes_pass
@@ -3150,7 +3319,7 @@ def _build_outcome_only_reranker_report(
         if frontier_beaten
         else (
             "outcome_only_reranker_matches_but_improvements_below_threshold"
-            if frontier_matched and probe_mode == "probe_expanded_v4"
+            if frontier_matched and probe_mode in {"probe_expanded_v4", "probe_expanded_v7"}
             else (
                 "outcome_only_reranker_matches_but_does_not_beat_frontier"
                 if frontier_matched
@@ -3818,7 +3987,16 @@ def choose_skill_realization_candidate(
         for candidate in candidates
     ]
     scored.sort(key=lambda item: _candidate_rank_key(skill_name, item[1]), reverse=True)
-    outcome_probe_mode = "probe_expanded_v4" if skill_name == "decision-loop-stress-test" else "frontier_v3"
+    outcome_probe_mode = "probe_expanded_v7" if skill_name == "decision-loop-stress-test" else "frontier_v3"
+    outcome_only_base_report = (
+        _build_outcome_only_reranker_report(
+            skill_name=skill_name,
+            scored_candidates=scored,
+            probe_mode="probe_expanded_v4",
+        )
+        if skill_name == "decision-loop-stress-test"
+        else None
+    )
     outcome_only_report = _build_outcome_only_reranker_report(
         skill_name=skill_name,
         scored_candidates=scored,
@@ -3858,9 +4036,17 @@ def choose_skill_realization_candidate(
         )
     residual_gap_report = _residual_gap_report(skill_name, residual_input_metrics)
     force_non_regression_status = monotonic_report.force_non_regression_status
+    base_probe_clean_pass = _decision_loop_probe_clean_pass(outcome_only_base_report)
+    v7_probe_clean_pass = _decision_loop_probe_clean_pass(outcome_only_report)
+    base_outcome_breakthrough = _decision_loop_probe_expanded_ready(outcome_only_base_report)
+    v7_outcome_breakthrough = (
+        _decision_loop_probe_expanded_ready(outcome_only_report)
+        if outcome_probe_mode == "probe_expanded_v7"
+        else True
+    )
     outcome_only_ready = (
-        _decision_loop_probe_expanded_v4_ready(outcome_only_report)
-        if outcome_probe_mode == "probe_expanded_v4"
+        base_outcome_breakthrough and v7_outcome_breakthrough
+        if skill_name == "decision-loop-stress-test"
         else True
     )
     decision_loop_outcome_breakthrough = bool(
@@ -4010,11 +4196,14 @@ def choose_skill_realization_candidate(
         )
     )
     outcome_only_probe_blocked = bool(
-        outcome_only_report is not None
-        and (
-            outcome_only_report.status != "pass"
-            or str(getattr(outcome_only_report, "frontier_comparison_status", "blocked") or "blocked") == "blocked"
-            or int(getattr(outcome_only_report, "blocked_probe_count", 0) or 0) > 0
+        (skill_name == "decision-loop-stress-test" and not base_probe_clean_pass)
+        or (
+            outcome_only_report is not None
+            and (
+                outcome_only_report.status != "pass"
+                or str(getattr(outcome_only_report, "frontier_comparison_status", "blocked") or "blocked") == "blocked"
+                or int(getattr(outcome_only_report, "blocked_probe_count", 0) or 0) > 0
+            )
         )
     )
     outcome_only_stable_matched = bool(
@@ -4023,6 +4212,10 @@ def choose_skill_realization_candidate(
         and str(getattr(outcome_only_report, "frontier_comparison_status", "blocked") or "blocked") == "matched"
         and int(getattr(outcome_only_report, "blocked_probe_count", 0) or 0) == 0
         and residual_gap_report.status == "pass"
+        and (
+            skill_name != "decision-loop-stress-test"
+            or base_probe_clean_pass
+        )
     )
     stable_but_no_breakthrough = (
         not promote
