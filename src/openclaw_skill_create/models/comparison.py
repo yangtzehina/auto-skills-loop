@@ -141,6 +141,12 @@ class SkillCreateComparisonMetrics(BaseModel):
     outcome_only_probe_evidence_density: float = 0.0
     outcome_only_collapse_witness_coverage: float = 0.0
     outcome_only_blocking_reason: str = ""
+    outcome_only_probe_witness_summary: list[str] = Field(default_factory=list)
+    outcome_only_matched_probe_ids: list[str] = Field(default_factory=list)
+    outcome_only_improved_probe_ids: list[str] = Field(default_factory=list)
+    outcome_only_blocked_probe_ids: list[str] = Field(default_factory=list)
+    outcome_only_repair_evidence_lines: list[str] = Field(default_factory=list)
+    outcome_only_collapse_evidence_lines: list[str] = Field(default_factory=list)
     legacy_delta_summary: list[str] = Field(default_factory=list)
     candidate_strategy_matrix: list[dict[str, str]] = Field(default_factory=list)
     editorial_force_status: str = "unknown"

@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from openclaw_skill_create.models.comparison import (
+    SkillCreateComparisonCaseResult,
+    SkillCreateComparisonMetrics,
+    SkillCreateComparisonReport,
+)
 from openclaw_skill_create.models.operation_backed_ops import OperationBackedBacklogReport
 from openclaw_skill_create.models.public_source_verification import PublicSourceCurationRoundReport, PublicSourcePromotionPack
 from openclaw_skill_create.models.request import SkillCreateRequestV6
@@ -12,7 +17,7 @@ from openclaw_skill_create.models.runtime_governance import (
     RuntimePriorPilotReport,
 )
 from openclaw_skill_create.models.verify import VerifyReport
-from openclaw_skill_create.services.verify import build_ops_roundbook_report
+from openclaw_skill_create.services.verify import build_ops_roundbook_report, render_ops_roundbook_markdown
 
 
 def test_build_ops_roundbook_report_marks_pending_manual_work_as_caution():
@@ -107,3 +112,51 @@ def test_build_ops_roundbook_report_marks_pending_manual_work_as_caution():
     assert report.task_outcome_status == 'pass'
     assert report.breakthrough_status == 'pass'
     assert report.overall_readiness == 'caution'
+
+
+def test_render_ops_roundbook_markdown_includes_decision_loop_outcome_only():
+    comparison_report = SkillCreateComparisonReport(
+        cases=[
+            SkillCreateComparisonCaseResult(
+                case_id='decision-loop-stress-test',
+                skill_name='decision-loop-stress-test',
+                auto_metrics=SkillCreateComparisonMetrics(
+                    outcome_only_reranker_status='fail',
+                    outcome_only_probe_mode='probe_expanded_v4',
+                    outcome_only_frontier_comparison_status='matched',
+                    outcome_only_probe_pass_count=7,
+                    outcome_only_probe_count=8,
+                    outcome_only_improved_probe_count=5,
+                    outcome_only_matched_probe_count=2,
+                    outcome_only_blocked_probe_count=1,
+                    outcome_only_repair_specificity_score=0.75,
+                    outcome_only_probe_evidence_density=0.875,
+                    outcome_only_collapse_witness_coverage=1.0,
+                    false_fix_rejection_status='fail',
+                    outcome_only_blocked_probe_ids=['decision.variation-without-read-change'],
+                    outcome_only_matched_probe_ids=['decision.midgame-autopilot'],
+                    outcome_only_improved_probe_ids=['decision.fake-repair-by-content'],
+                    outcome_only_probe_witness_summary=['decision.variation-without-read-change=blocked'],
+                    outcome_only_repair_evidence_lines=['repair recommendation: not just numeric tuning'],
+                    outcome_only_collapse_evidence_lines=['collapse witness appears before the stop condition label'],
+                ),
+            )
+        ]
+    )
+    report = build_ops_roundbook_report(
+        verify_report=VerifyReport(
+            mode='quick',
+            overall_status='pass',
+            skill_create_comparison_report=comparison_report,
+        ),
+        runtime_ops_decision_pack=RuntimeOpsDecisionPack(),
+        prior_pilot_exercise=RuntimePriorPilotExerciseReport(family='decision-loop'),
+        source_promotion_pack=PublicSourcePromotionPack(repo_full_name='example/repo'),
+    )
+
+    markdown = render_ops_roundbook_markdown(report)
+
+    assert '## Decision-Loop Outcome-Only' in markdown
+    assert '- blocked_probe_ids=' in markdown
+    assert '- repair_evidence_lines=' in markdown
+    assert '- collapse_evidence_lines=' in markdown

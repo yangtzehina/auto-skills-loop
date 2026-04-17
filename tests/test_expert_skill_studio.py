@@ -44,6 +44,12 @@ def _outcome_only_report(
     probe_count: int = 8,
     improved_probe_count: int = 2,
     probe_mode: str = 'probe_expanded_v4',
+    probe_witness_summary: list[str] | None = None,
+    matched_probe_ids: list[str] | None = None,
+    improved_probe_ids: list[str] | None = None,
+    blocked_probe_ids: list[str] | None = None,
+    repair_evidence_lines: list[str] | None = None,
+    collapse_evidence_lines: list[str] | None = None,
 ) -> OutcomeOnlyRerankerReport:
     return OutcomeOnlyRerankerReport(
         skill_name='decision-loop-stress-test',
@@ -55,6 +61,12 @@ def _outcome_only_report(
         probe_pass_count=probe_pass_count,
         probe_count=probe_count,
         improved_probe_count=improved_probe_count,
+        probe_witness_summary=probe_witness_summary or ['decision.fake-repair-by-content=blocked'],
+        matched_probe_ids=matched_probe_ids or ['decision.midgame-autopilot'],
+        improved_probe_ids=improved_probe_ids or ['decision.stop-condition-without-collapse-witness'],
+        blocked_probe_ids=blocked_probe_ids or ['decision.fake-repair-by-content'],
+        repair_evidence_lines=repair_evidence_lines or ['repair recommendation: reject not just numeric tuning; make a structural fix'],
+        collapse_evidence_lines=collapse_evidence_lines or ['name the collapse witness before the stop condition label'],
         status=status,
     )
 
@@ -737,7 +749,152 @@ def test_outcome_only_reranker_blocks_promotion_without_frontier_win(monkeypatch
     assert promotion_decision.outcome_only_probe_pass_count == 3
     assert promotion_decision.outcome_only_blocking_reason == 'outcome_only_reranker_not_better_than_frontier'
     assert promotion_decision.outcome_only_probe_mode == 'probe_expanded_v4'
+    assert promotion_decision.outcome_only_blocked_probe_ids == ['decision.fake-repair-by-content']
+    assert promotion_decision.outcome_only_matched_probe_ids == ['decision.midgame-autopilot']
+    assert promotion_decision.outcome_only_improved_probe_ids == ['decision.stop-condition-without-collapse-witness']
+    assert promotion_decision.outcome_only_probe_witness_summary
+    assert promotion_decision.outcome_only_repair_evidence_lines
+    assert promotion_decision.outcome_only_collapse_evidence_lines
     assert monotonic_report.promotion_reason == 'breakthrough'
+
+
+def test_decision_loop_outcome_breakthrough_can_promote_without_primary_force_win(monkeypatch):
+    candidates = [
+        SkillRealizationCandidate(
+            candidate_id='decision-loop-stress-test:collapse_first_v2:1',
+            skill_name='decision-loop-stress-test',
+            program_id='decision-loop-stress-test:execution_spine',
+            realization_strategy='collapse_first_v2',
+            strategy_profile={
+                'compression_stage': 'pre',
+                'opening_frame': 'Collapse frame',
+                'section_order': 'Overview > Default Workflow > Quality Checks',
+                'sentence_budget_profile': 'Default Workflow:5',
+                'workflow_mode': 'collapse_detection',
+                'step_frame': 'collapse_probe_v2',
+                'output_focus': 'Collapse Point,Break Point',
+                'quality_tone': 'collapse',
+                'quality_mode': 'collapse_gate',
+                'failure_style': 'collapse_signals',
+                'failure_mode': 'collapse_signals',
+            },
+            rendered_markdown='# collapse',
+        ),
+        SkillRealizationCandidate(
+            candidate_id='decision-loop-stress-test:fake_fix_rejection_v2:2',
+            skill_name='decision-loop-stress-test',
+            program_id='decision-loop-stress-test:execution_spine',
+            realization_strategy='fake_fix_rejection_v2',
+            strategy_profile={
+                'compression_stage': 'pre',
+                'opening_frame': 'False fix frame',
+                'section_order': 'Overview > Quality Checks > Failure Patterns and Fixes',
+                'sentence_budget_profile': 'Quality Checks:4',
+                'workflow_mode': 'false_fix_rejection',
+                'step_frame': 'false_fix_gate_v2',
+                'output_focus': 'False Fix Rejection,Repair Recommendation',
+                'quality_tone': 'false-fix',
+                'quality_mode': 'false_fix_gate',
+                'failure_style': 'false_fix',
+                'failure_mode': 'false_fix',
+            },
+            rendered_markdown='# false-fix',
+        ),
+    ]
+    strong_metrics = {
+        'editorial_force': type('Force', (), {
+            'decision_pressure_score': 1.0,
+            'cut_sharpness_score': 1.0,
+            'failure_repair_force': 1.0,
+            'stop_condition_coverage': 1.0,
+            'output_executability_score': 0.95,
+            'section_force_distinctness': 1.0,
+            'compression_without_loss': 0.83,
+        })(),
+        'editorial': type('Editorial', (), {'redundancy_ratio': 0.04})(),
+        'style': type('Style', (), {'domain_rhythm_score': 0.90})(),
+        'domain_move_coverage': 0.95,
+        'section_depth_score': 0.97,
+        'task_outcome_with_skill_average': 0.98,
+        'shared_opening_phrase_ratio': 0.0,
+        'cross_case_similarity': 0.23,
+        'compression_without_loss': 0.83,
+        'score': 1.02,
+    }
+    monkeypatch.setattr(studio, '_candidate_editorial_metrics', lambda **kwargs: strong_metrics)
+    monkeypatch.setattr(studio, '_current_best_editorial_metrics', lambda skill_name, task: {'score': 1.01})
+    monkeypatch.setattr(
+        studio,
+        '_compare_to_dual_baselines',
+        lambda **kwargs: studio.MonotonicImprovementReport(
+            skill_name='decision-loop-stress-test',
+            active_frontier_status='matched',
+            best_balance_comparison_status='not_beaten',
+            best_coverage_comparison_status='not_beaten',
+            force_non_regression_status='pass',
+            coverage_non_regression_status='pass',
+            compactness_non_regression_status='pass',
+            frontier_dominance_status='pass',
+            compression_gain_status='neutral',
+            promotion_status='hold',
+            promotion_reason='hold_due_to_no_primary_win',
+            primary_force_win_count=0,
+        ),
+    )
+    monkeypatch.setattr(
+        studio,
+        '_residual_gap_report',
+        lambda skill_name, metrics: studio.ResidualGapReport(
+            skill_name=skill_name,
+            target_focus='none',
+            quality_check_target_status='pass',
+            pressure_target_status='pass',
+            leakage_target_status='pass',
+            false_fix_rejection_status='pass',
+            residual_gap_count=0,
+            status='pass',
+        ),
+    )
+    monkeypatch.setattr(
+        studio,
+        '_build_outcome_only_reranker_report',
+        lambda **kwargs: _outcome_only_report(
+            winner='decision-loop-stress-test:collapse_first_v2:1',
+            candidate_ranking=[
+                'decision-loop-stress-test:collapse_first_v2:1',
+                'decision-loop-stress-test:fake_fix_rejection_v2:2',
+            ],
+            status='pass',
+            probe_mode='probe_expanded_v4',
+            frontier_comparison_status='beaten',
+            blocking_reason='',
+            probe_pass_count=8,
+            probe_count=8,
+            improved_probe_count=6,
+            blocked_probe_ids=[],
+            matched_probe_ids=['decision.midgame-autopilot'],
+            improved_probe_ids=[
+                'decision.fake-repair-by-content',
+                'decision.variation-without-read-change',
+            ],
+        ),
+    )
+
+    _, _, promotion_decision, monotonic_report = choose_skill_realization_candidate(
+        skill_name='decision-loop-stress-test',
+        task='stress a core loop',
+        candidates=candidates,
+    )
+
+    assert promotion_decision.promotion_status == 'promote'
+    assert promotion_decision.reason == 'breakthrough'
+    assert promotion_decision.stable_but_no_breakthrough is False
+    assert promotion_decision.current_best_comparison_status == 'beaten'
+    assert promotion_decision.active_frontier_status == 'beaten'
+    assert promotion_decision.outcome_only_frontier_comparison_status == 'beaten'
+    assert promotion_decision.outcome_only_probe_pass_count == 8
+    assert promotion_decision.outcome_only_improved_probe_count == 6
+    assert monotonic_report.promotion_reason == 'hold_due_to_no_primary_win'
 
 
 def test_outcome_only_reranker_collects_probe_witnesses(monkeypatch):

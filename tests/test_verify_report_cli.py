@@ -110,6 +110,14 @@ def test_run_verify_report_markdown_includes_decision_statuses(monkeypatch):
     assert stderr == ''
     assert '## Decision Statuses' in stdout
     assert '`pending`' in stdout
+    assert '## Decision-Loop Outcome-Only' in stdout
+    assert (
+        '- blocked_probe_ids=' in stdout
+        or '- matched_probe_ids=' in stdout
+        or '- improved_probe_ids=' in stdout
+    )
+    assert '- repair_evidence_lines=' in stdout
+    assert '- collapse_evidence_lines=' in stdout
     assert '## Operation-Backed Summary' in stdout
     assert '`no_change`' in stdout
     assert '- editorial_force_status=' in stdout

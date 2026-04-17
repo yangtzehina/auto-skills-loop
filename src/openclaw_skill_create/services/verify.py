@@ -9,6 +9,7 @@ import sys
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
+from ..models.comparison import SkillCreateComparisonCaseResult, SkillCreateComparisonReport
 from ..models.public_source_verification import PublicSourceCurationRoundReport, PublicSourcePromotionPack
 from ..models.runtime_governance import (
     RuntimeCreateSeedProposalPack,
@@ -264,6 +265,10 @@ def render_verify_report_markdown(report: VerifyReport) -> str:
         lines.extend(['', '## Decision Statuses'])
         for status, values in list(report.decision_statuses.items()):
             lines.append(f'- `{status}`: {values}')
+    decision_loop_case = _decision_loop_comparison_case(report.skill_create_comparison_report)
+    if decision_loop_case is not None:
+        lines.extend(['', '## Decision-Loop Outcome-Only'])
+        lines.extend(_render_decision_loop_outcome_only_lines(decision_loop_case))
     lines.extend(['', '## Operation-Backed Summary'])
     if not report.operation_backed_status_counts:
         lines.append('- None')
@@ -769,7 +774,57 @@ def render_ops_roundbook_markdown(report: OpsRoundbookReport) -> str:
     lines.append(f'- generic_shell_rejection={report.generic_shell_rejection:.2f}')
     lines.append(f'- program_regression_count={report.program_regression_count}')
     lines.append(f'- breakthrough_status={report.breakthrough_status}')
+    decision_loop_case = _decision_loop_comparison_case(getattr(report.verify_report, 'skill_create_comparison_report', None))
+    if decision_loop_case is not None:
+        lines.extend(['', '## Decision-Loop Outcome-Only'])
+        lines.extend(_render_decision_loop_outcome_only_lines(decision_loop_case, include_evidence=True))
     return '\n'.join(lines).strip()
+
+
+def _decision_loop_comparison_case(comparison_report: SkillCreateComparisonReport | None) -> SkillCreateComparisonCaseResult | None:
+    if comparison_report is None:
+        return None
+    for case in list(comparison_report.cases or []):
+        if str(getattr(case, 'skill_name', '') or '') == 'decision-loop-stress-test':
+            return case
+    return None
+
+
+def _render_decision_loop_outcome_only_lines(
+    case: SkillCreateComparisonCaseResult,
+    *,
+    include_evidence: bool = True,
+) -> list[str]:
+    metrics = case.auto_metrics
+    lines = [
+        f'- skill_name={case.skill_name}',
+        f'- outcome_only_reranker_status={metrics.outcome_only_reranker_status}',
+        f'- outcome_only_probe_mode={metrics.outcome_only_probe_mode}',
+        f'- outcome_only_frontier_comparison_status={metrics.outcome_only_frontier_comparison_status}',
+        f'- outcome_only_probe_pass_count={metrics.outcome_only_probe_pass_count}/{metrics.outcome_only_probe_count}',
+        f'- outcome_only_improved_probe_count={metrics.outcome_only_improved_probe_count}',
+        f'- outcome_only_matched_probe_count={metrics.outcome_only_matched_probe_count}',
+        f'- outcome_only_blocked_probe_count={metrics.outcome_only_blocked_probe_count}',
+        f'- outcome_only_repair_specificity_score={metrics.outcome_only_repair_specificity_score:.2f}',
+        f'- outcome_only_probe_evidence_density={metrics.outcome_only_probe_evidence_density:.2f}',
+        f'- outcome_only_collapse_witness_coverage={metrics.outcome_only_collapse_witness_coverage:.2f}',
+        f'- false_fix_rejection_status={metrics.false_fix_rejection_status}',
+    ]
+    if metrics.outcome_only_blocking_reason:
+        lines.append(f'- outcome_only_blocking_reason={metrics.outcome_only_blocking_reason}')
+    if metrics.outcome_only_blocked_probe_ids:
+        lines.append(f'- blocked_probe_ids={metrics.outcome_only_blocked_probe_ids}')
+    if metrics.outcome_only_matched_probe_ids:
+        lines.append(f'- matched_probe_ids={metrics.outcome_only_matched_probe_ids}')
+    if metrics.outcome_only_improved_probe_ids:
+        lines.append(f'- improved_probe_ids={metrics.outcome_only_improved_probe_ids}')
+    if metrics.outcome_only_probe_witness_summary:
+        lines.append(f'- probe_witness_summary={metrics.outcome_only_probe_witness_summary}')
+    if include_evidence and metrics.outcome_only_repair_evidence_lines:
+        lines.append(f'- repair_evidence_lines={metrics.outcome_only_repair_evidence_lines}')
+    if include_evidence and metrics.outcome_only_collapse_evidence_lines:
+        lines.append(f'- collapse_evidence_lines={metrics.outcome_only_collapse_evidence_lines}')
+    return lines
 
 
 def build_ops_roundbook_report(

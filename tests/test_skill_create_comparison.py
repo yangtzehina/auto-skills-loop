@@ -89,6 +89,13 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     assert all(item.auto_metrics.false_fix_rejection_status in {'pass', 'fail', 'unknown'} for item in report.cases)
     assert all(item.auto_metrics.residual_gap_count >= 0 for item in report.cases)
     assert all(len(item.auto_metrics.candidate_strategy_matrix) >= 4 for item in report.cases)
+    decision_case = next(item for item in report.cases if item.skill_name == 'decision-loop-stress-test')
+    assert isinstance(decision_case.auto_metrics.outcome_only_probe_witness_summary, list)
+    assert isinstance(decision_case.auto_metrics.outcome_only_blocked_probe_ids, list)
+    assert isinstance(decision_case.auto_metrics.outcome_only_repair_evidence_lines, list)
+    assert isinstance(decision_case.auto_metrics.outcome_only_collapse_evidence_lines, list)
+    assert '- auto_outcome_only_probe_witness_summary=' in report.markdown_summary
+    assert '- auto_outcome_only_repair_evidence_lines=' in report.markdown_summary
     if report.overall_status == 'stable_but_no_breakthrough':
         assert report.gap_count == 0
         assert report.stable_but_no_breakthrough_count >= 1

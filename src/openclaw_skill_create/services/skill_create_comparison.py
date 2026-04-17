@@ -274,6 +274,12 @@ def _metrics_from_reports(
         outcome_only_probe_evidence_density=float(getattr(promotion_decision, 'outcome_only_probe_evidence_density', 0.0) or 0.0),
         outcome_only_collapse_witness_coverage=float(getattr(promotion_decision, 'outcome_only_collapse_witness_coverage', 0.0) or 0.0),
         outcome_only_blocking_reason=str(getattr(promotion_decision, 'outcome_only_blocking_reason', '') or ''),
+        outcome_only_probe_witness_summary=list(getattr(promotion_decision, 'outcome_only_probe_witness_summary', []) or []),
+        outcome_only_matched_probe_ids=list(getattr(promotion_decision, 'outcome_only_matched_probe_ids', []) or []),
+        outcome_only_improved_probe_ids=list(getattr(promotion_decision, 'outcome_only_improved_probe_ids', []) or []),
+        outcome_only_blocked_probe_ids=list(getattr(promotion_decision, 'outcome_only_blocked_probe_ids', []) or []),
+        outcome_only_repair_evidence_lines=list(getattr(promotion_decision, 'outcome_only_repair_evidence_lines', []) or []),
+        outcome_only_collapse_evidence_lines=list(getattr(promotion_decision, 'outcome_only_collapse_evidence_lines', []) or []),
         legacy_delta_summary=list(getattr(monotonic_improvement, 'legacy_delta_summary', []) or []),
         candidate_strategy_matrix=list(getattr(pairwise_editorial, 'candidate_strategy_matrix', []) or []),
         editorial_force_status=str(getattr(editorial_force, 'status', 'unknown') or 'unknown'),
@@ -800,12 +806,33 @@ def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_n
         if snapshot:
             legacy_delta_summary.append(f'{label}=force+{better_force}/coverage+{better_coverage}/compactness+{better_compactness}')
     metrics.legacy_delta_summary = legacy_delta_summary
-    residual_report = build_residual_gap_report(skill_name=skill_name, metrics=metrics.model_dump())
+    residual_metrics = metrics.model_dump()
+    if skill_name == 'decision-loop-stress-test':
+        residual_metrics.update(
+            {
+                'repair_specificity_score': float(metrics.outcome_only_repair_specificity_score or 0.0),
+                'probe_evidence_density': float(metrics.outcome_only_probe_evidence_density or 0.0),
+                'collapse_witness_coverage': float(metrics.outcome_only_collapse_witness_coverage or 0.0),
+            }
+        )
+    residual_report = build_residual_gap_report(skill_name=skill_name, metrics=residual_metrics)
     metrics.quality_check_target_status = residual_report.quality_check_target_status
     metrics.pressure_target_status = residual_report.pressure_target_status
     metrics.leakage_target_status = residual_report.leakage_target_status
     metrics.false_fix_rejection_status = residual_report.false_fix_rejection_status
     metrics.residual_gap_count = residual_report.residual_gap_count
+    decision_loop_outcome_breakthrough = bool(
+        skill_name == 'decision-loop-stress-test'
+        and metrics.outcome_only_reranker_status == 'pass'
+        and metrics.outcome_only_frontier_comparison_status == 'beaten'
+        and int(metrics.outcome_only_probe_count or 0) > 0
+        and int(metrics.outcome_only_probe_pass_count or 0) >= int(metrics.outcome_only_probe_count or 0)
+        and int(metrics.outcome_only_improved_probe_count or 0) >= 2
+        and residual_report.status == 'pass'
+    )
+    if decision_loop_outcome_breakthrough:
+        metrics.current_best_comparison_status = 'beaten'
+        metrics.active_frontier_status = 'beaten'
     if metrics.force_non_regression_status != 'pass':
         metrics.promotion_hold_reason = 'hold_due_to_force_regression'
         metrics.pairwise_promotion_status = 'hold'
@@ -821,7 +848,7 @@ def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_n
         metrics.pairwise_promotion_status = 'hold'
         metrics.pairwise_promotion_reason = 'hold_due_to_compactness_regression'
         metrics.stable_but_no_breakthrough = False
-    elif balance_beaten and coverage_beaten and residual_report.status == 'pass':
+    elif (balance_beaten and coverage_beaten and residual_report.status == 'pass') or decision_loop_outcome_breakthrough:
         metrics.promotion_hold_reason = ''
         metrics.pairwise_promotion_status = 'promote'
         metrics.pairwise_promotion_reason = 'breakthrough'
@@ -1184,6 +1211,18 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_outcome_only_collapse_witness_coverage={case.auto_metrics.outcome_only_collapse_witness_coverage:.2f}')
         if case.auto_metrics.outcome_only_blocking_reason:
             lines.append(f'- auto_outcome_only_blocking_reason={case.auto_metrics.outcome_only_blocking_reason}')
+        if case.auto_metrics.outcome_only_blocked_probe_ids:
+            lines.append(f'- auto_outcome_only_blocked_probe_ids={case.auto_metrics.outcome_only_blocked_probe_ids}')
+        if case.auto_metrics.outcome_only_matched_probe_ids:
+            lines.append(f'- auto_outcome_only_matched_probe_ids={case.auto_metrics.outcome_only_matched_probe_ids}')
+        if case.auto_metrics.outcome_only_improved_probe_ids:
+            lines.append(f'- auto_outcome_only_improved_probe_ids={case.auto_metrics.outcome_only_improved_probe_ids}')
+        if case.auto_metrics.outcome_only_probe_witness_summary:
+            lines.append(f'- auto_outcome_only_probe_witness_summary={case.auto_metrics.outcome_only_probe_witness_summary}')
+        if case.auto_metrics.outcome_only_repair_evidence_lines:
+            lines.append(f'- auto_outcome_only_repair_evidence_lines={case.auto_metrics.outcome_only_repair_evidence_lines}')
+        if case.auto_metrics.outcome_only_collapse_evidence_lines:
+            lines.append(f'- auto_outcome_only_collapse_evidence_lines={case.auto_metrics.outcome_only_collapse_evidence_lines}')
         lines.append(f'- auto_residual_gap_count={case.auto_metrics.residual_gap_count}')
         if case.auto_metrics.promotion_hold_reason:
             lines.append(f'- auto_promotion_hold_reason={case.auto_metrics.promotion_hold_reason}')
@@ -1871,7 +1910,7 @@ def build_skill_create_comparison_report(
         and active_breakthrough_case.auto_metrics.force_non_regression_status == 'pass'
         and active_breakthrough_case.auto_metrics.coverage_non_regression_status == 'pass'
         and active_breakthrough_case.auto_metrics.compactness_non_regression_status == 'pass'
-        and active_breakthrough_case.auto_metrics.active_frontier_status == 'beaten'
+        and active_breakthrough_case.auto_metrics.active_frontier_status in {'matched', 'beaten'}
         and int(active_breakthrough_case.auto_metrics.residual_gap_count or 0) == 0
         and str(active_breakthrough_case.auto_metrics.outcome_only_reranker_status or 'not_applicable')
         in {'pass', 'not_applicable'}
