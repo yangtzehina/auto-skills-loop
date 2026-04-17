@@ -853,6 +853,30 @@ def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_n
         metrics.pairwise_promotion_status = 'promote'
         metrics.pairwise_promotion_reason = 'breakthrough'
         metrics.stable_but_no_breakthrough = False
+    elif (
+        skill_name == 'decision-loop-stress-test'
+        and metrics.outcome_only_reranker_status == 'pass'
+        and metrics.outcome_only_frontier_comparison_status == 'matched'
+        and int(metrics.outcome_only_blocked_probe_count or 0) == 0
+        and residual_report.status == 'pass'
+    ):
+        metrics.promotion_hold_reason = 'stable_but_no_breakthrough'
+        metrics.pairwise_promotion_status = 'hold'
+        metrics.pairwise_promotion_reason = 'stable_but_no_breakthrough'
+        metrics.stable_but_no_breakthrough = True
+    elif (
+        skill_name == 'decision-loop-stress-test'
+        and (
+            metrics.outcome_only_reranker_status != 'pass'
+            or metrics.outcome_only_frontier_comparison_status == 'blocked'
+            or int(metrics.outcome_only_blocked_probe_count or 0) > 0
+            or residual_report.status != 'pass'
+        )
+    ):
+        metrics.promotion_hold_reason = metrics.outcome_only_blocking_reason or 'hold_due_to_residual_gaps'
+        metrics.pairwise_promotion_status = 'hold'
+        metrics.pairwise_promotion_reason = metrics.promotion_hold_reason
+        metrics.stable_but_no_breakthrough = False
     elif residual_report.status != 'pass':
         metrics.promotion_hold_reason = 'stable_but_no_breakthrough'
         metrics.pairwise_promotion_status = 'hold'
