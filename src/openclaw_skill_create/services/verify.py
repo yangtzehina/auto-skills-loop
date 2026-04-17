@@ -79,8 +79,21 @@ def _run_in_process_main(*, label: str, cmd: list[str], script_path: Path, argv:
     )
 
 
+def _prefer_in_process_verify_commands() -> bool:
+    return True
+
+
 def _run_tests_command() -> VerifyCommandResult:
     cmd = [sys.executable, "scripts/run_tests.py"]
+    if _prefer_in_process_verify_commands():
+        result = _run_in_process_main(
+            label="run_tests",
+            cmd=cmd,
+            script_path=RUN_TESTS_SCRIPT,
+            argv=["run_tests.py"],
+        )
+        if re.search(r"passed=(\d+)\s+failed=(\d+)", result.stdout):
+            return result
     try:
         completed = subprocess.run(
             cmd,

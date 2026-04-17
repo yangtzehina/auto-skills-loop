@@ -152,6 +152,11 @@ def test_run_in_process_main_supports_zero_arg_main(tmp_path: Path):
 
 
 def test_run_tests_command_recovers_from_timeout_summary(monkeypatch):
+    monkeypatch.setattr(
+        'openclaw_skill_create.services.verify._prefer_in_process_verify_commands',
+        lambda: False,
+    )
+
     def _timeout(*args, **kwargs):
         raise TimeoutError  # pragma: no cover
 

@@ -9,6 +9,7 @@ from ..models.frontier_stability import (
     FrontierStabilityReport,
     FrontierStabilityRun,
 )
+from .expert_skill_studio import build_active_frontier_version
 from .skill_create_comparison import build_skill_create_comparison_report
 
 
@@ -222,7 +223,7 @@ def build_frontier_stability_report(*, runs: int = DEFAULT_FRONTIER_STABILITY_RU
         status = "fail"
     frontier_state = "stable_frontier" if status == "pass" else "frontier_regressed"
     report = FrontierStabilityReport(
-        frontier_version="frontier_v3",
+        frontier_version=build_active_frontier_version(),
         run_count=int(runs),
         pass_count=pass_count,
         fail_count=fail_count,

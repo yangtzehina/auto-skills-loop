@@ -11,7 +11,7 @@ from ..models.external_eval import (
     ExternalEvalProbe,
     NormalizedEvalSuite,
 )
-from .expert_skill_studio import build_profile_residual_targets
+from .expert_skill_studio import build_active_frontier_version, build_profile_residual_targets
 from .skill_create_comparison import COMPARISON_CASES, build_skill_create_comparison_report
 
 
@@ -113,6 +113,30 @@ def _adversarial_probe_specs() -> dict[str, list[dict[str, object]]]:
                 "criteria": ["pressure", "false_fix_rejection", "task_outcome"],
                 "expected_signals": ["mastery", "throughput", "new decision problem", "solved state"],
             },
+            {
+                "probe_id": "decision.solved-state-numeric-only-repair",
+                "task": "Audit a loop where the solved state is recognized, but the proposed repair is still only number tuning.",
+                "criteria": ["pressure", "false_fix_rejection", "editorial_force"],
+                "expected_signals": ["solved state", "collapse witness", "not just numeric tuning", "structural fix"],
+            },
+            {
+                "probe_id": "decision.variation-without-read-change",
+                "task": "Audit a loop where variation is named, but it still does not change read, tradeoff, or consequence.",
+                "criteria": ["pressure", "task_outcome", "editorial_force"],
+                "expected_signals": ["variation audit", "read", "tradeoff", "consequence"],
+            },
+            {
+                "probe_id": "decision.reinforcement-without-habit-mapping",
+                "task": "Audit a loop where reinforcement is mentioned, but the review never maps the wrong habit to the intended right habit.",
+                "criteria": ["pressure", "false_fix_rejection", "editorial_force"],
+                "expected_signals": ["wrong habit", "right habit", "reinforcement", "behavior shift"],
+            },
+            {
+                "probe_id": "decision.stop-condition-without-collapse-witness",
+                "task": "Audit a loop that names a stop condition, but never states the collapse witness that should trigger it.",
+                "criteria": ["pressure", "false_fix_rejection", "task_outcome"],
+                "expected_signals": ["stop condition", "collapse witness", "break point", "solved state risk"],
+            },
         ],
         "simulation-resource-loop-design": [
             {
@@ -166,6 +190,7 @@ def build_normalized_eval_suite(
     comparison_report: SkillCreateComparisonReport | None = None,
 ) -> NormalizedEvalSuite:
     report = comparison_report or build_skill_create_comparison_report(include_hermes=False)
+    active_frontier_version = build_active_frontier_version()
     criteria = _criteria_catalog()
     criteria_ids = [item.criterion_id for item in criteria]
     probe_specs = _adversarial_probe_specs()
@@ -203,7 +228,7 @@ def build_normalized_eval_suite(
         profiles.append(
             ExternalEvalProfile(
                 skill_name=skill_name,
-                active_frontier_version="frontier_v3",
+                active_frontier_version=active_frontier_version,
                 current_frontier_metrics=profile_metrics,
                 residual_targets={str(k): float(v) for k, v in dict(residual_targets.target_metrics or {}).items()},
                 expected_signals=target_signals,
@@ -211,14 +236,14 @@ def build_normalized_eval_suite(
             )
         )
     return NormalizedEvalSuite(
-        suite_version="frontier_v3",
+        suite_version=active_frontier_version,
         profiles=profiles,
         probes=probes,
         criteria=criteria,
         current_frontier_metrics=current_frontier_metrics,
         expected_signals=expected_signals,
         summary=[
-            "suite_version=frontier_v3",
+            f"suite_version={active_frontier_version}",
             f"profile_count={len(profiles)}",
             f"probe_count={len(probes)}",
             f"criteria_count={len(criteria)}",

@@ -130,8 +130,16 @@ class SkillCreateComparisonMetrics(BaseModel):
     false_fix_rejection_status: str = "unknown"
     residual_gap_count: int = 0
     outcome_only_reranker_status: str = "unknown"
+    outcome_only_probe_mode: str = "unknown"
     outcome_only_frontier_comparison_status: str = "unknown"
     outcome_only_probe_pass_count: int = 0
+    outcome_only_probe_count: int = 0
+    outcome_only_improved_probe_count: int = 0
+    outcome_only_matched_probe_count: int = 0
+    outcome_only_blocked_probe_count: int = 0
+    outcome_only_repair_specificity_score: float = 0.0
+    outcome_only_probe_evidence_density: float = 0.0
+    outcome_only_collapse_witness_coverage: float = 0.0
     outcome_only_blocking_reason: str = ""
     legacy_delta_summary: list[str] = Field(default_factory=list)
     candidate_strategy_matrix: list[dict[str, str]] = Field(default_factory=list)

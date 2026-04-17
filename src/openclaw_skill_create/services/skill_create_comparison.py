@@ -263,8 +263,16 @@ def _metrics_from_reports(
         false_fix_rejection_status=str(getattr(promotion_decision, 'false_fix_rejection_status', 'unknown') or 'unknown'),
         residual_gap_count=int(getattr(promotion_decision, 'residual_gap_count', 0) or 0),
         outcome_only_reranker_status=str(getattr(promotion_decision, 'outcome_only_reranker_status', 'unknown') or 'unknown'),
+        outcome_only_probe_mode=str(getattr(promotion_decision, 'outcome_only_probe_mode', 'unknown') or 'unknown'),
         outcome_only_frontier_comparison_status=str(getattr(promotion_decision, 'outcome_only_frontier_comparison_status', 'unknown') or 'unknown'),
         outcome_only_probe_pass_count=int(getattr(promotion_decision, 'outcome_only_probe_pass_count', 0) or 0),
+        outcome_only_probe_count=int(getattr(promotion_decision, 'outcome_only_probe_count', 0) or 0),
+        outcome_only_improved_probe_count=int(getattr(promotion_decision, 'outcome_only_improved_probe_count', 0) or 0),
+        outcome_only_matched_probe_count=int(getattr(promotion_decision, 'outcome_only_matched_probe_count', 0) or 0),
+        outcome_only_blocked_probe_count=int(getattr(promotion_decision, 'outcome_only_blocked_probe_count', 0) or 0),
+        outcome_only_repair_specificity_score=float(getattr(promotion_decision, 'outcome_only_repair_specificity_score', 0.0) or 0.0),
+        outcome_only_probe_evidence_density=float(getattr(promotion_decision, 'outcome_only_probe_evidence_density', 0.0) or 0.0),
+        outcome_only_collapse_witness_coverage=float(getattr(promotion_decision, 'outcome_only_collapse_witness_coverage', 0.0) or 0.0),
         outcome_only_blocking_reason=str(getattr(promotion_decision, 'outcome_only_blocking_reason', '') or ''),
         legacy_delta_summary=list(getattr(monotonic_improvement, 'legacy_delta_summary', []) or []),
         candidate_strategy_matrix=list(getattr(pairwise_editorial, 'candidate_strategy_matrix', []) or []),
@@ -1163,8 +1171,17 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_leakage_target_status={case.auto_metrics.leakage_target_status}')
         lines.append(f'- auto_false_fix_rejection_status={case.auto_metrics.false_fix_rejection_status}')
         lines.append(f'- auto_outcome_only_reranker_status={case.auto_metrics.outcome_only_reranker_status}')
+        lines.append(f'- auto_outcome_only_probe_mode={case.auto_metrics.outcome_only_probe_mode}')
         lines.append(f'- auto_outcome_only_frontier_comparison_status={case.auto_metrics.outcome_only_frontier_comparison_status}')
-        lines.append(f'- auto_outcome_only_probe_pass_count={case.auto_metrics.outcome_only_probe_pass_count}')
+        lines.append(
+            f'- auto_outcome_only_probe_pass_count={case.auto_metrics.outcome_only_probe_pass_count}/{case.auto_metrics.outcome_only_probe_count}'
+        )
+        lines.append(f'- auto_outcome_only_improved_probe_count={case.auto_metrics.outcome_only_improved_probe_count}')
+        lines.append(f'- auto_outcome_only_matched_probe_count={case.auto_metrics.outcome_only_matched_probe_count}')
+        lines.append(f'- auto_outcome_only_blocked_probe_count={case.auto_metrics.outcome_only_blocked_probe_count}')
+        lines.append(f'- auto_outcome_only_repair_specificity_score={case.auto_metrics.outcome_only_repair_specificity_score:.2f}')
+        lines.append(f'- auto_outcome_only_probe_evidence_density={case.auto_metrics.outcome_only_probe_evidence_density:.2f}')
+        lines.append(f'- auto_outcome_only_collapse_witness_coverage={case.auto_metrics.outcome_only_collapse_witness_coverage:.2f}')
         if case.auto_metrics.outcome_only_blocking_reason:
             lines.append(f'- auto_outcome_only_blocking_reason={case.auto_metrics.outcome_only_blocking_reason}')
         lines.append(f'- auto_residual_gap_count={case.auto_metrics.residual_gap_count}')
@@ -1860,6 +1877,14 @@ def build_skill_create_comparison_report(
         in {'pass', 'not_applicable'}
         and str(active_breakthrough_case.auto_metrics.outcome_only_frontier_comparison_status or 'not_applicable')
         in {'beaten', 'not_applicable'}
+        and (
+            active_breakthrough_case.auto_metrics.outcome_only_probe_count == 0
+            or (
+                int(active_breakthrough_case.auto_metrics.outcome_only_probe_pass_count or 0)
+                >= int(active_breakthrough_case.auto_metrics.outcome_only_probe_count or 0)
+                and int(active_breakthrough_case.auto_metrics.outcome_only_improved_probe_count or 0) >= 2
+            )
+        )
         and not bool(active_breakthrough_case.auto_metrics.stable_but_no_breakthrough)
     )
     breakthrough_ready = (

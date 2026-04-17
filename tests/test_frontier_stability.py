@@ -9,6 +9,7 @@ from openclaw_skill_create.models.comparison import (
     SkillCreateComparisonMetrics,
     SkillCreateComparisonReport,
 )
+from openclaw_skill_create.services.expert_skill_studio import build_active_frontier_version
 from openclaw_skill_create.services.frontier_stability import build_frontier_stability_report
 
 
@@ -169,4 +170,4 @@ def test_run_frontier_stability_report_cli(monkeypatch):
 
     assert code in {0, 1}
     assert stderr == ""
-    assert '"frontier_version": "frontier_v3"' in stdout
+    assert f'"frontier_version": "{build_active_frontier_version()}"' in stdout

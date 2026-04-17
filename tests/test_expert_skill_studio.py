@@ -40,10 +40,10 @@ def _outcome_only_report(
     status: str = 'pass',
     frontier_comparison_status: str = 'beaten',
     blocking_reason: str = '',
-    probe_pass_count: int = 4,
-    probe_count: int = 4,
-    improved_probe_count: int = 1,
-    probe_mode: str = 'frontier_v3',
+    probe_pass_count: int = 8,
+    probe_count: int = 8,
+    improved_probe_count: int = 2,
+    probe_mode: str = 'probe_expanded_v4',
 ) -> OutcomeOnlyRerankerReport:
     return OutcomeOnlyRerankerReport(
         skill_name='decision-loop-stress-test',
@@ -88,6 +88,11 @@ def test_profile_residual_targets_freeze_frontier_v3_priorities():
     assert 'Default Workflow' in decision.allowed_sections
     assert decision.target_metrics['compression_without_loss'] == 0.80
     assert decision.target_metrics['task_outcome_with_skill_average'] == 0.92
+    assert decision.target_metrics['outcome_only_probe_pass_count'] == 8.0
+    assert decision.target_metrics['outcome_only_improved_probe_count'] == 2.0
+    assert decision.target_metrics['repair_specificity_score'] == 0.90
+    assert decision.target_metrics['probe_evidence_density'] == 0.85
+    assert decision.target_metrics['collapse_witness_coverage'] == 0.90
     assert simulation.target_metrics['generic_surface_leakage'] == 0.05
     assert simulation.target_metrics['generic_skeleton_ratio'] == 0.20
     assert 'Analysis Blocks' in simulation.allowed_sections
@@ -193,7 +198,10 @@ def test_realization_candidates_support_pairwise_promotion_for_known_profile():
         'package_ready',
         'failure_pass',
     }
-    assert all(item.strategy_profile.get('active_frontier_version') == 'frontier_v3' for item in candidates)
+    assert all(
+        item.strategy_profile.get('active_frontier_version') == studio.build_active_frontier_version()
+        for item in candidates
+    )
     assert all(item.strategy_profile.get('allowed_sections') for item in candidates)
     assert {item.strategy_profile.get('target_focus') for item in candidates} <= {'quality_checks', 'failure_repairs', 'output_format', ''}
     assert sum(
@@ -237,6 +245,11 @@ def test_residual_gap_report_fails_for_known_frontier_weaknesses():
             'domain_move_coverage': 0.9285,
             'section_depth_score': 0.9008,
             'task_outcome_with_skill_average': 0.90,
+            'outcome_only_probe_pass_count': 4,
+            'outcome_only_improved_probe_count': 0,
+            'repair_specificity_score': 0.82,
+            'probe_evidence_density': 0.72,
+            'collapse_witness_coverage': 0.70,
         },
     )
     simulation_report = build_residual_gap_report(
@@ -701,9 +714,12 @@ def test_outcome_only_reranker_blocks_promotion_without_frontier_win(monkeypatch
                 'decision-loop-stress-test:fake_fix_rejection:2',
             ],
             status='fail',
+            probe_mode='probe_expanded_v4',
             frontier_comparison_status='matched',
             blocking_reason='outcome_only_reranker_not_better_than_frontier',
             probe_pass_count=3,
+            probe_count=8,
+            improved_probe_count=0,
         ),
     )
 
@@ -720,6 +736,7 @@ def test_outcome_only_reranker_blocks_promotion_without_frontier_win(monkeypatch
     assert promotion_decision.outcome_only_frontier_comparison_status == 'matched'
     assert promotion_decision.outcome_only_probe_pass_count == 3
     assert promotion_decision.outcome_only_blocking_reason == 'outcome_only_reranker_not_better_than_frontier'
+    assert promotion_decision.outcome_only_probe_mode == 'probe_expanded_v4'
     assert monotonic_report.promotion_reason == 'breakthrough'
 
 
