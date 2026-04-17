@@ -248,6 +248,150 @@
     }
   },
   {
+    "description": "decision.solved-state-numeric-only-repair",
+    "vars": {
+      "skill_name": "decision-loop-stress-test",
+      "task": "Audit a loop where the solved state is recognized, but the proposed repair is still only number tuning.",
+      "expected_signals": [
+        "solved state",
+        "collapse witness",
+        "not just numeric tuning",
+        "structural fix"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "solved state",
+          "collapse witness",
+          "not just numeric tuning",
+          "structural fix"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Decision Pressure",
+          "False Fix Rejection",
+          "Editorial Force"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "decision.variation-without-read-change",
+    "vars": {
+      "skill_name": "decision-loop-stress-test",
+      "task": "Audit a loop where variation is named, but it still does not change read, tradeoff, or consequence.",
+      "expected_signals": [
+        "variation audit",
+        "read",
+        "tradeoff",
+        "consequence"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "variation audit",
+          "read",
+          "tradeoff",
+          "consequence"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Decision Pressure",
+          "Task Outcome",
+          "Editorial Force"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "decision.reinforcement-without-habit-mapping",
+    "vars": {
+      "skill_name": "decision-loop-stress-test",
+      "task": "Audit a loop where reinforcement is mentioned, but the review never maps the wrong habit to the intended right habit.",
+      "expected_signals": [
+        "wrong habit",
+        "right habit",
+        "reinforcement",
+        "behavior shift"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "wrong habit",
+          "right habit",
+          "reinforcement",
+          "behavior shift"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Decision Pressure",
+          "False Fix Rejection",
+          "Editorial Force"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
+    "description": "decision.stop-condition-without-collapse-witness",
+    "vars": {
+      "skill_name": "decision-loop-stress-test",
+      "task": "Audit a loop that names a stop condition, but never states the collapse witness that should trigger it.",
+      "expected_signals": [
+        "stop condition",
+        "collapse witness",
+        "break point",
+        "solved state risk"
+      ]
+    },
+    "assert": [
+      {
+        "type": "contains-all",
+        "value": [
+          "stop condition",
+          "collapse witness",
+          "break point",
+          "solved state risk"
+        ]
+      },
+      {
+        "type": "rubric",
+        "value": [
+          "Decision Pressure",
+          "False Fix Rejection",
+          "Task Outcome"
+        ]
+      }
+    ],
+    "metadata": {
+      "probe_family": "adversarial",
+      "pass_expectation": "pass"
+    }
+  },
+  {
     "description": "simulation.invisible-pressure",
     "vars": {
       "skill_name": "simulation-resource-loop-design",

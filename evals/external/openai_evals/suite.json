@@ -170,6 +170,74 @@
       "pass_expectation": "pass"
     },
     {
+      "probe_id": "decision.solved-state-numeric-only-repair",
+      "skill_name": "decision-loop-stress-test",
+      "input": "Audit a loop where the solved state is recognized, but the proposed repair is still only number tuning.",
+      "criteria": [
+        "pressure",
+        "false_fix_rejection",
+        "editorial_force"
+      ],
+      "expected_signals": [
+        "solved state",
+        "collapse witness",
+        "not just numeric tuning",
+        "structural fix"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "decision.variation-without-read-change",
+      "skill_name": "decision-loop-stress-test",
+      "input": "Audit a loop where variation is named, but it still does not change read, tradeoff, or consequence.",
+      "criteria": [
+        "pressure",
+        "task_outcome",
+        "editorial_force"
+      ],
+      "expected_signals": [
+        "variation audit",
+        "read",
+        "tradeoff",
+        "consequence"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "decision.reinforcement-without-habit-mapping",
+      "skill_name": "decision-loop-stress-test",
+      "input": "Audit a loop where reinforcement is mentioned, but the review never maps the wrong habit to the intended right habit.",
+      "criteria": [
+        "pressure",
+        "false_fix_rejection",
+        "editorial_force"
+      ],
+      "expected_signals": [
+        "wrong habit",
+        "right habit",
+        "reinforcement",
+        "behavior shift"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
+      "probe_id": "decision.stop-condition-without-collapse-witness",
+      "skill_name": "decision-loop-stress-test",
+      "input": "Audit a loop that names a stop condition, but never states the collapse witness that should trigger it.",
+      "criteria": [
+        "pressure",
+        "false_fix_rejection",
+        "task_outcome"
+      ],
+      "expected_signals": [
+        "stop condition",
+        "collapse witness",
+        "break point",
+        "solved state risk"
+      ],
+      "pass_expectation": "pass"
+    },
+    {
       "probe_id": "simulation.invisible-pressure",
       "skill_name": "simulation-resource-loop-design",
       "input": "Audit a resource loop where the pressure relationships exist but the player cannot read them early enough to plan.",
@@ -276,28 +344,42 @@
         "domain_move_coverage": 0.9285,
         "section_depth_score": 0.9722,
         "task_outcome_with_skill_average": 0.9815,
-        "redundancy_ratio": 0.0403,
+        "redundancy_ratio": 0.0387,
         "generic_surface_leakage": 0.0,
         "expert_pitfall_cluster_recall": 1.0,
         "output_field_guidance_coverage": 1.0,
         "generic_skeleton_ratio": 0.3158,
-        "compression_without_loss": 0.8039
+        "compression_without_loss": 0.8261
       },
       "residual_targets": {
         "decision_pressure_score": 0.98,
         "compression_without_loss": 0.8,
-        "task_outcome_with_skill_average": 0.92
+        "task_outcome_with_skill_average": 0.92,
+        "outcome_only_probe_pass_count": 8.0,
+        "outcome_only_improved_probe_count": 2.0,
+        "repair_specificity_score": 0.9,
+        "probe_evidence_density": 0.85,
+        "collapse_witness_coverage": 0.9
       },
       "expected_signals": [
         "decision_pressure_score>=0.9800",
         "compression_without_loss>=0.8000",
-        "task_outcome_with_skill_average>=0.9200"
+        "task_outcome_with_skill_average>=0.9200",
+        "outcome_only_probe_pass_count>=8.0000",
+        "outcome_only_improved_probe_count>=2.0000",
+        "repair_specificity_score>=0.9000",
+        "probe_evidence_density>=0.8500",
+        "collapse_witness_coverage>=0.9000"
       ],
       "probe_ids": [
         "decision.novelty-masks-weak-choice",
         "decision.midgame-autopilot",
         "decision.fake-repair-by-content",
-        "decision.mastery-throughput-only"
+        "decision.mastery-throughput-only",
+        "decision.solved-state-numeric-only-repair",
+        "decision.variation-without-read-change",
+        "decision.reinforcement-without-habit-mapping",
+        "decision.stop-condition-without-collapse-witness"
       ]
     },
     {
