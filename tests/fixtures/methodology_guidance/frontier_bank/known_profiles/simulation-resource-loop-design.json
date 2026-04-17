@@ -1,6 +1,6 @@
 {
   "skill_name": "simulation-resource-loop-design",
-  "active_frontier_version": "frontier_v5",
+  "active_frontier_version": "frontier_v6",
   "pressure_best_sections": {
     "Analysis Blocks": [
       "Keep only tensions that visibly change player behavior; decorative mappings are noise."

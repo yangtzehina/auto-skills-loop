@@ -1,19 +1,20 @@
 {
   "skill_name": "decision-loop-stress-test",
-  "active_frontier_version": "frontier_v5",
+  "active_frontier_version": "frontier_v6",
   "pressure_best_sections": {
     "Overview": [
-      "Find the collapse witness and the break point before you discuss more content, and reject any repair recommendation that is not just numeric tuning, not just more content, not just phase explanation, and still leaves the same read, tradeoff, or consequence."
+      "Find the collapse witness and the break point before you discuss more content, and reject any repair recommendation that is not just numeric tuning, not just more content, still keeps the same dominant line, and still lets the old answer survive with the same read, tradeoff, or same consequence."
     ],
     "Default Workflow": [
-      "Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, maps the wrong habit to the right habit, and names the intended behavior shift before you call the loop fixed."
+      "Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, names what old answer stops working, what new answer becomes correct, which reward loop currently trains the wrong habit, what right habit should replace it, and what reward, information, or cost shift causes that behavior shift before you call the loop fixed."
     ],
     "Quality Checks": [
-      "Reject repairs that are not just numeric tuning, not just more content, and not just pacing or throughput cover; keep only the structural fixes that change the decision problem.",
-      "Check whether the repair recommendation is not just numeric tuning, not just more content, not just phase explanation, and not just pacing cover."
+      "Hard fail any solved-state repair that keeps the same dominant line, the same read, the same consequence structure, or the old answer alive inside the same decision landscape before balance values are tuned.",
+      "Hard fail any variation pass that names variation but keeps the same dominant line, the same read, the same consequence, or never says what old answer stops working and what new answer is required.",
+      "Hard fail any reinforcement pass that names wrong habit to right habit but never states which reward loop trains the wrong behavior, what player behavior must disappear, what replacement behavior must become optimal, or what reward, information, or cost shift causes the behavior shift."
     ],
     "Failure Patterns and Fixes": [
-      "Add a new constraint or pressure relationship before adding more content or reward layers, reject content-only or numeric-only repair, and change the decision landscape instead of polishing the same answer."
+      "Reject numeric-only or content-only fixes, write a structural repair recommendation, call out when numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure, and rewrite the fix so the decision landscape changes before balance values are tuned."
     ]
   },
   "compactness_best_sections": {
@@ -26,15 +27,15 @@
   },
   "quality_checks_best_sections": {
     "Quality Checks": [
-      "Check whether solved-state repair changes the decision landscape instead of leaving the same read, tradeoff, or consequence alive.",
-      "Check whether the variation audit changes read, tradeoff, consequence, or dominant line instead of renaming the same answer.",
-      "Check whether reinforcement maps wrong habit to right habit, names the intended behavior shift, and rejects throughput-only mastery.",
-      "Check whether the stop condition, collapse witness, and break point appear together as the structural witness for repair."
+      "Hard fail any solved-state repair that keeps the same dominant line, the same read, the same consequence structure, or the old answer alive inside the same decision landscape before balance values are tuned.",
+      "Hard fail any variation pass that names variation but keeps the same dominant line, the same read, the same consequence, or never says what old answer stops working and what new answer is required.",
+      "Hard fail any reinforcement pass that names wrong habit to right habit but never states which reward loop trains the wrong behavior, what player behavior must disappear, what replacement behavior must become optimal, or what reward, information, or cost shift causes the behavior shift.",
+      "Hard fail any stop condition that names a break point without naming the collapse witness the player can actually observe."
     ]
   },
   "failure_repairs_best_sections": {
     "Failure Patterns and Fixes": [
-      "Treat any loop without a collapse witness or break point, or any repair recommendation that still keeps the same read, tradeoff, consequence, or dominant line, as unshippable until the structural fix is explicit."
+      "Treat any loop without a collapse witness or break point, or any repair recommendation that still keeps the same read, tradeoff, same consequence, dominant line, or old answer alive, as unshippable until the structural fix is explicit."
     ]
   },
   "output_format_best_sections": {
