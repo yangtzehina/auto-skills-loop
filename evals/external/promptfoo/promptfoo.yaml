@@ -1,4 +1,4 @@
-description: frontier_v6 external eval export
+description: frontier_v7 external eval export
 prompts:
   - "{{task}}"
 providers:

@@ -9,7 +9,7 @@ Find the collapse witness before the loop gets greenlit by novelty, rewards, or 
 
 ## Overview
 
-Find the collapse witness and the break point before you discuss more content, and reject any repair recommendation that is not just numeric tuning, not just more content, still keeps the same dominant line, and still lets the old answer survive with the same read, tradeoff, or same consequence.
+Find the collapse witness and the break point before you discuss more content, and reject any repair recommendation that is not just numeric tuning, not just more content, still keeps the same dominant line, still keeps the same read or same consequence, and still lets the old answer survive instead of forcing a new answer.
 
 ## Core Principle
 
@@ -40,7 +40,7 @@ First hour, midgame, and late game are distinct stress lenses.
 - Put the collapse signal, collapse witness, stop condition, break point, and structural witness before explanation, then reject surface excitement, first-hour novelty, not just phase explanation, and not just pacing cover.
 - Treat not MVP scope cutting and not detailed numeric balancing as guardrails, not excuses for a weak decision.
 - Keep weak decision, midgame autopilot, fake variation, shallow reward inflation, the same dominant line, and the same read visible enough to reject them as false fixes in the decision landscape.
-- Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, names what old answer stops working, what new answer becomes correct, which reward loop currently trains the wrong habit, what right habit should replace it, and what reward, information, or cost shift causes that behavior shift before you call the loop fixed.
+- Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, names what old answer stops working, what new answer becomes correct, which reward loop currently trains the wrong habit, what player behavior must disappear, what right habit should replace it, what replacement behavior must become optimal, and what reward, information, or cost changed to cause that behavior shift before you call the loop fixed.
 
 1. **Define the Current Loop Shape**
    - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
@@ -66,7 +66,7 @@ First hour, midgame, and late game are distinct stress lenses.
    - Watch: Inspect constraints, tradeoffs, variation quality, and dominant-option risk. Name the counterpressure, variation audit, read shift, tradeoff change, and adaptation test before content gets added.
    - Reinforce / Repair: Add state changes that force adaptation, not just larger numbers.
    - Write: Midgame pressure with tradeoff change, variation quality, and autopilot risk.
-   - Check: Name the dominant strategy, the midgame autopilot risk, the missing counterpressure, and whether the variation audit changes read, tradeoff, or consequence; if it keeps the same read, the same dominant line, or the same consequence, or if the old answer still works and no new answer is required, reject it as fake variation.
+   - Check: Name the dominant strategy, the midgame autopilot risk, the missing counterpressure, and whether the variation audit changes read, tradeoff, or consequence; if it keeps the same read, the same dominant line, or the same consequence, or if the old answer still works and no new answer is required, reject it as fake variation until a reward, information, or cost change makes the old answer stop working and a new answer become correct.
 
 4. **Test Late-Game Expansion or Mutation**
    - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
@@ -84,7 +84,7 @@ First hour, midgame, and late game are distinct stress lenses.
    - Watch: Describe the dominant strategy and the reward, cost, or timing pattern that creates it. Reject any fix that only widens content, only tunes numbers, only softens pacing, or keeps the same dominant line without changing pressure.
    - Reinforce / Repair: Add structural counterpressure instead of another option.
    - Write: Solved-state risk with cause and counterpressure.
-   - Check: Break the dominant strategy with a structural fix and repair recommendation, reject numeric-only tuning or content-only padding, call out when numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure, then change the decision landscape before balance values are tuned.
+   - Check: Break the dominant strategy with a structural fix and repair recommendation, reject numeric-only tuning or content-only padding, call out when numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure, and change the decision landscape before balance values are tuned so the old answer stops working and a new answer becomes correct.
 
 6. **Audit Variation and Reinforcement**
    - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
@@ -93,7 +93,7 @@ First hour, midgame, and late game are distinct stress lenses.
    - Watch: Audit variation quality and reinforcement so the decision loop trains the intended behavior. Reject any fix that only widens content, only tunes numbers, only softens pacing, or keeps the same dominant line without changing pressure. Call out variation that does not change decisions, keeps the same read, preserves the same dominant line, or hides the missing behavior shift.
    - Reinforce / Repair: Reward adaptation, timing, state-reading, or expressive choices directly.
    - Write: Variation quality and reinforcement recommendations.
-   - Check: Reinforce the intended behavior, map wrong habit to right habit, name the behavior shift, say which reward loop currently trains the wrong habit, say what player behavior must disappear, say what replacement behavior must become optimal, reject fake variation, reject variation that does not change decisions, keeps the same dominant line, keeps the same read, or leaves the old answer working, and reject any repair that only improves throughput.
+   - Check: Reinforce the intended behavior, map wrong habit to right habit, name the behavior shift, say which reward loop currently trains the wrong habit, say what player behavior must disappear, say what replacement behavior must become optimal, say what reward, information, or cost changed to cause that shift, reject fake variation, reject variation that does not change decisions, keeps the same dominant line, keeps the same read, or leaves the old answer working, and reject any repair that only improves throughput.
 
 ## Common Pitfalls: Collapse Patterns and Repairs
 
@@ -116,12 +116,14 @@ Treat any loop without a collapse witness or break point, or any repair recommen
 ### Progression Without New Problems
 - Symptom: Progression adds throughput or spectacle while the underlying choice stays solved.
 - Cause: Expansion arrived without a new pressure problem.
-- Correction: Add a new constraint or pressure relationship before adding more content or reward layers, reject content-only or numeric-only repair, and change the decision landscape instead of polishing the same answer.
+- Correction: Add a new constraint or pressure relationship before adding more content or reward layers, reject content-only or numeric-only repair, and change the decision landscape instead of polishing the same answer so the old answer stops working and a new answer becomes correct.
 
 ### Variety Without Strategic Consequence
 - Symptom: The game offers more variants, but they do not change read, tradeoff, or consequence.
 - Cause: Variation was used as surface freshness instead of decision mutation.
-- Correction: Cut cosmetic variation, call fake variation by name, reject any variation that does not change decisions or keeps the same read, same consequence, or dominant line, say what old answer stops working and what new answer becomes required, and keep only the variants that force a new read, tradeoff, or consequence.
+- Correction: Cut cosmetic variation, call fake variation by name, reject any variation that does not change decisions or keeps the same read, same consequence, or dominant line, say what old answer stops working, what new answer becomes required, and what reward, information, or cost changed, and keep only the variants that force a new read, tradeoff, or consequence.
+- Fake version: Variation named, but the same dominant line, the same read, and the same consequence still survive under a new label.
+- Structural replacement: Change reward, information, or cost so the old answer stops working, a new answer becomes required, and the variation changes read, tradeoff, or consequence.
 
 ### Mastery Removes the Game
 - Symptom: Late play collapses into rote execution or a dominant route.
@@ -131,8 +133,8 @@ Treat any loop without a collapse witness or break point, or any repair recommen
 ## Quality Checks
 
 - Gate: Keep the audit on collapse witness, structural repair, dominant strategy, and reinforcement before anyone reaches for extra content.
-- Reject repairs that are not just numeric tuning, not just more content, and not just pacing or throughput cover; keep only the structural fixes that change the decision problem.
-- Check whether the repair recommendation is not just numeric tuning, not just more content, not just phase explanation, and not just pacing cover.
+- Hard fail any solved-state repair that keeps the same dominant line, the same read, the same consequence structure, or the old answer alive inside the same decision landscape before balance values are tuned.
+- Hard fail any variation pass that names variation but keeps the same dominant line, the same read, the same consequence, or never says what old answer stops working and what new answer is required.
 - Check whether first-hour novelty is masking a weak decision before the loop gets greenlit.
 - Check whether the decision loop is readable in the first hour before novelty wears off.
 - Check whether first hour, midgame, and lategame differ for the right reason instead of only inflating numbers.
@@ -152,12 +154,17 @@ Treat any loop without a collapse witness or break point, or any repair recommen
 - Check whether the variation audit changes read, tradeoff, consequence, or dominant line instead of renaming the same answer.
 - Check whether reinforcement maps wrong habit to right habit, names the intended behavior shift, and rejects throughput-only mastery.
 - Check whether the stop condition, collapse witness, and break point appear together as the structural witness for repair.
+- Check whether variation named but same dominant line, same read, or same consequence is being falsely accepted as strategic change.
+- Check whether habit mapping is named while the reward loop currently trains the same behavior and no replacement behavior becomes optimal.
+- Check whether the repair recommendation claims a solved-state fix while the decision landscape stays unchanged.
 - Check whether the first named collapse witness appears before phase explanation, pacing cover, or reward pacing.
 - Check whether a named stop condition also includes a concrete collapse witness and a break point the player can observe.
 - Check whether solved-state repair is anything more than numeric-only tuning or softer compensation.
 - Check whether variation changes read, tradeoff, or consequence instead of just renaming content.
 - Check whether variation does not change decisions, keeps the same dominant line, or preserves the same read under a new label.
 - Check whether reinforcement explicitly maps the wrong habit to the right habit the loop should train.
+- Check whether reinforcement names what reward loop currently trains the wrong behavior and what replacement behavior must become optimal.
+- Check whether solved-state repair says numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure.
 - Check whether every repair recommendation names a structural fix instead of numeric-only tuning, content-only padding, pacing-only relief, or throughput-only mastery.
 
 ## Decision Rules

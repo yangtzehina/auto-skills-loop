@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0.0",
   "skill_name": "decision-loop-stress-test",
-  "active_frontier_version": "frontier_v6",
+  "active_frontier_version": "frontier_v7",
   "best_balance_snapshot": {
-    "label": "frontier_v6",
+    "label": "frontier_v7",
     "primary_force_metrics": {
       "decision_pressure_score": 1.0,
       "failure_repair_force": 1.0,
@@ -15,22 +15,22 @@
       "task_outcome_with_skill_average": 0.9815
     },
     "compactness_metrics": {
-      "redundancy_ratio": 0.0432,
+      "redundancy_ratio": 0.0355,
       "shared_opening_phrase_ratio": 0.0,
-      "cross_case_similarity": 0.2351,
-      "compression_without_loss": 0.8333
+      "cross_case_similarity": 0.2322,
+      "compression_without_loss": 0.8184
     },
     "target_metrics": {
       "decision_pressure_score": 1.0,
-      "compression_without_loss": 0.8333
+      "compression_without_loss": 0.8184
     },
     "summary": [
-      "active_frontier=frontier_v6",
+      "active_frontier=frontier_v7",
       "current HEAD establishes the new active frontier"
     ]
   },
   "best_coverage_snapshot": {
-    "label": "frontier_v6",
+    "label": "frontier_v7",
     "primary_force_metrics": {
       "decision_pressure_score": 1.0,
       "failure_repair_force": 1.0,
@@ -42,17 +42,17 @@
       "task_outcome_with_skill_average": 0.9815
     },
     "compactness_metrics": {
-      "redundancy_ratio": 0.0432,
+      "redundancy_ratio": 0.0355,
       "shared_opening_phrase_ratio": 0.0,
-      "cross_case_similarity": 0.2351,
-      "compression_without_loss": 0.8333
+      "cross_case_similarity": 0.2322,
+      "compression_without_loss": 0.8184
     },
     "target_metrics": {
       "decision_pressure_score": 1.0,
-      "compression_without_loss": 0.8333
+      "compression_without_loss": 0.8184
     },
     "summary": [
-      "active_frontier=frontier_v6",
+      "active_frontier=frontier_v7",
       "current HEAD establishes the new active frontier"
     ]
   },
@@ -123,17 +123,17 @@
     "task_outcome_with_skill_average": 0.9615
   },
   "compactness_ceiling": {
-    "redundancy_ratio": 0.0632,
+    "redundancy_ratio": 0.0555,
     "shared_opening_phrase_ratio": 0.06,
-    "cross_case_similarity": 0.2651,
-    "compression_without_loss": 0.8333
+    "cross_case_similarity": 0.2622,
+    "compression_without_loss": 0.8184
   },
   "tolerance": {
     "score_metric": 0.02,
     "compactness_metric": 0.06
   },
   "summary": [
-    "freeze active_frontier=frontier_v6",
+    "freeze active_frontier=frontier_v7",
     "retain rerun6 as legacy reference point"
   ]
 }
