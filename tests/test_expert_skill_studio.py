@@ -230,6 +230,22 @@ def test_realization_candidates_support_pairwise_promotion_for_known_profile():
     assert promotion_decision.promotion_status in {'promote', 'hold'}
 
 
+def test_decision_loop_candidates_surface_stronger_probe_evidence():
+    _, _, candidates = build_skill_realization_candidates(
+        skill_name='decision-loop-stress-test',
+        description='Stress-test a decision loop.',
+        task='Stress a decision loop across first hour, midgame, and mastery pressure.',
+        references=[],
+        scripts=[],
+    )
+
+    assert candidates
+    assert all('old answer' in item.rendered_markdown.lower() for item in candidates)
+    assert all('reward loop' in item.rendered_markdown.lower() for item in candidates)
+    assert all('same consequence' in item.rendered_markdown.lower() for item in candidates)
+    assert all('decision landscape' in item.rendered_markdown.lower() for item in candidates)
+
+
 def test_residual_gap_report_fails_for_known_frontier_weaknesses():
     concept_report = build_residual_gap_report(
         skill_name='concept-to-mvp-pack',
@@ -1104,6 +1120,50 @@ def test_outcome_only_reranker_counts_frontier_equivalent_evidence_as_matched(mo
     assert report.frontier_comparison_status == 'matched'
     assert report.matched_probe_ids == ['decision.frontier-equivalent']
     assert report.blocked_probe_ids == []
+
+
+def test_outcome_only_reranker_counts_stronger_witness_bundle_as_improved(monkeypatch):
+    frontier_markdown = (
+        "# Frontier\n\n"
+        "- Reject fake variation if it keeps the same dominant line or the same read.\n"
+        "- Map the wrong habit to the right habit and name the intended behavior shift.\n"
+        "- Reject repairs that are not just numeric tuning and still leave the same dominant line alive.\n"
+    )
+    candidate = SkillRealizationCandidate(
+        candidate_id='decision-loop-stress-test:pressure_audit_v2:1',
+        skill_name='decision-loop-stress-test',
+        program_id='decision-loop-stress-test:execution_spine',
+        realization_strategy='pressure_audit_v2',
+        strategy_profile={},
+        rendered_markdown=(
+            "# Candidate\n\n"
+            "- Reject fake variation if it keeps the same dominant line, the same read, or the same consequence, because the old answer still works until a new answer is required.\n"
+            "- Map the wrong habit to the right habit, name the intended behavior and the behavior shift, say which reward loop currently trains the wrong behavior, and say what replacement behavior must become optimal.\n"
+            "- Reject repairs that are not just numeric tuning when they keep the same dominant line, the same read, the same consequence structure, and the same decision landscape.\n"
+        ),
+    )
+    monkeypatch.setattr(studio, '_current_best_markdown', lambda skill_name: frontier_markdown)
+
+    def _metrics(**kwargs):
+        return {
+            'editorial': type('Editorial', (), {'redundancy_ratio': 0.05})(),
+            'editorial_force': type('Force', (), {})(),
+        }
+
+    monkeypatch.setattr(studio, '_candidate_editorial_metrics', _metrics)
+
+    report = studio._build_outcome_only_reranker_report(
+        skill_name='decision-loop-stress-test',
+        scored_candidates=[(candidate, {'editorial': type('Editorial', (), {'redundancy_ratio': 0.05})()})],
+        probe_mode='probe_expanded_v4',
+    )
+
+    assert report is not None
+    assert {
+        'decision.variation-without-read-change',
+        'decision.reinforcement-without-habit-mapping',
+        'decision.solved-state-numeric-only-repair',
+    } <= set(report.improved_probe_ids)
 
 
 def test_promotion_stays_stable_when_residual_targets_do_not_improve(monkeypatch):
