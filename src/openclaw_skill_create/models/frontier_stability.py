@@ -49,7 +49,7 @@ class FrontierStabilityProfileSummary(BaseModel):
 
 class FrontierStabilityReport(BaseModel):
     schema_version: str = "1.0.0"
-    frontier_version: str = "frontier_v2"
+    frontier_version: str = "frontier_v3"
     run_count: int = 0
     pass_count: int = 0
     fail_count: int = 0

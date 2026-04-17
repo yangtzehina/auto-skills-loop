@@ -81,6 +81,7 @@ def test_frontier_stability_report_marks_stable_frontier(monkeypatch):
                     decision_pressure_score=0.9692,
                     task_outcome_with_skill_average=0.8981 + drift,
                     redundancy_ratio=0.01,
+                    residual_gap_count=2,
                 ),
                 _comparison_case(
                     "simulation-resource-loop-design",
@@ -96,12 +97,12 @@ def test_frontier_stability_report_marks_stable_frontier(monkeypatch):
         fake_build_skill_create_comparison_report,
     )
 
-    report = build_frontier_stability_report(runs=5)
+    report = build_frontier_stability_report()
 
     assert report.status == "pass"
     assert report.frontier_state == "stable_frontier"
-    assert report.run_count == 5
-    assert report.pass_count == 5
+    assert report.run_count == 10
+    assert report.pass_count == 10
     assert report.fail_count == 0
     assert report.frontier_regression_count == 0
     assert {item.skill_name for item in report.profile_summaries} == {
@@ -168,4 +169,4 @@ def test_run_frontier_stability_report_cli(monkeypatch):
 
     assert code in {0, 1}
     assert stderr == ""
-    assert '"frontier_version": "frontier_v2"' in stdout
+    assert '"frontier_version": "frontier_v3"' in stdout

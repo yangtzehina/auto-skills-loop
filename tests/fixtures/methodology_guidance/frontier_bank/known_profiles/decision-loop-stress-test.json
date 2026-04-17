@@ -1,6 +1,6 @@
 {
   "skill_name": "decision-loop-stress-test",
-  "active_frontier_version": "frontier_v2",
+  "active_frontier_version": "frontier_v3",
   "pressure_best_sections": {
     "Overview": [
       "Stress the loop until you can name where the decision collapses, not where the content runs out."

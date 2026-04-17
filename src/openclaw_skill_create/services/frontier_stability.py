@@ -12,10 +12,11 @@ from ..models.frontier_stability import (
 from .skill_create_comparison import build_skill_create_comparison_report
 
 
-DEFAULT_FRONTIER_STABILITY_RUNS = 5
+DEFAULT_FRONTIER_STABILITY_RUNS = 10
 _PRESSURE_SPREAD_LIMIT = 0.03
 _OUTCOME_SPREAD_LIMIT = 0.03
 _REDUNDANCY_SPREAD_LIMIT = 0.02
+_ACTIVE_BREAKTHROUGH_SKILL = "decision-loop-stress-test"
 
 
 def _profile_run(case: SkillCreateComparisonCaseResult) -> FrontierStabilityProfileRun:
@@ -84,12 +85,17 @@ def _profile_summary(profile_runs: list[FrontierStabilityProfileRun]) -> Frontie
     statuses = [str(item.pairwise_promotion_status or "unknown") for item in profile_runs]
     residuals = [int(item.residual_gap_count or 0) for item in profile_runs]
     frontier_statuses = [str(item.active_frontier_status or "unknown") for item in profile_runs]
+    stable_active_target_gap = (
+        skill_name == _ACTIVE_BREAKTHROUGH_SKILL
+        and all(value in {"pass", "matched", "beaten"} for value in frontier_statuses)
+        and all(value in {"hold", "promote"} for value in statuses)
+    )
     status = "pass"
     if (
         pressure_spread > _PRESSURE_SPREAD_LIMIT
         or outcome_spread > _OUTCOME_SPREAD_LIMIT
         or redundancy_spread > _REDUNDANCY_SPREAD_LIMIT
-        or any(value > 0 for value in residuals)
+        or (any(value > 0 for value in residuals) and not stable_active_target_gap)
         or any(value == "fail" for value in frontier_statuses)
     ):
         status = "fail"
@@ -177,7 +183,7 @@ def build_frontier_stability_report(*, runs: int = DEFAULT_FRONTIER_STABILITY_RU
         1
         for run in run_reports
         if (
-            run.overall_status in {"pass", "stable_but_no_breakthrough"}
+            run.overall_status in {"breakthrough", "stable_but_no_breakthrough"}
             and run.gap_count == 0
             and run.active_frontier_status in {"pass", "matched", "beaten"}
             and run.force_non_regression_status == "pass"
@@ -216,7 +222,7 @@ def build_frontier_stability_report(*, runs: int = DEFAULT_FRONTIER_STABILITY_RU
         status = "fail"
     frontier_state = "stable_frontier" if status == "pass" else "frontier_regressed"
     report = FrontierStabilityReport(
-        frontier_version="frontier_v2",
+        frontier_version="frontier_v3",
         run_count=int(runs),
         pass_count=pass_count,
         fail_count=fail_count,

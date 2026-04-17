@@ -17,7 +17,7 @@ SCRIPT_PATH = Path(__file__).resolve().parents[1] / 'scripts' / 'run_external_ev
 def test_normalized_eval_suite_covers_known_profiles():
     suite = build_normalized_eval_suite()
 
-    assert suite.suite_version == 'frontier_v2'
+    assert suite.suite_version == 'frontier_v3'
     assert {item.skill_name for item in suite.profiles} == {
         'concept-to-mvp-pack',
         'decision-loop-stress-test',
@@ -25,7 +25,7 @@ def test_normalized_eval_suite_covers_known_profiles():
     }
     assert len(suite.criteria) >= 6
     assert len(suite.probes) >= 11
-    assert all(item.active_frontier_version == 'frontier_v2' for item in suite.profiles)
+    assert all(item.active_frontier_version == 'frontier_v3' for item in suite.profiles)
     assert all(item.probe_ids for item in suite.profiles)
     assert 'decision-loop-stress-test' in suite.current_frontier_metrics
     assert suite.current_frontier_metrics['decision-loop-stress-test']['decision_pressure_score'] >= 0.0
@@ -51,7 +51,7 @@ def test_external_eval_export_bundle_writes_sidecars(tmp_path: Path):
     promptfoo_payload = json.loads(promptfoo_cases.read_text(encoding='utf-8'))
     openai_payload = json.loads(openai_suite.read_text(encoding='utf-8'))
 
-    assert suite_payload['suite_version'] == 'frontier_v2'
+    assert suite_payload['suite_version'] == 'frontier_v3'
     assert len(suite_payload['profiles']) == 3
     assert len(promptfoo_payload) >= 11
     assert len(openai_payload['profiles']) == 3

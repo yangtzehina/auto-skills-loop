@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0.0",
   "skill_name": "simulation-resource-loop-design",
-  "active_frontier_version": "frontier_v2",
+  "active_frontier_version": "frontier_v3",
   "best_balance_snapshot": {
-    "label": "frontier_v2",
+    "label": "frontier_v3",
     "primary_force_metrics": {
       "failure_repair_force": 1.0,
       "section_force_distinctness": 1.0,
@@ -26,12 +26,12 @@
       "generic_skeleton_ratio": 0.2
     },
     "summary": [
-      "active_frontier=frontier_v2",
+      "active_frontier=frontier_v3",
       "current HEAD establishes the new active frontier"
     ]
   },
   "best_coverage_snapshot": {
-    "label": "frontier_v2",
+    "label": "frontier_v3",
     "primary_force_metrics": {
       "failure_repair_force": 1.0,
       "section_force_distinctness": 1.0,
@@ -54,7 +54,7 @@
       "generic_skeleton_ratio": 0.2
     },
     "summary": [
-      "active_frontier=frontier_v2",
+      "active_frontier=frontier_v3",
       "current HEAD establishes the new active frontier"
     ]
   },
@@ -133,7 +133,7 @@
     "compactness_metric": 0.06
   },
   "summary": [
-    "freeze active_frontier=frontier_v2",
+    "freeze active_frontier=frontier_v3",
     "retain rerun6 as legacy reference point"
   ]
 }

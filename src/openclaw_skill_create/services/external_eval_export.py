@@ -203,7 +203,7 @@ def build_normalized_eval_suite(
         profiles.append(
             ExternalEvalProfile(
                 skill_name=skill_name,
-                active_frontier_version="frontier_v2",
+                active_frontier_version="frontier_v3",
                 current_frontier_metrics=profile_metrics,
                 residual_targets={str(k): float(v) for k, v in dict(residual_targets.target_metrics or {}).items()},
                 expected_signals=target_signals,
@@ -211,14 +211,14 @@ def build_normalized_eval_suite(
             )
         )
     return NormalizedEvalSuite(
-        suite_version="frontier_v2",
+        suite_version="frontier_v3",
         profiles=profiles,
         probes=probes,
         criteria=criteria,
         current_frontier_metrics=current_frontier_metrics,
         expected_signals=expected_signals,
         summary=[
-            "suite_version=frontier_v2",
+            "suite_version=frontier_v3",
             f"profile_count={len(profiles)}",
             f"probe_count={len(probes)}",
             f"criteria_count={len(criteria)}",

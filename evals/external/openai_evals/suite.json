@@ -1,5 +1,5 @@
 {
-  "suite_version": "frontier_v2",
+  "suite_version": "frontier_v3",
   "format": "criteria-first",
   "criteria": [
     {
@@ -237,7 +237,7 @@
   "profiles": [
     {
       "skill_name": "concept-to-mvp-pack",
-      "active_frontier_version": "frontier_v2",
+      "active_frontier_version": "frontier_v3",
       "current_frontier_metrics": {
         "decision_pressure_score": 0.9467,
         "failure_repair_force": 0.89,
@@ -268,28 +268,30 @@
     },
     {
       "skill_name": "decision-loop-stress-test",
-      "active_frontier_version": "frontier_v2",
+      "active_frontier_version": "frontier_v3",
       "current_frontier_metrics": {
-        "decision_pressure_score": 0.9692,
+        "decision_pressure_score": 1.0,
         "failure_repair_force": 1.0,
         "section_force_distinctness": 1.0,
         "domain_move_coverage": 0.9285,
-        "section_depth_score": 0.9563,
-        "task_outcome_with_skill_average": 0.8981,
-        "redundancy_ratio": 0.0072,
+        "section_depth_score": 0.9722,
+        "task_outcome_with_skill_average": 0.9815,
+        "redundancy_ratio": 0.0403,
         "generic_surface_leakage": 0.0,
         "expert_pitfall_cluster_recall": 1.0,
-        "output_field_guidance_coverage": 0.8571,
+        "output_field_guidance_coverage": 1.0,
         "generic_skeleton_ratio": 0.3158,
-        "compression_without_loss": 0.7806
+        "compression_without_loss": 0.8039
       },
       "residual_targets": {
-        "decision_pressure_score": 0.96,
-        "compression_without_loss": 0.78
+        "decision_pressure_score": 0.98,
+        "compression_without_loss": 0.8,
+        "task_outcome_with_skill_average": 0.92
       },
       "expected_signals": [
-        "decision_pressure_score>=0.9600",
-        "compression_without_loss>=0.7800"
+        "decision_pressure_score>=0.9800",
+        "compression_without_loss>=0.8000",
+        "task_outcome_with_skill_average>=0.9200"
       ],
       "probe_ids": [
         "decision.novelty-masks-weak-choice",
@@ -300,7 +302,7 @@
     },
     {
       "skill_name": "simulation-resource-loop-design",
-      "active_frontier_version": "frontier_v2",
+      "active_frontier_version": "frontier_v3",
       "current_frontier_metrics": {
         "decision_pressure_score": 0.9385,
         "failure_repair_force": 1.0,
@@ -313,7 +315,7 @@
         "expert_pitfall_cluster_recall": 1.0,
         "output_field_guidance_coverage": 1.0,
         "generic_skeleton_ratio": 0.2,
-        "compression_without_loss": 0.8204
+        "compression_without_loss": 0.8531
       },
       "residual_targets": {
         "generic_surface_leakage": 0.05,
