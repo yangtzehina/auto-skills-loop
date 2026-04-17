@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0.0",
   "skill_name": "simulation-resource-loop-design",
-  "active_frontier_version": "frontier_v3",
+  "active_frontier_version": "frontier_v4",
   "best_balance_snapshot": {
-    "label": "frontier_v3",
+    "label": "frontier_v4",
     "primary_force_metrics": {
       "failure_repair_force": 1.0,
       "section_force_distinctness": 1.0,
@@ -17,8 +17,8 @@
     "compactness_metrics": {
       "redundancy_ratio": 0.0141,
       "shared_opening_phrase_ratio": 0.0,
-      "cross_case_similarity": 0.2382,
-      "compression_without_loss": 0.8204
+      "cross_case_similarity": 0.234,
+      "compression_without_loss": 0.8531
     },
     "target_metrics": {
       "generic_surface_leakage": 0.0,
@@ -26,12 +26,12 @@
       "generic_skeleton_ratio": 0.2
     },
     "summary": [
-      "active_frontier=frontier_v3",
+      "active_frontier=frontier_v4",
       "current HEAD establishes the new active frontier"
     ]
   },
   "best_coverage_snapshot": {
-    "label": "frontier_v3",
+    "label": "frontier_v4",
     "primary_force_metrics": {
       "failure_repair_force": 1.0,
       "section_force_distinctness": 1.0,
@@ -45,8 +45,8 @@
     "compactness_metrics": {
       "redundancy_ratio": 0.0141,
       "shared_opening_phrase_ratio": 0.0,
-      "cross_case_similarity": 0.2382,
-      "compression_without_loss": 0.8204
+      "cross_case_similarity": 0.234,
+      "compression_without_loss": 0.8531
     },
     "target_metrics": {
       "generic_surface_leakage": 0.0,
@@ -54,7 +54,7 @@
       "generic_skeleton_ratio": 0.2
     },
     "summary": [
-      "active_frontier=frontier_v3",
+      "active_frontier=frontier_v4",
       "current HEAD establishes the new active frontier"
     ]
   },
@@ -125,15 +125,15 @@
   "compactness_ceiling": {
     "redundancy_ratio": 0.0341,
     "shared_opening_phrase_ratio": 0.06,
-    "cross_case_similarity": 0.2682,
-    "compression_without_loss": 0.8204
+    "cross_case_similarity": 0.264,
+    "compression_without_loss": 0.8531
   },
   "tolerance": {
     "score_metric": 0.02,
     "compactness_metric": 0.06
   },
   "summary": [
-    "freeze active_frontier=frontier_v3",
+    "freeze active_frontier=frontier_v4",
     "retain rerun6 as legacy reference point"
   ]
 }

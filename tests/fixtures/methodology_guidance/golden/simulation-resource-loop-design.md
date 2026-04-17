@@ -9,7 +9,7 @@ Map the pressure web before you balance any single resource in isolation.
 
 ## Overview
 
-Frame the system as a visible tension web with costly recovery, upkeep drag, overflow risk, stockpile pressure, and hoarding traps, not as a long list of resources.
+Start by drawing the pressure web; only then judge balance inside it.
 
 ## Core Principle
 

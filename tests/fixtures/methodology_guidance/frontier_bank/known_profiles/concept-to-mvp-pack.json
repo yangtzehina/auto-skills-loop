@@ -1,6 +1,6 @@
 {
   "skill_name": "concept-to-mvp-pack",
-  "active_frontier_version": "frontier_v3",
+  "active_frontier_version": "frontier_v4",
   "pressure_best_sections": {
     "Overview": [
       "Start with a validation question that can fail in a short playtest, then cut until the answer lives inside one honest loop."

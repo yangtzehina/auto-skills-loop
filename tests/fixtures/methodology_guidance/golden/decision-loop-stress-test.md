@@ -5,10 +5,11 @@ description: Phase-by-phase audit for finding collapse points, dominant routes, 
 
 # decision-loop-stress-test
 
-Audit what mastery teaches before the wrong habit hardens.
+Find the collapse witness before the loop gets greenlit by novelty, rewards, or pacing cover.
 
 ## Overview
-Audit what mastery teaches before the wrong habit hardens.
+
+Find the collapse witness and the break point before you discuss more content, and reject any repair recommendation that is not just numeric tuning, not just more content, and still leaves the same read.
 
 ## Core Principle
 
@@ -34,63 +35,125 @@ First hour, midgame, and late game are distinct stress lenses.
 - Costs, risks, rewards, timing, known dominant strategies, and boring phases.
 
 ## Default Workflow
+
 - Keep the audit on first-hour, midgame, late-game, solved state, dominant strategy, variation quality, reinforcement, and structural fixes.
-- Watch the first collapse signal and reinforce the intended behavior before anyone reaches for more content.
-- Reject surface excitement, content padding, MVP scope cutting, and detailed numeric balancing before proposing more content.
+- Put the collapse signal, collapse witness, stop condition, and break point before explanation, then reject surface excitement, first-hour novelty, and not greenlighting the loop with more content.
+- Treat not MVP scope cutting and not detailed numeric balancing as guardrails, not excuses for a weak decision.
+- Keep weak decision, midgame autopilot, fake variation, shallow reward inflation, the same dominant line, and the same read visible enough to reject them as false fixes.
+- Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, and map the wrong habit to the right habit before you call the loop fixed.
 
 1. **Define the Current Loop Shape**
-- Frame: Use this step to check what behavior the system is actually teaching.
-- Stress Test: What does the player observe, decide, do, receive, and repeat?
-- Check: Map observe, decide, act, resolve, reward, and next-choice trigger.
-- Write: Loop under test with choice, feedback structure, and repeat trigger.
-- Repair: Rewrite the loop as choice -> feedback -> reward -> next choice.
-- Reject If: The loop description lists activities but not the repeated decision.
-- Must include: current loop, core decision, feedback structure, next-choice trigger.
+   - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
+   - Stress Test: What does the player observe, decide, do, receive, and repeat?
+   - Break If: The loop description lists activities but not the repeated decision.
+   - Watch: Map observe, decide, act, resolve, reward, and next-choice trigger.
+   - Reinforce / Repair: Rewrite the loop as choice -> feedback -> reward -> next choice.
+   - Write: Loop under test with choice, feedback structure, and repeat trigger.
 
 2. **Test the First-Hour Hook**
-- Stress Test: Why would a new player understand and repeat this decision in the first hour? Name the stop condition before proposing more content.
-- Check: Stress readability, immediate stakes, cause-effect feedback, and reason to repeat.
-- Write: First-hour performance with hook, confusion risk, and boredom risk.
-- Repair: Expose a meaningful tradeoff or readable consequence earlier.
-- Reject If: The first hour works only because the premise is fresh.
-- Check: Reject surface excitement if the first-hour pressure still feels weak.
-- Must include: first hour, readability, reason to repeat, novelty.
+   - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
+   - Stress Test: Why would a new player understand and repeat this decision in the first hour? Name the stop condition before proposing more content.
+   - Break If: The first hour works only because the premise is fresh.
+   - Watch: Stress readability, immediate stakes, cause-effect feedback, and reason to repeat.
+   - Reinforce / Repair: Expose a meaningful tradeoff or readable consequence earlier.
+   - Write: First-hour performance with hook, confusion risk, and boredom risk.
+   - Check: Reject surface excitement, first-hour novelty, and not greenlighting the loop if the first-hour pressure still hides a weak decision; name the collapse witness before phase explanation or pacing cover.
 
 3. **Test Midgame Sustainability**
-- Stress Test: What prevents the midgame from flattening once the basics are understood? Name the stop condition before proposing more content.
-- Check: Inspect constraints, tradeoffs, variation quality, and dominant-option risk.
-- Write: Midgame pressure with tradeoff change, variation quality, and autopilot risk.
-- Repair: Add state changes that force adaptation, not just larger numbers.
-- Reject If: Midgame content changes labels while decisions stay identical.
-- Check: Name the dominant strategy or autopilot risk before adding content.
-- Must include: midgame, tradeoffs, variation quality, autopilot.
+   - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
+   - Stress Test: What prevents the midgame from flattening once the basics are understood? Name the stop condition before proposing more content.
+   - Break If: Midgame content changes labels while decisions stay identical.
+   - Watch: Inspect constraints, tradeoffs, variation quality, and dominant-option risk. Name the counterpressure, read shift, tradeoff change, and adaptation test before content gets added.
+   - Reinforce / Repair: Add state changes that force adaptation, not just larger numbers.
+   - Write: Midgame pressure with tradeoff change, variation quality, and autopilot risk.
+   - Check: Name the dominant strategy, the midgame autopilot risk, the missing counterpressure, and whether variation changes read, tradeoff, or consequence; if it keeps the same read, the same dominant line, or does not change decisions, reject it as fake variation.
 
 4. **Test Late-Game Expansion or Mutation**
-- Stress Test: Test whether lategame mastery reveals a deeper problem or solves the game away.
-- Check: Name the expansion, mutation, or collapse point that appears at mastery.
-- Write: Late-game performance with evolution demand and collapse point.
-- Repair: Introduce risk, asymmetry, or pressure that meets mastery.
-- Reject If: Mastery removes the game instead of changing the problem.
-- Check: Confirm late-game mastery creates a new decision problem instead of pure throughput.
-- Must include: late-game, mastery, collapse point, mutation.
+   - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
+   - Stress Test: Test whether lategame mastery reveals a deeper problem or solves the game away.
+   - Break If: Mastery removes the game instead of changing the problem.
+   - Watch: Name the expansion, mutation, or collapse point that appears at mastery.
+   - Reinforce / Repair: Introduce risk, asymmetry, or pressure that meets mastery.
+   - Write: Late-game performance with evolution demand and collapse point.
+   - Check: Confirm late-game mastery creates a new decision problem instead of pure throughput, pacing cover, reward inflation, or a solved-state witness with no structural response.
 
 5. **Look for Solved States**
-- Stress Test: Test which solved state a strong player would repeat until the loop becomes stale.
-- Check: Describe the dominant strategy and the reward, cost, or timing pattern that creates it. Reject any fix that only widens content without changing pressure.
-- Write: Solved-state risk with cause and counterpressure.
-- Repair: Add structural counterpressure instead of another option.
-- Reject If: The solved state is dismissed as player preference.
-- Check: Break the dominant strategy with structural fixes, not softer compensation.
-- Must include: solved state, dominant strategy, counterpressure.
+   - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
+   - Stress Test: Test which solved state a strong player would repeat until the loop becomes stale.
+   - Break If: The solved state is dismissed as player preference.
+   - Watch: Describe the dominant strategy and the reward, cost, or timing pattern that creates it. Reject any fix that only widens content, only tunes numbers, or keeps the same dominant line without changing pressure.
+   - Reinforce / Repair: Add structural counterpressure instead of another option.
+   - Write: Solved-state risk with cause and counterpressure.
+   - Check: Break the dominant strategy with a structural fix and repair recommendation, reject numeric-only tuning, punish repeated safe choices, and reward state-aware adaptation instead of softer compensation or content padding.
 
 6. **Audit Variation and Reinforcement**
-- Stress Test: Test whether variation quality changes read, tradeoff, consequence, or adaptation.
-- Check: Audit variation quality and reinforcement so the decision loop trains the intended behavior. Reject any fix that only widens content without changing pressure.
-- Write: Variation quality and reinforcement recommendations.
-- Repair: Reward adaptation, timing, state-reading, or expressive choices directly.
-- Reject If: Rewards teach efficient autopilot while the design claims expressive play.
-- Check: Reinforce the intended behavior and reject content padding or fake variation.
-- Must include: variation quality, reinforcement, reward, autopilot.
+   - Frame: Use this step to name the collapse witness before novelty, phase explanation, or pacing cover can hide it.
+   - Stress Test: Test whether variation quality changes read, tradeoff, consequence, or adaptation.
+   - Break If: Rewards teach efficient autopilot while the design claims expressive play.
+   - Watch: Audit variation quality and reinforcement so the decision loop trains the intended behavior. Reject any fix that only widens content, only tunes numbers, or keeps the same dominant line without changing pressure. Call out variation that does not change decisions, keeps the same read, or preserves the same dominant line.
+   - Reinforce / Repair: Reward adaptation, timing, state-reading, or expressive choices directly.
+   - Write: Variation quality and reinforcement recommendations.
+   - Check: Reinforce the intended behavior, map wrong habit to right habit, reject fake variation, reject variation that does not change decisions, keeps the same dominant line, or keeps the same read, avoid shallow reward inflation, and reject any repair that only improves throughput.
+
+## Common Pitfalls: Collapse Patterns and Repairs
+
+Treat any loop without a collapse witness, or any repair recommendation that still keeps the same read or the same dominant line, as unshippable until the structural fix is explicit.
+
+- Use these failure patterns to pressure-test lategame, variation quality, solved state, and reinforcement before adding content.
+- Pattern index: Novelty-Only Start, Midgame Autopilot, Progression Without New Problems, Cosmetic Options, Dominant Strategy, Rewarding Autopilot.
+- Repair moves: expose meaningful tradeoffs in the first hour, add state changes that force adaptation, add structural counterpressure, reward the intended behavior directly.
+
+### Novelty-Only Start
+- Symptom: Early play only works because the premise is fresh, not because the decision is clear.
+- Cause: The first-hour hook never established readable pressure.
+- Correction: Raise the stakes and feedback around the core choice, call the weak decision directly, and do not greenlight a repair that only adds more content.
+
+### Midgame Autopilot
+- Symptom: The player keeps repeating the same answer while the game only changes labels or numbers.
+- Cause: Midgame added volume without adding new constraints.
+- Correction: Introduce counterpressure that forces adaptation, punish repeated safe choices, and reward state-aware adaptation instead of simple efficiency scaling.
+
+### Progression Without New Problems
+- Symptom: Progression adds throughput or spectacle while the underlying choice stays solved.
+- Cause: Expansion arrived without a new pressure problem.
+- Correction: Add a new constraint or pressure relationship before adding more content or reward layers, and avoid shallow reward inflation that keeps the same decision problem.
+
+### Variety Without Strategic Consequence
+- Symptom: The game offers more variants, but they do not change read, tradeoff, or consequence.
+- Cause: Variation was used as surface freshness instead of decision mutation.
+- Correction: Cut cosmetic variation, call fake variation by name, reject any variation that does not change decisions or keeps the same read, and keep only the variants that force a new answer.
+
+### Mastery Removes the Game
+- Symptom: Late play collapses into rote execution or a dominant route.
+- Cause: Mastery widened throughput without creating a new decision problem.
+- Correction: Change the pressure landscape so mastery unlocks new tradeoffs instead of solving the loop forever.
+
+## Quality Checks
+
+- Gate: Keep the audit on collapse, dominant strategy, and reinforcement before anyone reaches for extra content.
+- Reject repairs that are not just numeric tuning, not just more content, and not just pacing or throughput cover; keep only the structural fixes that change the decision problem.
+- Call out solved-state, fake variation, and mastery that keeps the same read, tradeoff, or consequence.
+- Check whether first-hour novelty is masking a weak decision before the loop gets greenlit.
+- Check whether the decision loop is readable in the first hour before novelty wears off.
+- Check whether first hour, midgame, and lategame differ for the right reason instead of only inflating numbers.
+- Check whether midgame autopilot is appearing because the loop lost counterpressure and adaptation.
+- Check whether lategame pressure mutates the problem instead of rewarding autopilot.
+- Check whether solved state is concrete enough to name, trigger, and attack.
+- Check whether variation changes decisions rather than surface decoration.
+- Check whether reinforcement teaches intended behavior instead of efficient repetition.
+- Check whether fake variation, shallow reward inflation, or content padding are being mistaken for repair.
+- Check whether the repair changes pressure inside the decision loop instead of adding softer content.
+- Check whether mastery only improves throughput without creating a new decision problem.
+- Check whether any proposed repair adds events, rewards, or content layers without changing the decision landscape.
+- Check whether the review stays on decision quality instead of greenlighting the theme.
+- Check whether detailed numeric balancing or MVP scope cutting is being used to dodge a structural break.
+- Check whether the first named collapse witness appears before phase explanation, pacing cover, or reward pacing.
+- Check whether a named stop condition also includes a concrete collapse witness and a break point the player can observe.
+- Check whether solved-state repair is anything more than numeric-only tuning or softer compensation.
+- Check whether variation changes read, tradeoff, or consequence instead of just renaming content.
+- Check whether variation does not change decisions, keeps the same dominant line, or preserves the same read under a new label.
+- Check whether reinforcement explicitly maps the wrong habit to the right habit the loop should train.
+- Check whether every repair recommendation names a structural fix instead of numeric-only tuning, content-only padding, pacing-only relief, or throughput-only mastery.
 
 ## Decision Rules
 
@@ -107,28 +170,17 @@ First hour, midgame, and late game are distinct stress lenses.
 - healthy mastery
 - decision quality
 
-## Quality Checks
-- Gate: Keep the audit on collapse, dominant strategy, and reinforcement before anyone reaches for extra content.
-- Reject fixes that only add content, rewards, or softer compensation; keep only the ones that change the pressure problem.
-- Call out mastery that only improves throughput and still fails to create a new decision problem.
-- Check whether the decision loop is readable in the first hour before novelty wears off.
-- Check whether first hour, midgame, and lategame differ for the right reason instead of only inflating numbers.
-- Check whether lategame pressure mutates the problem instead of rewarding autopilot.
-- Check whether solved state is concrete enough to name, trigger, and attack.
-- Check whether variation changes decisions rather than surface decoration.
-- Check whether reinforcement teaches intended behavior instead of efficient repetition.
-- Check whether the repair changes pressure inside the decision loop instead of adding softer content.
-
 ## Output Format
 
 Keep the deliverable focused on collapse point, solved state, repair move, and the next pressure test.
 
 ```markdown
-## Reinforcement Check
-- Write: what behavior the rewards teach and whether they train autopilot.
-- Strong: Good: Reinforcement Check names the decision, evidence, consequence, and next action clearly enough to act on.
-- Weak: Reinforcement Check stays abstract, repeats the prompt, or leaves the field as a vague summary.
-- Focus: Keep this field sharp enough to drive the next decision.
+## Solved State Risk
+- Write: solved-state risks, dominant strategy, and counterpressure.
+- Strong: Good: Solved State Risk names the decision, evidence, consequence, and next action clearly enough to act on.
+- Weak: Solved State Risk stays abstract, repeats the prompt, or leaves the field as a vague summary.
+- Guardrail: Name the dominant strategy, the counterpressure, and the move that punishes repeated safe choices.
+- Focus: Make this field show the exact collapse point or solved-state risk.
 
 ## Current Loop Shape
 - Write: observe, core decision, action, feedback structure, reward, and next-choice trigger.
@@ -165,54 +217,25 @@ Keep the deliverable focused on collapse point, solved state, repair move, and t
 - Strong: Good: Late-Game Performance names the decision, evidence, consequence, and next action clearly enough to act on.
 - Weak: Late-Game Performance stays abstract, repeats the prompt, or leaves the field as a vague summary.
 
-## Solved State Risk
-- Write: solved-state risks, dominant strategy, and counterpressure.
-- Strong: Good: Solved State Risk names the decision, evidence, consequence, and next action clearly enough to act on.
-- Weak: Solved State Risk stays abstract, repeats the prompt, or leaves the field as a vague summary.
-
 ## Variation Quality
 - Write: whether variation changes decisions, not just surface variation or cosmetic options.
 - Strong: Good: Variation Quality names the decision, evidence, consequence, and next action clearly enough to act on.
 - Weak: Variation Quality stays abstract, repeats the prompt, or leaves the field as a vague summary.
+- Guardrail: Reject fake variation and keep only changes that alter read, tradeoff, consequence, or adaptation.
+
+## Reinforcement Check
+- Write: what behavior the rewards teach and whether they train autopilot.
+- Strong: Good: Reinforcement Check names the decision, evidence, consequence, and next action clearly enough to act on.
+- Weak: Reinforcement Check stays abstract, repeats the prompt, or leaves the field as a vague summary.
+- Guardrail: State whether the loop teaches the wrong habit, throughput only, or the intended behavior under pressure.
 
 ## Reinforcement Recommendations
 - Write: reinforcement recommendations that reward adaptation, state-reading, or expressive timing.
 - Strong: Good: Reinforcement Recommendations names the decision, evidence, consequence, and next action clearly enough to act on.
 - Weak: Reinforcement Recommendations stays abstract, repeats the prompt, or leaves the field as a vague summary.
+- Guardrail: Avoid shallow reward inflation; reward state-aware adaptation and change incentive structure instead.
 
 ```
-
-## Common Pitfalls: Collapse Patterns and Repairs
-If mastery removes the decision, the repair must alter pressure, not reward players with more throughput.
-
-- Use these failure patterns to pressure-test lategame, variation quality, solved state, and reinforcement before adding content.
-- Pattern index: Novelty-Only Start, Midgame Autopilot, Progression Without New Problems, Cosmetic Options, Dominant Strategy, Rewarding Autopilot.
-- Repair moves: expose meaningful tradeoffs in the first hour, add state changes that force adaptation, add structural counterpressure, reward the intended behavior directly.
-
-### Novelty-Only Start
-- Symptom: Early play only works because the premise is fresh, not because the decision is clear.
-- Cause: The first-hour hook never established readable pressure.
-- Correction: Raise the stakes and feedback around the core choice before adding more content.
-
-### Midgame Autopilot
-- Symptom: The player keeps repeating the same answer while the game only changes labels or numbers.
-- Cause: Midgame added volume without adding new constraints.
-- Correction: Introduce counterpressure that forces adaptation instead of simple efficiency scaling.
-
-### Progression Without New Problems
-- Symptom: Progression adds throughput or spectacle while the underlying choice stays solved.
-- Cause: Expansion arrived without a new pressure problem.
-- Correction: Add a new constraint or pressure relationship before adding more content or reward layers.
-
-### Variety Without Strategic Consequence
-- Symptom: The game offers more variants, but they do not change read, tradeoff, or consequence.
-- Cause: Variation was used as surface freshness instead of decision mutation.
-- Correction: Cut cosmetic variation and keep only the variants that force a new answer.
-
-### Mastery Removes the Game
-- Symptom: Late play collapses into rote execution or a dominant route.
-- Cause: Mastery widened throughput without creating a new decision problem.
-- Correction: Change the pressure landscape so mastery unlocks new tradeoffs instead of solving the loop forever.
 
 ## Cut Rules
 

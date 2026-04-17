@@ -1,19 +1,19 @@
 {
   "skill_name": "decision-loop-stress-test",
-  "active_frontier_version": "frontier_v3",
+  "active_frontier_version": "frontier_v4",
   "pressure_best_sections": {
     "Overview": [
-      "Stress the loop until you can name where the decision collapses, not where the content runs out."
+      "Find the collapse witness and break point before you greenlight novelty, then reject any repair that is not a structural fix."
     ],
     "Default Workflow": [
-      "Each step should name the collapse signal, stop condition, dominant strategy risk, or reinforcement break before it explains the rest of the audit."
+      "Each step should name the collapse witness, break point, stop condition, dominant route, or wrong-habit reinforcement before it explains the rest of the audit."
     ],
     "Quality Checks": [
-      "Reject fixes that only add content, rewards, or softer compensation; keep only the ones that change the pressure problem.",
-      "Call out mastery that only improves throughput and still fails to create a new decision problem."
+      "Reject repairs that are not just numeric tuning, not just more content, and not just pacing or throughput cover; keep only the structural fixes that change the decision problem.",
+      "Call out solved-state, fake variation, and mastery that keeps the same read, tradeoff, or consequence."
     ],
     "Failure Patterns and Fixes": [
-      "If mastery removes the decision, the repair must alter pressure, not reward players with more throughput."
+      "If a proposed repair keeps the same read, tradeoff, or consequence, reject it and replace it with a structural fix that changes the decision landscape and maps the wrong habit to the right habit."
     ]
   },
   "compactness_best_sections": {
