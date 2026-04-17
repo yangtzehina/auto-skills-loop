@@ -178,6 +178,46 @@ class ResidualGapReport(BaseModel):
     summary: list[str] = Field(default_factory=list)
 
 
+class OutcomeOnlyProbeScore(BaseModel):
+    schema_version: str = "1.0.0"
+    candidate_id: str = ""
+    probe_id: str = ""
+    win_status: str = "hold"
+    pressure_delta: float = 0.0
+    false_fix_delta: float = 0.0
+    compression_delta: float = 0.0
+    candidate_score: float = 0.0
+    frontier_score: float = 0.0
+    summary: list[str] = Field(default_factory=list)
+
+
+class OutcomeOnlyRerankerReport(BaseModel):
+    schema_version: str = "1.0.0"
+    skill_name: str = ""
+    probe_mode: str = "frontier_v3"
+    candidate_ranking: list[str] = Field(default_factory=list)
+    winner: str = ""
+    frontier_comparison_status: str = "unknown"
+    blocking_reason: str = ""
+    probe_pass_count: int = 0
+    probe_count: int = 0
+    improved_probe_count: int = 0
+    matched_probe_count: int = 0
+    blocked_probe_count: int = 0
+    repair_specificity_score: float = 0.0
+    probe_evidence_density: float = 0.0
+    collapse_witness_coverage: float = 0.0
+    probe_witness_summary: list[str] = Field(default_factory=list)
+    matched_probe_ids: list[str] = Field(default_factory=list)
+    improved_probe_ids: list[str] = Field(default_factory=list)
+    blocked_probe_ids: list[str] = Field(default_factory=list)
+    repair_evidence_lines: list[str] = Field(default_factory=list)
+    collapse_evidence_lines: list[str] = Field(default_factory=list)
+    probe_scores: list[OutcomeOnlyProbeScore] = Field(default_factory=list)
+    status: str = "unknown"
+    summary: list[str] = Field(default_factory=list)
+
+
 class SectionCompressionPlan(BaseModel):
     section_name: str
     max_sentence_budget: int = 3
@@ -291,6 +331,10 @@ class SkillPromotionDecision(BaseModel):
     leakage_target_status: str = "unknown"
     false_fix_rejection_status: str = "unknown"
     residual_gap_count: int = 0
+    outcome_only_reranker_status: str = "unknown"
+    outcome_only_frontier_comparison_status: str = "unknown"
+    outcome_only_probe_pass_count: int = 0
+    outcome_only_blocking_reason: str = ""
     summary: list[str] = Field(default_factory=list)
 
 

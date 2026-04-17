@@ -10,6 +10,7 @@ from .editorial_quality import SkillEditorialQualityReport
 from .expert_dna import ExpertDNAAuthoringPack, SkillMoveQualityReport, SkillUsefulnessEvalReport
 from .expert_studio import (
     MonotonicImprovementReport,
+    OutcomeOnlyRerankerReport,
     PairwiseEditorialReport,
     SkillEditorialForceReport,
     ProgramCandidateReviewBatchReport,
@@ -128,6 +129,10 @@ class SkillCreateComparisonMetrics(BaseModel):
     leakage_target_status: str = "unknown"
     false_fix_rejection_status: str = "unknown"
     residual_gap_count: int = 0
+    outcome_only_reranker_status: str = "unknown"
+    outcome_only_frontier_comparison_status: str = "unknown"
+    outcome_only_probe_pass_count: int = 0
+    outcome_only_blocking_reason: str = ""
     legacy_delta_summary: list[str] = Field(default_factory=list)
     candidate_strategy_matrix: list[dict[str, str]] = Field(default_factory=list)
     editorial_force_status: str = "unknown"
@@ -178,6 +183,7 @@ class SkillCreateComparisonCaseResult(BaseModel):
     move_quality: SkillMoveQualityReport | None = None
     workflow_form: SkillWorkflowFormReport | None = None
     pairwise_editorial: PairwiseEditorialReport | None = None
+    outcome_only_reranker: OutcomeOnlyRerankerReport | None = None
     promotion_decision: SkillPromotionDecision | None = None
     monotonic_improvement: MonotonicImprovementReport | None = None
     editorial_force: SkillEditorialForceReport | None = None

@@ -133,7 +133,8 @@ EXPERT_EDITORIAL_PROFILES: dict[str, ExpertEditorialProfile] = {
 ACTION_TERMS = {
     "ask", "cut", "choose", "define", "separate", "test", "validate", "name", "write",
     "mark", "remove", "flag", "confirm", "map", "identify", "trace", "check", "recommend",
-    "convert", "compare", "pressure", "reject", "keep", "defer", "output",
+    "convert", "compare", "pressure", "reject", "keep", "defer", "output", "watch",
+    "break", "reinforce", "record", "audit",
 }
 FILLER_TERMS = {
     "generic", "domain-specific", "methodology shell", "another agent", "raw design material",

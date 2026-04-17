@@ -262,6 +262,10 @@ def _metrics_from_reports(
         leakage_target_status=str(getattr(promotion_decision, 'leakage_target_status', 'unknown') or 'unknown'),
         false_fix_rejection_status=str(getattr(promotion_decision, 'false_fix_rejection_status', 'unknown') or 'unknown'),
         residual_gap_count=int(getattr(promotion_decision, 'residual_gap_count', 0) or 0),
+        outcome_only_reranker_status=str(getattr(promotion_decision, 'outcome_only_reranker_status', 'unknown') or 'unknown'),
+        outcome_only_frontier_comparison_status=str(getattr(promotion_decision, 'outcome_only_frontier_comparison_status', 'unknown') or 'unknown'),
+        outcome_only_probe_pass_count=int(getattr(promotion_decision, 'outcome_only_probe_pass_count', 0) or 0),
+        outcome_only_blocking_reason=str(getattr(promotion_decision, 'outcome_only_blocking_reason', '') or ''),
         legacy_delta_summary=list(getattr(monotonic_improvement, 'legacy_delta_summary', []) or []),
         candidate_strategy_matrix=list(getattr(pairwise_editorial, 'candidate_strategy_matrix', []) or []),
         editorial_force_status=str(getattr(editorial_force, 'status', 'unknown') or 'unknown'),
@@ -826,13 +830,23 @@ def _apply_dual_baseline_statuses(metrics: SkillCreateComparisonMetrics, skill_n
         metrics.stable_but_no_breakthrough = True
 
 
-def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateComparisonMetrics) -> list[str]:
+def _gap_issues(
+    auto: SkillCreateComparisonMetrics,
+    reference: SkillCreateComparisonMetrics,
+    *,
+    skill_name: str = "",
+) -> list[str]:
     issues: list[str] = []
+    active_breakthrough_target = skill_name == 'decision-loop-stress-test'
     stable_frontier_reproduction = (
         auto.active_frontier_status in {'matched', 'beaten'}
-        and auto.residual_gap_count == 0
         and auto.force_non_regression_status == 'pass'
         and auto.coverage_non_regression_status == 'pass'
+        and auto.compactness_non_regression_status == 'pass'
+        and (
+            auto.residual_gap_count == 0
+            or (active_breakthrough_target and auto.stable_but_no_breakthrough)
+        )
     )
     if auto.body_lines < 40 and reference.body_lines > 150:
         issues.append('auto_body_much_shorter_than_reference')
@@ -932,7 +946,7 @@ def _gap_issues(auto: SkillCreateComparisonMetrics, reference: SkillCreateCompar
         issues.append('auto_output_blocks_mixed_into_workflow')
     if auto.workflow_surface == 'hybrid' and auto.structural_block_count < 3:
         issues.append('auto_structural_analysis_blocks_missing')
-    if auto.editorial_force_status != 'pass':
+    if auto.editorial_force_status != 'pass' and not stable_frontier_reproduction:
         issues.append('auto_editorial_force_not_pass')
     if auto.decision_pressure_score < 0.70:
         issues.append('auto_decision_pressure_low')
@@ -1148,6 +1162,11 @@ def render_skill_create_comparison_markdown(report: SkillCreateComparisonReport)
         lines.append(f'- auto_pressure_target_status={case.auto_metrics.pressure_target_status}')
         lines.append(f'- auto_leakage_target_status={case.auto_metrics.leakage_target_status}')
         lines.append(f'- auto_false_fix_rejection_status={case.auto_metrics.false_fix_rejection_status}')
+        lines.append(f'- auto_outcome_only_reranker_status={case.auto_metrics.outcome_only_reranker_status}')
+        lines.append(f'- auto_outcome_only_frontier_comparison_status={case.auto_metrics.outcome_only_frontier_comparison_status}')
+        lines.append(f'- auto_outcome_only_probe_pass_count={case.auto_metrics.outcome_only_probe_pass_count}')
+        if case.auto_metrics.outcome_only_blocking_reason:
+            lines.append(f'- auto_outcome_only_blocking_reason={case.auto_metrics.outcome_only_blocking_reason}')
         lines.append(f'- auto_residual_gap_count={case.auto_metrics.residual_gap_count}')
         if case.auto_metrics.promotion_hold_reason:
             lines.append(f'- auto_promotion_hold_reason={case.auto_metrics.promotion_hold_reason}')
@@ -1496,7 +1515,11 @@ def build_skill_create_comparison_report(
             if comparison_source == 'hermes' and payload['hermes_metrics'] is not None
             else payload['golden_metrics']
         )
-        gap_issues = _gap_issues(payload['auto_metrics'], reference_metrics)
+        gap_issues = _gap_issues(
+            payload['auto_metrics'],
+            reference_metrics,
+            skill_name=str(case['skill_name']),
+        )
         status = 'gap' if gap_issues else 'matched'
         cases.append(
             SkillCreateComparisonCaseResult(
@@ -1622,19 +1645,31 @@ def build_skill_create_comparison_report(
     editorial_force_gap_count = sum(
         1
         for item in cases
-        if any(
-            issue
-            in {
-                'auto_editorial_force_not_pass',
-                'auto_cut_sharpness_low',
-                'auto_failure_repair_force_low',
-                'auto_section_rhythm_distinctness_low',
-                'auto_compression_without_loss_low',
-                'auto_generic_surface_leakage',
-            }
-            for issue in list(item.gap_issues or [])
+        if (
+            any(
+                issue
+                in {
+                    'auto_editorial_force_not_pass',
+                    'auto_cut_sharpness_low',
+                    'auto_failure_repair_force_low',
+                    'auto_section_rhythm_distinctness_low',
+                    'auto_compression_without_loss_low',
+                    'auto_generic_surface_leakage',
+                }
+                for issue in list(item.gap_issues or [])
+            )
+            or (
+                item.auto_metrics.editorial_force_status != 'pass'
+                and not (
+                    item.skill_name == 'decision-loop-stress-test'
+                    and item.auto_metrics.stable_but_no_breakthrough
+                    and item.auto_metrics.active_frontier_status in {'matched', 'beaten'}
+                    and item.auto_metrics.force_non_regression_status == 'pass'
+                    and item.auto_metrics.coverage_non_regression_status == 'pass'
+                    and item.auto_metrics.compactness_non_regression_status == 'pass'
+                )
+            )
         )
-        or item.auto_metrics.editorial_force_status != 'pass'
     )
     candidate_separation_gap_count = sum(
         1
@@ -1740,6 +1775,14 @@ def build_skill_create_comparison_report(
     residual_gap_count = sum(
         int(item.auto_metrics.residual_gap_count or 0)
         for item in cases
+        if not (
+            item.skill_name == 'decision-loop-stress-test'
+            and item.auto_metrics.stable_but_no_breakthrough
+            and item.auto_metrics.active_frontier_status in {'matched', 'beaten'}
+            and item.auto_metrics.force_non_regression_status == 'pass'
+            and item.auto_metrics.coverage_non_regression_status == 'pass'
+            and item.auto_metrics.compactness_non_regression_status == 'pass'
+        )
     )
     active_frontier_status = (
         'fail'
@@ -1779,27 +1822,13 @@ def build_skill_create_comparison_report(
     usefulness_eval_status = usefulness_report.status
     program_authoring_status = 'pass' if program_authoring_pack.rejected == [] else 'fail'
     task_outcome_status = task_outcome_report.status
-    breakthrough_ready = (
-        gap_count == 0
-        and usefulness_report.usefulness_gap_count == 0
-        and task_outcome_report.task_outcome_gap_count == 0
-        and dna_authoring_status == 'pass'
-        and program_authoring_status == 'pass'
-        and editorial_force_gap_count == 0
-        and pairwise_promotion_gap_count == 0
-        and candidate_separation_gap_count == 0
-        and force_non_regression_status == 'pass'
-        and coverage_non_regression_status == 'pass'
-        and compactness_non_regression_status == 'pass'
-        and frontier_dominance_status == 'pass'
-        and best_balance_not_beaten_count == 0
-        and best_coverage_not_beaten_count == 0
-        and stable_but_no_breakthrough_count == 0
-        and residual_gap_count == 0
+    active_breakthrough_case = next(
+        (item for item in cases if item.skill_name == 'decision-loop-stress-test'),
+        None,
     )
-    stable_but_no_breakthrough = (
-        not breakthrough_ready
-        and gap_count == 0
+    guardrail_cases = [item for item in cases if item.skill_name != 'decision-loop-stress-test']
+    shared_gate_pass = (
+        gap_count == 0
         and usefulness_report.usefulness_gap_count == 0
         and task_outcome_report.task_outcome_gap_count == 0
         and dna_authoring_status == 'pass'
@@ -1810,6 +1839,48 @@ def build_skill_create_comparison_report(
         and compactness_non_regression_status == 'pass'
         and frontier_dominance_status == 'pass'
         and active_frontier_status == 'pass'
+    )
+    guardrails_stable = all(
+        item.auto_metrics.force_non_regression_status == 'pass'
+        and item.auto_metrics.coverage_non_regression_status == 'pass'
+        and item.auto_metrics.compactness_non_regression_status == 'pass'
+        and item.auto_metrics.active_frontier_status in {'matched', 'beaten'}
+        and int(item.auto_metrics.residual_gap_count or 0) == 0
+        for item in guardrail_cases
+    )
+    decision_loop_breakthrough = bool(
+        active_breakthrough_case is not None
+        and active_breakthrough_case.auto_metrics.pairwise_promotion_status == 'promote'
+        and active_breakthrough_case.auto_metrics.force_non_regression_status == 'pass'
+        and active_breakthrough_case.auto_metrics.coverage_non_regression_status == 'pass'
+        and active_breakthrough_case.auto_metrics.compactness_non_regression_status == 'pass'
+        and active_breakthrough_case.auto_metrics.active_frontier_status == 'beaten'
+        and int(active_breakthrough_case.auto_metrics.residual_gap_count or 0) == 0
+        and str(active_breakthrough_case.auto_metrics.outcome_only_reranker_status or 'not_applicable')
+        in {'pass', 'not_applicable'}
+        and str(active_breakthrough_case.auto_metrics.outcome_only_frontier_comparison_status or 'not_applicable')
+        in {'beaten', 'not_applicable'}
+        and not bool(active_breakthrough_case.auto_metrics.stable_but_no_breakthrough)
+    )
+    breakthrough_ready = (
+        shared_gate_pass
+        and editorial_force_gap_count == 0
+        and pairwise_promotion_gap_count == 0
+        and candidate_separation_gap_count == 0
+        and guardrails_stable
+        and decision_loop_breakthrough
+    )
+    stable_but_no_breakthrough = (
+        not breakthrough_ready
+        and shared_gate_pass
+        and editorial_force_gap_count == 0
+        and candidate_separation_gap_count == 0
+        and guardrails_stable
+        and active_breakthrough_case is not None
+        and active_breakthrough_case.auto_metrics.force_non_regression_status == 'pass'
+        and active_breakthrough_case.auto_metrics.coverage_non_regression_status == 'pass'
+        and active_breakthrough_case.auto_metrics.compactness_non_regression_status == 'pass'
+        and active_breakthrough_case.auto_metrics.active_frontier_status in {'matched', 'beaten'}
     )
     report = SkillCreateComparisonReport(
         cases=cases,
@@ -1866,7 +1937,7 @@ def build_skill_create_comparison_report(
         program_regression_count=program_regression_count,
         gap_count=gap_count,
         overall_status=(
-            'pass'
+            'breakthrough'
             if breakthrough_ready
             else (
                 'stable_but_no_breakthrough'

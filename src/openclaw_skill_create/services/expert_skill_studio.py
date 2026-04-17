@@ -16,6 +16,8 @@ from ..models.expert_studio import (
     ExpertSkillCorpusEntry,
     ExpertTaskProbe,
     MonotonicImprovementReport,
+    OutcomeOnlyProbeScore,
+    OutcomeOnlyRerankerReport,
     PairwiseEditorialReport,
     ProfileBaselineBundle,
     ProfileBaselineSnapshot,
@@ -86,12 +88,15 @@ PROFILE_QUALITY_CHECK_LINES: dict[str, list[str]] = {
         "Check whether a greybox build with stubbed content and placeholder art still answers the validation question.",
     ],
     "decision-loop-stress-test": [
+        "Check whether first-hour novelty is masking a weak decision before the loop gets greenlit.",
         "Check whether the decision loop is readable in the first hour before novelty wears off.",
         "Check whether first hour, midgame, and lategame differ for the right reason instead of only inflating numbers.",
+        "Check whether midgame autopilot is appearing because the loop lost counterpressure and adaptation.",
         "Check whether lategame pressure mutates the problem instead of rewarding autopilot.",
         "Check whether solved state is concrete enough to name, trigger, and attack.",
         "Check whether variation changes decisions rather than surface decoration.",
         "Check whether reinforcement teaches intended behavior instead of efficient repetition.",
+        "Check whether fake variation, shallow reward inflation, or content padding are being mistaken for repair.",
         "Check whether the repair changes pressure inside the decision loop instead of adding softer content.",
         "Check whether mastery only improves throughput without creating a new decision problem.",
         "Check whether any proposed repair adds events, rewards, or content layers without changing the decision landscape.",
@@ -151,25 +156,25 @@ PROFILE_FAILURE_ENTRIES: dict[str, list[tuple[str, str, str, str]]] = {
             "Novelty-Only Start",
             "Early play only works because the premise is fresh, not because the decision is clear.",
             "The first-hour hook never established readable pressure.",
-            "Raise the stakes and feedback around the core choice before adding more content.",
+            "Raise the stakes and feedback around the core choice, call the weak decision directly, and do not greenlight a repair that only adds more content.",
         ),
         (
             "Midgame Autopilot",
             "The player keeps repeating the same answer while the game only changes labels or numbers.",
             "Midgame added volume without adding new constraints.",
-            "Introduce counterpressure that forces adaptation instead of simple efficiency scaling.",
+            "Introduce counterpressure that forces adaptation, punish repeated safe choices, and reward state-aware adaptation instead of simple efficiency scaling.",
         ),
         (
             "Progression Without New Problems",
             "Progression adds throughput or spectacle while the underlying choice stays solved.",
             "Expansion arrived without a new pressure problem.",
-            "Add a new constraint or pressure relationship before adding more content or reward layers.",
+            "Add a new constraint or pressure relationship before adding more content or reward layers, and avoid shallow reward inflation that keeps the same decision problem.",
         ),
         (
             "Variety Without Strategic Consequence",
             "The game offers more variants, but they do not change read, tradeoff, or consequence.",
             "Variation was used as surface freshness instead of decision mutation.",
-            "Cut cosmetic variation and keep only the variants that force a new answer.",
+            "Cut cosmetic variation, call fake variation by name, and keep only the variants that force a new answer.",
         ),
         (
             "Mastery Removes the Game",
@@ -303,8 +308,9 @@ def _profile_residual_targets(skill_name: str) -> ProfileResidualTargets:
         "decision-loop-stress-test": ProfileResidualTargets(
             skill_name=skill_name,
             target_metrics={
-                "decision_pressure_score": 0.96,
-                "compression_without_loss": 0.78,
+                "decision_pressure_score": 0.98,
+                "compression_without_loss": 0.80,
+                "task_outcome_with_skill_average": 0.92,
             },
             allowed_sections=[
                 "Overview",
@@ -321,8 +327,9 @@ def _profile_residual_targets(skill_name: str) -> ProfileResidualTargets:
                 "section_force_distinctness": 0.84,
             },
             summary=[
-                "target decision_pressure_score >= 0.96",
-                "target compression_without_loss >= 0.78",
+                "target decision_pressure_score >= 0.98",
+                "target compression_without_loss >= 0.80",
+                "target task_outcome_with_skill_average >= 0.92",
                 "target false_fix_rejection_status = pass",
             ],
         ),
@@ -432,6 +439,7 @@ def _residual_gap_report(skill_name: str, metrics: dict[str, Any]) -> ResidualGa
             if (
                 values.get("decision_pressure_score", 0.0) >= targets.target_metrics.get("decision_pressure_score", 0.0)
                 and values.get("compression_without_loss", 0.0) >= targets.target_metrics.get("compression_without_loss", 0.0)
+                and values.get("task_outcome_with_skill_average", 0.0) >= targets.target_metrics.get("task_outcome_with_skill_average", 0.0)
             )
             else "fail"
         )
@@ -485,6 +493,7 @@ def _residual_gap_report(skill_name: str, metrics: dict[str, Any]) -> ResidualGa
                 "decision_pressure_score": "pressure",
                 "section_force_distinctness": "pressure",
                 "compression_without_loss": "pressure",
+                "task_outcome_with_skill_average": "pressure",
                 "generic_surface_leakage": "leakage",
                 "redundancy_ratio": "compactness",
                 "generic_skeleton_ratio": "compactness",
@@ -1199,10 +1208,10 @@ def _surface_label_profile(skill_name: str) -> dict[str, str]:
         },
         "decision-loop-stress-test": {
             "decision": "Stress Test",
-            "action": "Check",
+            "action": "Watch",
             "output": "Write",
-            "failure": "Reject If",
-            "fix": "Repair",
+            "failure": "Break If",
+            "fix": "Reinforce / Repair",
             "write": "Write",
             "good": "Strong",
             "weak": "Weak",
@@ -1386,25 +1395,11 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
         ],
         "decision-loop-stress-test": [
             {
-                "name": "pressure_first",
-                "opening_frame": "Pressure-test the decision game before content smooths over weak structure.",
-                "section_order": _ordered_sections(base_order, ["Quality Checks", "Failure Patterns and Fixes", "Output Format", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
-                "sentence_budgets": {"Overview": 1, "Default Workflow": 5, "Quality Checks": 4},
-                "workflow_mode": "pressure_first",
-                "step_frame": "pressure_probe",
-                "output_focus": ["Pressure Map", "Break Point", "Repair Recommendation"],
-                "quality_tone": "pressure",
-                "quality_mode": "pressure_gate",
-                "failure_style": "collapse_signals",
-                "failure_mode": "collapse_signals",
-                "strategy_tags": ["pressure", "stress", "breakpoint"],
-            },
-            {
                 "name": "collapse_first",
-                "opening_frame": "Find the collapse point before you propose new content or rewards.",
+                "opening_frame": "Find the collapse signal before the loop gets greenlit by novelty, rewards, or pacing cover.",
                 "section_order": _ordered_sections(base_order, ["Failure Patterns and Fixes", "Quality Checks", "Decision Rules", "Output Format", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Failure Patterns and Fixes": 5, "Default Workflow": 4},
-                "workflow_mode": "collapse_detection",
+                "workflow_mode": "collapse_first",
                 "step_frame": "collapse_probe",
                 "output_focus": ["Collapse Point", "Solved State Risk", "Repair Recommendation"],
                 "quality_tone": "collapse",
@@ -1414,28 +1409,42 @@ def _pressure_strategy_family(skill_name: str, workflow_surface: str, base_order
                 "strategy_tags": ["collapse", "solved-state", "dominance"],
             },
             {
-                "name": "repair_first",
-                "opening_frame": "Name the structural repair before anyone reaches for more content.",
+                "name": "stop_condition_first",
+                "opening_frame": "Name the stop condition before you explain the phase, the content, or the reward pacing.",
+                "section_order": _ordered_sections(base_order, ["Quality Checks", "Failure Patterns and Fixes", "Output Format", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
+                "sentence_budgets": {"Overview": 1, "Default Workflow": 5, "Quality Checks": 4},
+                "workflow_mode": "stop_condition_first",
+                "step_frame": "stop_condition_probe",
+                "output_focus": ["Break Point", "Pressure Map", "Repair Recommendation"],
+                "quality_tone": "pressure",
+                "quality_mode": "pressure_gate",
+                "failure_style": "collapse_signals",
+                "failure_mode": "collapse_signals",
+                "strategy_tags": ["stop-condition", "pressure", "breakpoint"],
+            },
+            {
+                "name": "fake_fix_rejection",
+                "opening_frame": "Reject fake fixes early: if the repair is just more content, it is not a repair yet.",
                 "section_order": _ordered_sections(base_order, ["Output Format", "Failure Patterns and Fixes", "Quality Checks", "Decision Rules", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Output Format": 4, "Failure Patterns and Fixes": 4},
-                "workflow_mode": "repair_priority",
-                "step_frame": "repair_commit",
+                "workflow_mode": "fake_fix_rejection",
+                "step_frame": "false_fix_gate",
                 "output_focus": ["Repair Recommendation", "Pressure Map", "Variation Audit"],
                 "quality_tone": "repair",
                 "quality_mode": "repair_gate",
-                "failure_style": "repair_moves",
-                "failure_mode": "repair_moves",
-                "strategy_tags": ["repair", "structure", "fix"],
+                "failure_style": "false_fix_rejection",
+                "failure_mode": "false_fix_rejection",
+                "strategy_tags": ["repair", "structure", "false-fix"],
             },
             {
-                "name": "reinforcement_audit",
-                "opening_frame": "Audit what mastery teaches before the wrong habit hardens.",
+                "name": "pressure_audit",
+                "opening_frame": "Audit the loop for pressure, collapse, and wrong reinforcement before mastery hardens the wrong habit.",
                 "section_order": _ordered_sections(base_order, ["Decision Rules", "Quality Checks", "Output Format", "Failure Patterns and Fixes", "Cut Rules", "Worked Micro-Example", "Voice Rules"]),
                 "sentence_budgets": {"Overview": 1, "Decision Rules": 4, "Quality Checks": 4},
-                "workflow_mode": "reinforcement_audit",
-                "step_frame": "reinforcement_probe",
+                "workflow_mode": "pressure_audit",
+                "step_frame": "pressure_audit",
                 "output_focus": ["Reinforcement Check", "Variation Audit", "Repair Recommendation"],
-                "quality_tone": "reinforcement",
+                "quality_tone": "pressure",
                 "quality_mode": "reinforcement_gate",
                 "failure_style": "wrong_behavior",
                 "failure_mode": "wrong_behavior",
@@ -1781,10 +1790,10 @@ def _section_variant_text(
             ("concept-to-mvp-pack", "cut_first"): "Treat scope as suspect until the smallest surviving proof is clear.",
             ("concept-to-mvp-pack", "package_ready"): "Lock the proof first, then shape the smallest build-ready pack around it.",
             ("concept-to-mvp-pack", "failure_pass"): "Approve the first playable only after a failure pass says what would force a redesign in a greybox build with stubbed content.",
-            ("decision-loop-stress-test", "pressure_first"): "Stress each phase until the decision game produces pressure instead of novelty.",
             ("decision-loop-stress-test", "collapse_first"): "Find the collapse point before you discuss more content, rewards, or pacing cover.",
-            ("decision-loop-stress-test", "repair_first"): "Name the structural fix before anyone suggests softer compensation.",
-            ("decision-loop-stress-test", "reinforcement_audit"): "Check what mastery teaches, then strip reward from the wrong habit.",
+            ("decision-loop-stress-test", "stop_condition_first"): "Name the stop condition before you explain the phase, the reward table, or the pacing cover.",
+            ("decision-loop-stress-test", "fake_fix_rejection"): "Reject repairs that only add content, rewards, or softer compensation before you call anything fixed.",
+            ("decision-loop-stress-test", "pressure_audit"): "Audit what mastery teaches, where the loop collapses, and what still rewards the wrong habit.",
             ("simulation-resource-loop-design", "map_first"): "Start by drawing the pressure web; only then judge balance inside it.",
             ("simulation-resource-loop-design", "tension_first"): "Lead with tradeoffs that hurt in visible ways, not with resource lists.",
             ("simulation-resource-loop-design", "loop_balance"): "Balance positive and negative loops so neither side erases the decision game.",
@@ -1826,6 +1835,8 @@ def _section_variant_text(
             return ["Treat cheap recovery and invisible pressure as core loop failures, not polish issues."]
         if failure_style == "scope_creep":
             return ["Treat anything that dilutes the proof or hides uncertainty as a failure, not a nice-to-have."]
+        if failure_style == "false_fix_rejection":
+            return ["Treat repairs that add events, rewards, or content padding without changing pressure as false fixes."]
         if failure_style == "repair_moves":
             return ["Treat repairs that add content without changing pressure as false fixes."]
         if failure_cases:
@@ -1995,6 +2006,15 @@ def _render_output_fields(
             lines.append(f"- {labels['good']}: {_strip_guidance_prefix(guidance_lines[1], labels['good'])}")
         if len(guidance_lines) > 2:
             lines.append(f"- {labels['weak']}: {_strip_guidance_prefix(guidance_lines[2], labels['weak'])}")
+        if program.skill_name == "decision-loop-stress-test":
+            decision_loop_guardrail = {
+                "Solved State Risk": "Name the dominant strategy, the counterpressure, and the move that punishes repeated safe choices.",
+                "Variation Quality": "Reject fake variation and keep only changes that alter read, tradeoff, consequence, or adaptation.",
+                "Reinforcement Check": "State whether the loop teaches the wrong habit, throughput only, or the intended behavior under pressure.",
+                "Reinforcement Recommendations": "Avoid shallow reward inflation; reward state-aware adaptation and change incentive structure instead.",
+            }.get(field, "")
+            if decision_loop_guardrail:
+                lines.append(f"- Guardrail: {decision_loop_guardrail}")
         if field in focus:
             focus_note = {
                 "proof_gate": "Make this field strong enough to prove or kill the first playable.",
@@ -2031,10 +2051,10 @@ def _render_workflow(
         "cut_pressure": ["decision", "failure", "action", "output", "fix"],
         "package_readiness": ["decision", "output", "action", "failure", "fix"],
         "failure_pass": ["decision", "failure", "fix", "output", "action"],
-        "pressure_first": ["decision", "action", "failure", "output", "fix"],
-        "collapse_detection": ["decision", "failure", "action", "fix", "output"],
-        "repair_priority": ["decision", "fix", "failure", "output", "action"],
-        "reinforcement_audit": ["decision", "action", "output", "fix", "failure"],
+        "collapse_first": ["decision", "failure", "action", "fix", "output"],
+        "stop_condition_first": ["decision", "failure", "action", "output", "fix"],
+        "fake_fix_rejection": ["decision", "fix", "failure", "output", "action"],
+        "pressure_audit": ["decision", "action", "output", "fix", "failure"],
         "map_first": ["decision", "action", "output", "failure", "fix"],
         "tension_first": ["decision", "failure", "action", "output", "fix"],
         "loop_balance": ["decision", "action", "output", "fix", "failure"],
@@ -2045,10 +2065,10 @@ def _render_workflow(
         "scope_gate": "Use this step to remove anything that only makes the idea feel safer.",
         "handoff_gate": "Use this step to leave the next builder with a concrete pack, not a concept note.",
         "failure_pass": "Use this step to surface what would kill the MVP before more scope sneaks in.",
-        "pressure_probe": "Use this step to pressure the loop until the weak decision shows itself.",
         "collapse_probe": "Use this step to find where the loop caves in or goes automatic.",
-        "repair_commit": "Use this step to commit to the structural fix before adding comfort.",
-        "reinforcement_probe": "Use this step to check what behavior the system is actually teaching.",
+        "stop_condition_probe": "Use this step to name the stop condition before the phase gets explained away.",
+        "false_fix_gate": "Use this step to reject repairs that only add content, rewards, or softer compensation.",
+        "pressure_audit": "Use this step to check what behavior the system is actually teaching under pressure.",
         "map_probe": "Use this step to map the visible pressure before tuning any single variable.",
         "tension_probe": "Use this step to state the tradeoff before the loop gets smoothed over.",
         "loop_balance": "Use this step to prove the loop has both drive and restraint.",
@@ -2066,8 +2086,9 @@ def _render_workflow(
         lines.extend(
             [
                 "- Keep the audit on first-hour, midgame, late-game, solved state, dominant strategy, variation quality, reinforcement, and structural fixes.",
-                "- Watch the first collapse signal and reinforce the intended behavior before anyone reaches for more content.",
-                "- Reject surface excitement, content padding, MVP scope cutting, and detailed numeric balancing before proposing more content.",
+                "- Put the collapse signal and stop condition before explanation, then reject surface excitement, first-hour novelty, and not greenlighting the loop with more content.",
+                "- Treat not MVP scope cutting and not detailed numeric balancing as guardrails, not excuses for a weak decision.",
+                "- Keep weak decision, midgame autopilot, fake variation, and shallow reward inflation visible enough to reject them as false fixes.",
                 "",
             ]
         )
@@ -2088,17 +2109,18 @@ def _render_workflow(
                 if move.label in {"Test the First-Hour Hook", "Test Midgame Sustainability"}:
                     decision_text = _append_sentence(decision_text, "Name the stop condition before proposing more content.")
                 if move.label == "Test the First-Hour Hook":
-                    extra_pressure_line = "   - Check: Reject surface excitement if the first-hour pressure still feels weak."
+                    extra_pressure_line = "   - Check: Reject surface excitement, first-hour novelty, and not greenlighting the loop if the first-hour pressure still hides a weak decision."
                 elif move.label == "Test Midgame Sustainability":
-                    extra_pressure_line = "   - Check: Name the dominant strategy or autopilot risk before adding content."
+                    action_text = _append_sentence(action_text, "Name the counterpressure and adaptation test before content gets added.")
+                    extra_pressure_line = "   - Check: Name the dominant strategy, the midgame autopilot risk, and the missing counterpressure before adding content."
                 elif move.label in {"Look for Solved States", "Audit Variation and Reinforcement"}:
                     action_text = _append_sentence(action_text, "Reject any fix that only widens content without changing pressure.")
                     if move.label == "Look for Solved States":
-                        extra_pressure_line = "   - Check: Break the dominant strategy with structural fixes, not softer compensation."
+                        extra_pressure_line = "   - Check: Break the dominant strategy with structural fixes, punish repeated safe choices, and reward state-aware adaptation instead of softer compensation or content padding."
                     else:
-                        extra_pressure_line = "   - Check: Reinforce the intended behavior and reject content padding or fake variation."
+                        extra_pressure_line = "   - Check: Reinforce the intended behavior, reject fake variation, avoid shallow reward inflation, and reject any repair that only improves throughput."
                 elif move.label == "Test Late-Game Expansion or Mutation":
-                    extra_pressure_line = "   - Check: Confirm late-game mastery creates a new decision problem instead of pure throughput."
+                    extra_pressure_line = "   - Check: Confirm late-game mastery creates a new decision problem instead of pure throughput, pacing cover, or reward inflation."
         elif skill_name == "simulation-resource-loop-design" and target_focus in {"leakage", "compactness"}:
             workflow_opener = {
                 1: "Use this step to map the visible pressure before tuning any single variable.",
@@ -2572,6 +2594,418 @@ def _coverage_rank_key(skill_name: str, metrics: dict[str, Any]) -> tuple[float,
         *tuple(round(force_values.get(metric, 0.0), 4) for metric in _primary_force_metric_names(skill_name)),
         round(float(getattr(metrics.get("editorial_force"), "compression_without_loss", 0.0) or 0.0), 4),
         round(float(metrics.get("score", 0.0) or 0.0), 4),
+    )
+
+
+def _normalize_probe_text(text: str) -> str:
+    return " ".join(str(text or "").lower().replace("-", " ").split())
+
+
+def _probe_term_coverage(text: str, terms: list[str]) -> float:
+    if not terms:
+        return 1.0
+    normalized = _normalize_probe_text(text)
+    hits = 0
+    for term in terms:
+        token = _normalize_probe_text(term)
+        if token and token in normalized:
+            hits += 1
+    return round(hits / max(1, len(terms)), 4)
+
+
+def _matching_probe_lines(text: str, *, terms: list[str], limit: int = 6) -> list[str]:
+    normalized_terms = [_normalize_probe_text(term) for term in terms if _normalize_probe_text(term)]
+    if not normalized_terms:
+        return []
+    matches: list[str] = []
+    seen: set[str] = set()
+    for raw_line in str(text or "").splitlines():
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        normalized_line = _normalize_probe_text(stripped.lstrip("-#* "))
+        if any(term in normalized_line for term in normalized_terms):
+            clean_line = stripped
+            if clean_line not in seen:
+                matches.append(clean_line)
+                seen.add(clean_line)
+        if len(matches) >= limit:
+            break
+    return matches
+
+
+def _decision_loop_outcome_probe_specs(*, mode: str = "frontier_v3") -> list[dict[str, Any]]:
+    base_specs = [
+        {
+            "probe_id": "decision.novelty-masks-weak-choice",
+            "pressure_terms": [
+                "first hour novelty",
+                "weak decision",
+                "collapse signal",
+                "stop condition",
+                "surface excitement",
+            ],
+            "false_fix_terms": [
+                "not greenlighting",
+                "more content",
+                "structural fixes",
+                "decision problem",
+            ],
+        },
+        {
+            "probe_id": "decision.midgame-autopilot",
+            "pressure_terms": [
+                "midgame autopilot",
+                "dominant strategy",
+                "counterpressure",
+                "adaptation",
+            ],
+            "false_fix_terms": [
+                "content padding",
+                "not detailed numeric balancing",
+                "structural fixes",
+                "pressure",
+            ],
+        },
+        {
+            "probe_id": "decision.fake-repair-by-content",
+            "pressure_terms": [
+                "collapse signal",
+                "solved state",
+                "decision landscape",
+                "structural fixes",
+            ],
+            "false_fix_terms": [
+                "reject any fix that only",
+                "more content",
+                "reward inflation",
+                "softer compensation",
+            ],
+        },
+        {
+            "probe_id": "decision.mastery-throughput-only",
+            "pressure_terms": [
+                "mastery",
+                "throughput",
+                "new decision problem",
+                "reinforcement",
+            ],
+            "false_fix_terms": [
+                "wrong habit",
+                "fake variation",
+                "repair",
+                "pressure",
+            ],
+        },
+    ]
+    if mode != "probe_expanded_v4":
+        return base_specs
+    return base_specs + [
+        {
+            "probe_id": "decision.solved-state-numeric-only-repair",
+            "pressure_terms": [
+                "solved state",
+                "collapse witness",
+                "repair recommendation",
+                "decision landscape",
+            ],
+            "false_fix_terms": [
+                "not just numeric tuning",
+                "not just number tuning",
+                "not just削数值",
+                "structural fix",
+            ],
+        },
+        {
+            "probe_id": "decision.variation-without-read-change",
+            "pressure_terms": [
+                "variation audit",
+                "read",
+                "tradeoff",
+                "consequence",
+            ],
+            "false_fix_terms": [
+                "fake variation",
+                "does not change decisions",
+                "same dominant line",
+                "same read",
+            ],
+        },
+        {
+            "probe_id": "decision.reinforcement-without-habit-mapping",
+            "pressure_terms": [
+                "reinforcement",
+                "wrong habit",
+                "right habit",
+                "behavior shift",
+            ],
+            "false_fix_terms": [
+                "throughput only",
+                "mastery",
+                "wrong behavior",
+                "habit mapping",
+            ],
+        },
+        {
+            "probe_id": "decision.stop-condition-without-collapse-witness",
+            "pressure_terms": [
+                "stop condition",
+                "collapse witness",
+                "break point",
+                "solved state risk",
+            ],
+            "false_fix_terms": [
+                "not just phase explanation",
+                "not just pacing",
+                "not just more content",
+                "structural witness",
+            ],
+        },
+    ]
+
+
+def _decision_loop_probe_expanded_v4_ready(
+    report: OutcomeOnlyRerankerReport | None,
+    *,
+    required_probe_count: int = 8,
+    required_improved_probe_count: int = 2,
+) -> bool:
+    if report is None:
+        return False
+    return (
+        report.status == "pass"
+        and report.probe_count >= required_probe_count
+        and report.probe_pass_count >= required_probe_count
+        and report.frontier_comparison_status == "beaten"
+        and report.improved_probe_count >= required_improved_probe_count
+    )
+
+
+def _build_outcome_only_reranker_report(
+    *,
+    skill_name: str,
+    scored_candidates: list[tuple[SkillRealizationCandidate, dict[str, Any]]],
+    probe_mode: str = "frontier_v3",
+) -> OutcomeOnlyRerankerReport | None:
+    if skill_name != "decision-loop-stress-test":
+        return None
+    frontier_markdown = _current_best_markdown(skill_name)
+    if not frontier_markdown.strip():
+        return OutcomeOnlyRerankerReport(
+            skill_name=skill_name,
+            probe_mode=probe_mode,
+            status="not_applicable",
+            frontier_comparison_status="missing_current_best",
+            blocking_reason="missing_current_best",
+            summary=["outcome_only_reranker_skipped=missing_current_best"],
+        )
+    frontier_metrics = _candidate_editorial_metrics(
+        skill_name=skill_name,
+        task="frontier_outcome_only",
+        markdown=frontier_markdown,
+        realization_candidate_count=0,
+    )
+    frontier_redundancy = float(getattr(frontier_metrics.get("editorial"), "redundancy_ratio", 0.0) or 0.0)
+    frontier_compression = round(max(0.0, 1.0 - frontier_redundancy), 4)
+    probe_specs = _decision_loop_outcome_probe_specs(mode=probe_mode)
+    ranking_rows: list[tuple[str, int, int, float, float, float, float]] = []
+    winner_probe_scores: list[OutcomeOnlyProbeScore] = []
+    winner_matched_probe_ids: list[str] = []
+    winner_improved_probe_ids: list[str] = []
+    winner_blocked_probe_ids: list[str] = []
+    winner_repair_evidence_lines: list[str] = []
+    winner_collapse_evidence_lines: list[str] = []
+    winner_probe_witness_summary: list[str] = []
+    winner_repair_specificity_score = 0.0
+    winner_probe_evidence_density = 0.0
+    winner_collapse_witness_coverage = 0.0
+    for candidate, metrics in scored_candidates:
+        candidate_redundancy = float(getattr(metrics.get("editorial"), "redundancy_ratio", 0.0) or 0.0)
+        candidate_compression = round(max(0.0, 1.0 - candidate_redundancy), 4)
+        probe_scores: list[OutcomeOnlyProbeScore] = []
+        pass_count = 0
+        improved_probe_count = 0
+        matched_probe_ids: list[str] = []
+        improved_probe_ids: list[str] = []
+        blocked_probe_ids: list[str] = []
+        total_candidate_score = 0.0
+        total_pressure_delta = 0.0
+        total_false_fix_delta = 0.0
+        total_compression_delta = 0.0
+        for spec in probe_specs:
+            candidate_pressure = _probe_term_coverage(candidate.rendered_markdown, list(spec.get("pressure_terms") or []))
+            frontier_pressure = _probe_term_coverage(frontier_markdown, list(spec.get("pressure_terms") or []))
+            candidate_false_fix = _probe_term_coverage(candidate.rendered_markdown, list(spec.get("false_fix_terms") or []))
+            frontier_false_fix = _probe_term_coverage(frontier_markdown, list(spec.get("false_fix_terms") or []))
+            candidate_score = round((0.50 * candidate_pressure) + (0.35 * candidate_false_fix) + (0.15 * candidate_compression), 4)
+            frontier_score = round((0.50 * frontier_pressure) + (0.35 * frontier_false_fix) + (0.15 * frontier_compression), 4)
+            pressure_delta = round(candidate_pressure - frontier_pressure, 4)
+            false_fix_delta = round(candidate_false_fix - frontier_false_fix, 4)
+            compression_delta = round(candidate_compression - frontier_compression, 4)
+            saturated_frontier = frontier_score >= 0.98 and frontier_pressure >= 0.99 and frontier_false_fix >= 0.99
+            probe_improved = (
+                candidate_score > frontier_score + 0.02
+                and pressure_delta >= 0.0
+                and false_fix_delta >= 0.0
+            )
+            probe_matched = (
+                saturated_frontier
+                and candidate_pressure >= frontier_pressure
+                and candidate_false_fix >= frontier_false_fix
+                and candidate_score >= frontier_score - 0.01
+            )
+            probe_id = str(spec.get("probe_id") or "")
+            win_status = "pass" if (probe_improved or probe_matched) else "hold"
+            if win_status == "pass":
+                pass_count += 1
+            if probe_improved:
+                improved_probe_count += 1
+                improved_probe_ids.append(probe_id)
+            elif probe_matched:
+                matched_probe_ids.append(probe_id)
+            else:
+                blocked_probe_ids.append(probe_id)
+            total_candidate_score += candidate_score
+            total_pressure_delta += pressure_delta
+            total_false_fix_delta += false_fix_delta
+            total_compression_delta += compression_delta
+            probe_scores.append(
+                OutcomeOnlyProbeScore(
+                    candidate_id=candidate.candidate_id,
+                    probe_id=probe_id,
+                    win_status=win_status,
+                    pressure_delta=pressure_delta,
+                    false_fix_delta=false_fix_delta,
+                    compression_delta=compression_delta,
+                    candidate_score=candidate_score,
+                    frontier_score=frontier_score,
+                    summary=[
+                        f"candidate_score={candidate_score:.4f}",
+                        f"frontier_score={frontier_score:.4f}",
+                        f"pressure_delta={pressure_delta:.4f}",
+                        f"false_fix_delta={false_fix_delta:.4f}",
+                        f"compression_delta={compression_delta:.4f}",
+                    ],
+                )
+            )
+        ranking_rows.append(
+            (
+                candidate.candidate_id,
+                pass_count,
+                improved_probe_count,
+                round(total_candidate_score, 4),
+                round(total_pressure_delta, 4),
+                round(total_false_fix_delta, 4),
+                round(total_compression_delta, 4),
+            )
+        )
+        repair_evidence_lines = _matching_probe_lines(
+            candidate.rendered_markdown,
+            terms=[
+                "reject any fix that only",
+                "structural fix",
+                "wrong habit",
+                "fake variation",
+                "not just numeric tuning",
+                "not just more content",
+            ],
+        )
+        collapse_evidence_lines = _matching_probe_lines(
+            candidate.rendered_markdown,
+            terms=[
+                "collapse signal",
+                "collapse witness",
+                "stop condition",
+                "break point",
+                "solved state risk",
+            ],
+        )
+        repair_specificity_score = _probe_term_coverage(
+            candidate.rendered_markdown,
+            [
+                "reject any fix that only",
+                "structural fix",
+                "wrong habit",
+                "repair recommendation",
+            ],
+        )
+        collapse_witness_coverage = _probe_term_coverage(
+            candidate.rendered_markdown,
+            [
+                "collapse signal",
+                "collapse witness",
+                "stop condition",
+                "break point",
+            ],
+        )
+        probe_evidence_density = round(pass_count / max(1, len(probe_specs)), 4)
+        probe_witness_summary = [
+            f"{probe_id}={'improved' if probe_id in improved_probe_ids else ('matched' if probe_id in matched_probe_ids else 'blocked')}"
+            for probe_id in [str(spec.get("probe_id") or "") for spec in probe_specs]
+        ]
+        if not winner_probe_scores or ranking_rows[-1][1:] > max(
+            (row[1:] for row in ranking_rows[:-1]),
+            default=(-1, -1, -1.0, -1.0, -1.0, -1.0),
+        ):
+            winner_probe_scores = probe_scores
+            winner_matched_probe_ids = matched_probe_ids
+            winner_improved_probe_ids = improved_probe_ids
+            winner_blocked_probe_ids = blocked_probe_ids
+            winner_repair_evidence_lines = repair_evidence_lines
+            winner_collapse_evidence_lines = collapse_evidence_lines
+            winner_probe_witness_summary = probe_witness_summary
+            winner_repair_specificity_score = repair_specificity_score
+            winner_probe_evidence_density = probe_evidence_density
+            winner_collapse_witness_coverage = collapse_witness_coverage
+    ranking_rows.sort(key=lambda item: item[1:], reverse=True)
+    candidate_ranking = [row[0] for row in ranking_rows]
+    winner = candidate_ranking[0] if candidate_ranking else ""
+    winner_row = ranking_rows[0] if ranking_rows else ("", 0, 0, 0.0, 0.0, 0.0, 0.0)
+    all_probes_pass = bool(winner and int(winner_row[1]) == len(probe_specs))
+    improved_probe_count = int(winner_row[2]) if winner else 0
+    frontier_beaten = bool(all_probes_pass and improved_probe_count > 0)
+    frontier_matched = bool(all_probes_pass and not frontier_beaten)
+    blocking_reason = (
+        ""
+        if frontier_beaten
+        else ("outcome_only_reranker_matches_but_does_not_beat_frontier" if frontier_matched else "outcome_only_reranker_not_better_than_frontier")
+    )
+    return OutcomeOnlyRerankerReport(
+        skill_name=skill_name,
+        probe_mode=probe_mode,
+        candidate_ranking=candidate_ranking,
+        winner=winner,
+        frontier_comparison_status="beaten" if frontier_beaten else "matched",
+        blocking_reason=blocking_reason,
+        probe_pass_count=int(winner_row[1]),
+        probe_count=len(probe_specs),
+        improved_probe_count=improved_probe_count,
+        matched_probe_count=len(winner_matched_probe_ids),
+        blocked_probe_count=len(winner_blocked_probe_ids),
+        repair_specificity_score=winner_repair_specificity_score,
+        probe_evidence_density=winner_probe_evidence_density,
+        collapse_witness_coverage=winner_collapse_witness_coverage,
+        probe_witness_summary=winner_probe_witness_summary,
+        matched_probe_ids=winner_matched_probe_ids,
+        improved_probe_ids=winner_improved_probe_ids,
+        blocked_probe_ids=winner_blocked_probe_ids,
+        repair_evidence_lines=winner_repair_evidence_lines,
+        collapse_evidence_lines=winner_collapse_evidence_lines,
+        probe_scores=winner_probe_scores,
+        status="pass" if all_probes_pass else "fail",
+        summary=[
+            f"winner={winner or 'none'}",
+            f"probe_mode={probe_mode}",
+            f"probe_pass_count={int(winner_row[1])}/{len(probe_specs)}",
+            f"improved_probe_count={improved_probe_count}",
+            f"matched_probe_count={len(winner_matched_probe_ids)}",
+            f"blocked_probe_count={len(winner_blocked_probe_ids)}",
+            f"frontier_comparison_status={'beaten' if frontier_beaten else 'matched'}",
+            f"repair_specificity_score={winner_repair_specificity_score:.4f}",
+            f"probe_evidence_density={winner_probe_evidence_density:.4f}",
+            f"collapse_witness_coverage={winner_collapse_witness_coverage:.4f}",
+            f"blocking_reason={blocking_reason or 'none'}",
+        ],
     )
 
 
@@ -3195,6 +3629,18 @@ def choose_skill_realization_candidate(
         for candidate in candidates
     ]
     scored.sort(key=lambda item: _candidate_rank_key(skill_name, item[1]), reverse=True)
+    outcome_only_report = _build_outcome_only_reranker_report(
+        skill_name=skill_name,
+        scored_candidates=scored,
+    )
+    if outcome_only_report is not None and list(outcome_only_report.candidate_ranking or []):
+        ranking_order = {candidate_id: index for index, candidate_id in enumerate(list(outcome_only_report.candidate_ranking or []))}
+        scored.sort(
+            key=lambda item: (
+                ranking_order.get(item[0].candidate_id, len(ranking_order)),
+                tuple(-value for value in _candidate_rank_key(skill_name, item[1])),
+            )
+        )
     winner, winner_metrics = scored[0]
     loser, loser_metrics = scored[1] if len(scored) > 1 else scored[0]
     scored_by_id = {item.candidate_id: metrics for item, metrics in scored}
@@ -3265,6 +3711,7 @@ def choose_skill_realization_candidate(
             f"force_non_regression_status={force_non_regression_status}",
             f"current_best_comparison_status={current_best_comparison_status}",
             f"primary_force_win_count={primary_force_win_count}",
+            f"outcome_only_reranker_status={getattr(outcome_only_report, 'status', 'not_applicable')}",
             f"score_delta={winner_metrics['score'] - loser_metrics['score']:.4f}",
         ],
     )
@@ -3300,6 +3747,10 @@ def choose_skill_realization_candidate(
             leakage_target_status=residual_gap_report.leakage_target_status,
             false_fix_rejection_status=residual_gap_report.false_fix_rejection_status,
             residual_gap_count=residual_gap_report.residual_gap_count,
+            outcome_only_reranker_status=str(getattr(outcome_only_report, "status", "not_applicable") or "not_applicable"),
+            outcome_only_frontier_comparison_status=str(getattr(outcome_only_report, "frontier_comparison_status", "missing_current_best") or "missing_current_best"),
+            outcome_only_probe_pass_count=int(getattr(outcome_only_report, "probe_pass_count", 0) or 0),
+            outcome_only_blocking_reason=str(getattr(outcome_only_report, "blocking_reason", "") or ""),
             summary=[
                 f"promotion_status={'promote' if promote_without_best else 'hold'}",
                 f"reason={'no_current_best_snapshot' if promote_without_best else 'hold_due_to_candidate_separation'}",
@@ -3314,6 +3765,20 @@ def choose_skill_realization_candidate(
         and monotonic_report.frontier_dominance_status == "pass"
         and monotonic_report.promotion_status == "promote"
         and residual_gap_report.status == "pass"
+        and (
+            outcome_only_report is None
+            or (
+                outcome_only_report.status == "pass"
+                and outcome_only_report.frontier_comparison_status == "beaten"
+            )
+        )
+    )
+    outcome_only_blocked = bool(
+        outcome_only_report is not None
+        and (
+            outcome_only_report.status != "pass"
+            or outcome_only_report.frontier_comparison_status != "beaten"
+        )
     )
     stable_but_no_breakthrough = (
         candidate_separation_status == "pass"
@@ -3321,6 +3786,7 @@ def choose_skill_realization_candidate(
         and (
             (monotonic_report.promotion_status != "promote" and monotonic_report.promotion_reason == "hold_due_to_no_primary_win")
             or residual_gap_report.status != "pass"
+            or outcome_only_blocked
         )
     )
     promotion_reason = (
@@ -3332,7 +3798,11 @@ def choose_skill_realization_candidate(
             else (
                 "stable_but_no_breakthrough"
                 if stable_but_no_breakthrough
-                else monotonic_report.promotion_reason
+                else (
+                    str(getattr(outcome_only_report, "blocking_reason", "") or "")
+                    if outcome_only_blocked
+                    else monotonic_report.promotion_reason
+                )
             )
         )
     )
@@ -3360,6 +3830,10 @@ def choose_skill_realization_candidate(
         leakage_target_status=residual_gap_report.leakage_target_status,
         false_fix_rejection_status=residual_gap_report.false_fix_rejection_status,
         residual_gap_count=residual_gap_report.residual_gap_count,
+        outcome_only_reranker_status=str(getattr(outcome_only_report, "status", "not_applicable") or "not_applicable"),
+        outcome_only_frontier_comparison_status=str(getattr(outcome_only_report, "frontier_comparison_status", "not_applicable") or "not_applicable"),
+        outcome_only_probe_pass_count=int(getattr(outcome_only_report, "probe_pass_count", 0) or 0),
+        outcome_only_blocking_reason=str(getattr(outcome_only_report, "blocking_reason", "") or ""),
         summary=[
             f"winner_score={winner_score:.4f}",
             f"current_best_score={current_score:.4f}",
@@ -3372,6 +3846,9 @@ def choose_skill_realization_candidate(
             f"compression_gain_status={monotonic_report.compression_gain_status}",
             f"current_best_comparison_status={current_best_comparison_status}",
             f"primary_force_win_count={primary_force_win_count}",
+            f"outcome_only_reranker_status={getattr(outcome_only_report, 'status', 'not_applicable')}",
+            f"outcome_only_frontier_comparison_status={getattr(outcome_only_report, 'frontier_comparison_status', 'not_applicable')}",
+            f"outcome_only_probe_pass_count={int(getattr(outcome_only_report, 'probe_pass_count', 0) or 0)}",
             f"promotion_status={'promote' if promote else 'hold'}",
             *residual_gap_report.summary,
         ],

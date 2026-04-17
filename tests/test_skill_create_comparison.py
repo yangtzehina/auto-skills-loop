@@ -14,7 +14,7 @@ SCRIPT_PATH = Path(__file__).resolve().parents[1] / 'scripts' / 'run_skill_creat
 def test_skill_create_comparison_uses_golden_baselines_without_hermes():
     report = build_skill_create_comparison_report(include_hermes=False)
 
-    assert report.overall_status in {'pass', 'stable_but_no_breakthrough', 'fail'}
+    assert report.overall_status in {'breakthrough', 'stable_but_no_breakthrough', 'fail'}
     assert report.gap_count >= 0
     assert len(report.cases) == 3
     assert report.comparison_independence_status == 'golden_only'
@@ -105,7 +105,7 @@ def test_skill_create_comparison_uses_golden_baselines_without_hermes():
             or report.frontier_dominance_status == 'fail'
         )
         assert any(item.auto_metrics.editorial_force_status in {'warn', 'fail'} for item in report.cases)
-    if report.overall_status == 'pass':
+    if report.overall_status == 'breakthrough':
         assert report.gap_count == 0
     elif report.overall_status == 'fail':
         assert report.gap_count >= 1
@@ -127,7 +127,7 @@ def test_skill_create_comparison_cli_writes_sidecar(tmp_path: Path):
     sidecar = tmp_path / 'evals' / 'hermes_comparison.json'
     assert sidecar.exists()
     payload = json.loads(sidecar.read_text(encoding='utf-8'))
-    assert payload['overall_status'] in {'pass', 'stable_but_no_breakthrough', 'fail'}
+    assert payload['overall_status'] in {'breakthrough', 'stable_but_no_breakthrough', 'fail'}
     assert payload['comparison_independence_status'] == 'golden_only'
     assert payload['depth_quality_gap_count'] == 0
     assert payload['editorial_gap_count'] == 0

@@ -5,7 +5,10 @@ from pathlib import Path
 
 from tests.runtime_test_helpers import invoke_main, load_script_module
 
-from openclaw_skill_create.models.expert_studio import SkillRealizationCandidate
+from openclaw_skill_create.models.expert_studio import (
+    OutcomeOnlyRerankerReport,
+    SkillRealizationCandidate,
+)
 from openclaw_skill_create.models.artifacts import ArtifactFile, Artifacts
 from openclaw_skill_create.models.plan import SkillPlan
 from openclaw_skill_create.models.request import SkillCreateRequestV6
@@ -30,6 +33,32 @@ AUTHORING_SCRIPT = ROOT / 'scripts' / 'run_skill_program_authoring.py'
 REVIEW_SCRIPT = ROOT / 'scripts' / 'run_skill_program_review.py'
 
 
+def _outcome_only_report(
+    *,
+    winner: str,
+    candidate_ranking: list[str] | None = None,
+    status: str = 'pass',
+    frontier_comparison_status: str = 'beaten',
+    blocking_reason: str = '',
+    probe_pass_count: int = 4,
+    probe_count: int = 4,
+    improved_probe_count: int = 1,
+    probe_mode: str = 'frontier_v3',
+) -> OutcomeOnlyRerankerReport:
+    return OutcomeOnlyRerankerReport(
+        skill_name='decision-loop-stress-test',
+        probe_mode=probe_mode,
+        candidate_ranking=candidate_ranking or [winner],
+        winner=winner,
+        frontier_comparison_status=frontier_comparison_status,
+        blocking_reason=blocking_reason,
+        probe_pass_count=probe_pass_count,
+        probe_count=probe_count,
+        improved_probe_count=improved_probe_count,
+        status=status,
+    )
+
+
 def test_known_game_design_profile_builds_skill_program_ir():
     program = build_skill_program_ir(
         skill_name='decision-loop-stress-test',
@@ -43,7 +72,7 @@ def test_known_game_design_profile_builds_skill_program_ir():
     assert 'Reinforcement Check' in program.output_schema
 
 
-def test_profile_residual_targets_freeze_frontier_v2_priorities():
+def test_profile_residual_targets_freeze_frontier_v3_priorities():
     concept = build_profile_residual_targets('concept-to-mvp-pack')
     decision = build_profile_residual_targets('decision-loop-stress-test')
     simulation = build_profile_residual_targets('simulation-resource-loop-design')
@@ -55,12 +84,48 @@ def test_profile_residual_targets_freeze_frontier_v2_priorities():
         'Failure Patterns and Fixes',
         'Output Format',
     ]
-    assert decision.target_metrics['decision_pressure_score'] == 0.96
+    assert decision.target_metrics['decision_pressure_score'] == 0.98
     assert 'Default Workflow' in decision.allowed_sections
-    assert decision.target_metrics['compression_without_loss'] == 0.78
+    assert decision.target_metrics['compression_without_loss'] == 0.80
+    assert decision.target_metrics['task_outcome_with_skill_average'] == 0.92
     assert simulation.target_metrics['generic_surface_leakage'] == 0.05
     assert simulation.target_metrics['generic_skeleton_ratio'] == 0.20
     assert 'Analysis Blocks' in simulation.allowed_sections
+
+
+def test_decision_loop_probe_expanded_specs_include_future_adversarial_set():
+    specs = studio._decision_loop_outcome_probe_specs(mode='probe_expanded_v4')
+
+    assert len(specs) == 8
+    probe_ids = {item['probe_id'] for item in specs}
+    assert {
+        'decision.solved-state-numeric-only-repair',
+        'decision.variation-without-read-change',
+        'decision.reinforcement-without-habit-mapping',
+        'decision.stop-condition-without-collapse-witness',
+    } <= probe_ids
+
+
+def test_decision_loop_probe_expanded_upgrade_requires_two_improved_probes():
+    matched_only = _outcome_only_report(
+        winner='decision-loop-stress-test:collapse_first_v2:1',
+        probe_mode='probe_expanded_v4',
+        frontier_comparison_status='matched',
+        probe_pass_count=8,
+        probe_count=8,
+        improved_probe_count=0,
+    )
+    improved = _outcome_only_report(
+        winner='decision-loop-stress-test:collapse_first_v2:1',
+        probe_mode='probe_expanded_v4',
+        frontier_comparison_status='beaten',
+        probe_pass_count=8,
+        probe_count=8,
+        improved_probe_count=2,
+    )
+
+    assert studio._decision_loop_probe_expanded_v4_ready(matched_only) is False
+    assert studio._decision_loop_probe_expanded_v4_ready(improved) is True
 
 
 def test_program_authoring_pack_surfaces_known_and_unknown_candidates():
@@ -128,7 +193,7 @@ def test_realization_candidates_support_pairwise_promotion_for_known_profile():
         'package_ready',
         'failure_pass',
     }
-    assert all(item.strategy_profile.get('active_frontier_version') == 'frontier_v2' for item in candidates)
+    assert all(item.strategy_profile.get('active_frontier_version') == 'frontier_v3' for item in candidates)
     assert all(item.strategy_profile.get('allowed_sections') for item in candidates)
     assert {item.strategy_profile.get('target_focus') for item in candidates} <= {'quality_checks', 'failure_repairs', 'output_format', ''}
     assert sum(
@@ -208,85 +273,85 @@ def test_residual_gap_report_fails_for_known_frontier_weaknesses():
 def test_pairwise_promotion_holds_when_primary_force_regresses(monkeypatch):
     candidates = [
         SkillRealizationCandidate(
-            candidate_id='decision-loop-stress-test:pressure_first:1',
-            skill_name='decision-loop-stress-test',
-            program_id='decision-loop-stress-test:execution_spine',
-            realization_strategy='pressure_first',
-            strategy_profile={
-                'opening_frame': 'Pressure frame',
-                'section_order': 'Overview > Default Workflow > Quality Checks',
-                'sentence_budget_profile': 'Default Workflow:5',
-                'workflow_mode': 'pressure_first',
-                'step_frame': 'pressure_probe',
-                'output_focus': 'Pressure Map,Break Point',
-                'quality_tone': 'pressure',
-                'quality_mode': 'pressure_gate',
-                'failure_style': 'collapse_signals',
-                'failure_mode': 'collapse_signals',
-            },
-            rendered_markdown='# pressure',
-        ),
-        SkillRealizationCandidate(
-            candidate_id='decision-loop-stress-test:repair_first:2',
-            skill_name='decision-loop-stress-test',
-            program_id='decision-loop-stress-test:execution_spine',
-            realization_strategy='repair_first',
-            strategy_profile={
-                'opening_frame': 'Repair frame',
-                'section_order': 'Overview > Default Workflow > Output Format',
-                'sentence_budget_profile': 'Output Format:4',
-                'workflow_mode': 'repair_priority',
-                'step_frame': 'repair_commit',
-                'output_focus': 'Repair Recommendation,Variation Audit',
-                'quality_tone': 'repair',
-                'quality_mode': 'repair_gate',
-                'failure_style': 'repair_moves',
-                'failure_mode': 'repair_moves',
-            },
-            rendered_markdown='# repair',
-        ),
-        SkillRealizationCandidate(
-            candidate_id='decision-loop-stress-test:collapse_first:3',
+            candidate_id='decision-loop-stress-test:collapse_first:1',
             skill_name='decision-loop-stress-test',
             program_id='decision-loop-stress-test:execution_spine',
             realization_strategy='collapse_first',
             strategy_profile={
                 'opening_frame': 'Collapse frame',
-                'section_order': 'Overview > Failure Patterns and Fixes > Default Workflow',
-                'sentence_budget_profile': 'Failure Patterns and Fixes:5',
+                'section_order': 'Overview > Default Workflow > Quality Checks',
+                'sentence_budget_profile': 'Default Workflow:5',
                 'workflow_mode': 'collapse_detection',
                 'step_frame': 'collapse_probe',
-                'output_focus': 'Collapse Point,Solved State Risk',
+                'output_focus': 'Collapse Point,Break Point',
                 'quality_tone': 'collapse',
                 'quality_mode': 'collapse_gate',
+                'failure_style': 'collapse_signals',
+                'failure_mode': 'collapse_signals',
+            },
+            rendered_markdown='# collapse-first',
+        ),
+        SkillRealizationCandidate(
+            candidate_id='decision-loop-stress-test:stop_condition_first:2',
+            skill_name='decision-loop-stress-test',
+            program_id='decision-loop-stress-test:execution_spine',
+            realization_strategy='stop_condition_first',
+            strategy_profile={
+                'opening_frame': 'Stop frame',
+                'section_order': 'Overview > Default Workflow > Output Format',
+                'sentence_budget_profile': 'Output Format:4',
+                'workflow_mode': 'stop_condition_priority',
+                'step_frame': 'stop_condition_probe',
+                'output_focus': 'Stop Condition,Solved State Risk',
+                'quality_tone': 'stop-first',
+                'quality_mode': 'stop_condition_gate',
                 'failure_style': 'solved_state',
                 'failure_mode': 'solved_state',
             },
-            rendered_markdown='# collapse',
+            rendered_markdown='# stop-condition',
         ),
         SkillRealizationCandidate(
-            candidate_id='decision-loop-stress-test:reinforcement_audit:4',
+            candidate_id='decision-loop-stress-test:fake_fix_rejection:3',
             skill_name='decision-loop-stress-test',
             program_id='decision-loop-stress-test:execution_spine',
-            realization_strategy='reinforcement_audit',
+            realization_strategy='fake_fix_rejection',
             strategy_profile={
-                'opening_frame': 'Reinforcement frame',
+                'opening_frame': 'False fix frame',
+                'section_order': 'Overview > Failure Patterns and Fixes > Default Workflow',
+                'sentence_budget_profile': 'Failure Patterns and Fixes:5',
+                'workflow_mode': 'false_fix_rejection',
+                'step_frame': 'false_fix_gate',
+                'output_focus': 'False Fix Rejection,Repair Recommendation',
+                'quality_tone': 'false-fix',
+                'quality_mode': 'false_fix_gate',
+                'failure_style': 'false_fix',
+                'failure_mode': 'false_fix',
+            },
+            rendered_markdown='# fake-fix',
+        ),
+        SkillRealizationCandidate(
+            candidate_id='decision-loop-stress-test:pressure_audit:4',
+            skill_name='decision-loop-stress-test',
+            program_id='decision-loop-stress-test:execution_spine',
+            realization_strategy='pressure_audit',
+            strategy_profile={
+                'opening_frame': 'Audit frame',
                 'section_order': 'Overview > Decision Rules > Default Workflow',
                 'sentence_budget_profile': 'Decision Rules:4',
-                'workflow_mode': 'reinforcement_audit',
-                'step_frame': 'reinforcement_probe',
-                'output_focus': 'Reinforcement Check,Variation Audit',
-                'quality_tone': 'reinforcement',
-                'quality_mode': 'reinforcement_gate',
+                'workflow_mode': 'pressure_audit',
+                'step_frame': 'pressure_audit',
+                'output_focus': 'Pressure Audit,Variation Audit',
+                'quality_tone': 'audit',
+                'quality_mode': 'pressure_audit',
                 'failure_style': 'wrong_behavior',
                 'failure_mode': 'wrong_behavior',
             },
-            rendered_markdown='# reinforcement',
+            rendered_markdown='# pressure-audit',
         ),
     ]
 
     candidate_metrics = {
-        '# pressure': {
+        '# collapse-first': {
             'editorial_force': type('Force', (), {
                 'decision_pressure_score': 0.90,
                 'cut_sharpness_score': 0.90,
@@ -299,7 +364,7 @@ def test_pairwise_promotion_holds_when_primary_force_regresses(monkeypatch):
             'style': type('Style', (), {'domain_rhythm_score': 0.85})(),
             'score': 0.90,
         },
-        '# repair': {
+        '# stop-condition': {
             'editorial_force': type('Force', (), {
                 'decision_pressure_score': 0.88,
                 'cut_sharpness_score': 0.86,
@@ -312,7 +377,7 @@ def test_pairwise_promotion_holds_when_primary_force_regresses(monkeypatch):
             'style': type('Style', (), {'domain_rhythm_score': 0.88})(),
             'score': 0.88,
         },
-        '# collapse': {
+        '# fake-fix': {
             'editorial_force': type('Force', (), {
                 'decision_pressure_score': 0.87,
                 'cut_sharpness_score': 0.85,
@@ -325,7 +390,7 @@ def test_pairwise_promotion_holds_when_primary_force_regresses(monkeypatch):
             'style': type('Style', (), {'domain_rhythm_score': 0.87})(),
             'score': 0.87,
         },
-        '# reinforcement': {
+        '# pressure-audit': {
             'editorial_force': type('Force', (), {
                 'decision_pressure_score': 0.86,
                 'cut_sharpness_score': 0.84,
@@ -341,6 +406,19 @@ def test_pairwise_promotion_holds_when_primary_force_regresses(monkeypatch):
     }
 
     monkeypatch.setattr(studio, '_candidate_editorial_metrics', lambda **kwargs: candidate_metrics[kwargs['markdown']])
+    monkeypatch.setattr(
+        studio,
+        '_build_outcome_only_reranker_report',
+        lambda **kwargs: _outcome_only_report(
+            winner='decision-loop-stress-test:collapse_first:1',
+            candidate_ranking=[
+                'decision-loop-stress-test:collapse_first:1',
+                'decision-loop-stress-test:stop_condition_first:2',
+                'decision-loop-stress-test:fake_fix_rejection:3',
+                'decision-loop-stress-test:pressure_audit:4',
+            ],
+        ),
+    )
     monkeypatch.setattr(
         studio,
         '_current_best_editorial_metrics',
@@ -427,42 +505,42 @@ def test_pairwise_promotion_holds_when_candidates_only_change_opening(monkeypatc
 def test_monotonic_promotion_holds_when_only_stable_without_breakthrough(monkeypatch):
     candidates = [
         SkillRealizationCandidate(
-            candidate_id='decision-loop-stress-test:pressure_first:1',
+            candidate_id='decision-loop-stress-test:collapse_first:1',
             skill_name='decision-loop-stress-test',
             program_id='decision-loop-stress-test:execution_spine',
-            realization_strategy='pressure_first',
+            realization_strategy='collapse_first',
             strategy_profile={
                 'compression_stage': 'pre',
-                'opening_frame': 'Pressure frame',
+                'opening_frame': 'Collapse frame',
                 'section_order': 'Overview > Default Workflow > Output Format',
                 'sentence_budget_profile': 'Default Workflow:5',
-                'workflow_mode': 'pressure_first',
-                'step_frame': 'pressure_probe',
-                'output_focus': 'Pressure Map,Break Point,Repair Recommendation',
-                'quality_tone': 'pressure',
-                'quality_mode': 'pressure_gate',
+                'workflow_mode': 'collapse_detection',
+                'step_frame': 'collapse_probe',
+                'output_focus': 'Collapse Point,Break Point,Repair Recommendation',
+                'quality_tone': 'collapse',
+                'quality_mode': 'collapse_gate',
                 'failure_style': 'collapse_signals',
                 'failure_mode': 'collapse_signals',
             },
             rendered_markdown='# proof',
         ),
         SkillRealizationCandidate(
-            candidate_id='decision-loop-stress-test:repair_first:2',
+            candidate_id='decision-loop-stress-test:fake_fix_rejection:2',
             skill_name='decision-loop-stress-test',
             program_id='decision-loop-stress-test:execution_spine',
-            realization_strategy='repair_first',
+            realization_strategy='fake_fix_rejection',
             strategy_profile={
                 'compression_stage': 'pre',
-                'opening_frame': 'Repair frame',
+                'opening_frame': 'False fix frame',
                 'section_order': 'Overview > Output Format > Default Workflow',
                 'sentence_budget_profile': 'Output Format:4',
-                'workflow_mode': 'repair_priority',
-                'step_frame': 'repair_commit',
-                'output_focus': 'Repair Recommendation,Pressure Map,Variation Audit',
-                'quality_tone': 'repair',
-                'quality_mode': 'repair_gate',
-                'failure_style': 'repair_moves',
-                'failure_mode': 'repair_moves',
+                'workflow_mode': 'false_fix_rejection',
+                'step_frame': 'false_fix_gate',
+                'output_focus': 'Repair Recommendation,False Fix Rejection,Variation Audit',
+                'quality_tone': 'false-fix',
+                'quality_mode': 'false_fix_gate',
+                'failure_style': 'false_fix',
+                'failure_mode': 'false_fix',
             },
             rendered_markdown='# repair',
         ),
@@ -491,6 +569,17 @@ def test_monotonic_promotion_holds_when_only_stable_without_breakthrough(monkeyp
     }
     monkeypatch.setattr(studio, '_candidate_editorial_metrics', lambda **kwargs: metrics)
     monkeypatch.setattr(studio, '_current_best_editorial_metrics', lambda skill_name, task: {'score': 0.90})
+    monkeypatch.setattr(
+        studio,
+        '_build_outcome_only_reranker_report',
+        lambda **kwargs: _outcome_only_report(
+            winner='decision-loop-stress-test:collapse_first:1',
+            candidate_ranking=[
+                'decision-loop-stress-test:collapse_first:1',
+                'decision-loop-stress-test:fake_fix_rejection:2',
+            ],
+        ),
+    )
 
     _, _, promotion_decision, monotonic_report = choose_skill_realization_candidate(
         skill_name='decision-loop-stress-test',
@@ -504,6 +593,187 @@ def test_monotonic_promotion_holds_when_only_stable_without_breakthrough(monkeyp
     assert promotion_decision.pressure_target_status == 'fail'
     assert promotion_decision.residual_gap_count >= 1
     assert monotonic_report.promotion_reason == 'hold_due_to_force_regression'
+
+
+def test_outcome_only_reranker_blocks_promotion_without_frontier_win(monkeypatch):
+    candidates = [
+        SkillRealizationCandidate(
+            candidate_id='decision-loop-stress-test:collapse_first:1',
+            skill_name='decision-loop-stress-test',
+            program_id='decision-loop-stress-test:execution_spine',
+            realization_strategy='collapse_first',
+            strategy_profile={
+                'compression_stage': 'pre',
+                'opening_frame': 'Collapse frame',
+                'section_order': 'Overview > Default Workflow > Quality Checks',
+                'sentence_budget_profile': 'Default Workflow:5',
+                'workflow_mode': 'collapse_detection',
+                'step_frame': 'collapse_probe',
+                'output_focus': 'Collapse Point,Break Point',
+                'quality_tone': 'collapse',
+                'quality_mode': 'collapse_gate',
+                'failure_style': 'collapse_signals',
+                'failure_mode': 'collapse_signals',
+            },
+            rendered_markdown='# collapse',
+        ),
+        SkillRealizationCandidate(
+            candidate_id='decision-loop-stress-test:fake_fix_rejection:2',
+            skill_name='decision-loop-stress-test',
+            program_id='decision-loop-stress-test:execution_spine',
+            realization_strategy='fake_fix_rejection',
+            strategy_profile={
+                'compression_stage': 'pre',
+                'opening_frame': 'False fix frame',
+                'section_order': 'Overview > Quality Checks > Failure Patterns and Fixes',
+                'sentence_budget_profile': 'Quality Checks:4',
+                'workflow_mode': 'false_fix_rejection',
+                'step_frame': 'false_fix_gate',
+                'output_focus': 'False Fix Rejection,Repair Recommendation',
+                'quality_tone': 'false-fix',
+                'quality_mode': 'false_fix_gate',
+                'failure_style': 'false_fix',
+                'failure_mode': 'false_fix',
+            },
+            rendered_markdown='# false-fix',
+        ),
+    ]
+    strong_metrics = {
+        'editorial_force': type('Force', (), {
+            'decision_pressure_score': 0.99,
+            'cut_sharpness_score': 1.0,
+            'failure_repair_force': 1.0,
+            'stop_condition_coverage': 1.0,
+            'output_executability_score': 0.95,
+            'section_force_distinctness': 0.90,
+            'compression_without_loss': 0.81,
+        })(),
+        'editorial': type('Editorial', (), {'redundancy_ratio': 0.03})(),
+        'style': type('Style', (), {'domain_rhythm_score': 0.90})(),
+        'domain_move_coverage': 0.95,
+        'section_depth_score': 0.92,
+        'task_outcome_with_skill_average': 0.93,
+        'shared_opening_phrase_ratio': 0.0,
+        'cross_case_similarity': 0.22,
+        'compression_without_loss': 0.81,
+        'score': 0.99,
+    }
+    monkeypatch.setattr(studio, '_candidate_editorial_metrics', lambda **kwargs: strong_metrics)
+    monkeypatch.setattr(studio, '_current_best_editorial_metrics', lambda skill_name, task: {'score': 0.95})
+    monkeypatch.setattr(
+        studio,
+        '_compare_to_dual_baselines',
+        lambda **kwargs: studio.MonotonicImprovementReport(
+            skill_name='decision-loop-stress-test',
+            active_frontier_status='beaten',
+            best_balance_comparison_status='beaten',
+            best_coverage_comparison_status='beaten',
+            force_non_regression_status='pass',
+            coverage_non_regression_status='pass',
+            compactness_non_regression_status='pass',
+            frontier_dominance_status='pass',
+            compression_gain_status='pass',
+            promotion_status='promote',
+            promotion_reason='breakthrough',
+            primary_force_win_count=2,
+        ),
+    )
+    monkeypatch.setattr(
+        studio,
+        '_residual_gap_report',
+        lambda skill_name, metrics: studio.ResidualGapReport(
+            skill_name=skill_name,
+            quality_check_target_status='unknown',
+            pressure_target_status='pass',
+            leakage_target_status='unknown',
+            false_fix_rejection_status='pass',
+            residual_gap_count=0,
+            status='pass',
+        ),
+    )
+    monkeypatch.setattr(
+        studio,
+        '_build_outcome_only_reranker_report',
+        lambda **kwargs: _outcome_only_report(
+            winner='decision-loop-stress-test:collapse_first:1',
+            candidate_ranking=[
+                'decision-loop-stress-test:collapse_first:1',
+                'decision-loop-stress-test:fake_fix_rejection:2',
+            ],
+            status='fail',
+            frontier_comparison_status='matched',
+            blocking_reason='outcome_only_reranker_not_better_than_frontier',
+            probe_pass_count=3,
+        ),
+    )
+
+    _, _, promotion_decision, monotonic_report = choose_skill_realization_candidate(
+        skill_name='decision-loop-stress-test',
+        task='stress a core loop',
+        candidates=candidates,
+    )
+
+    assert promotion_decision.promotion_status == 'hold'
+    assert promotion_decision.stable_but_no_breakthrough is True
+    assert promotion_decision.reason == 'stable_but_no_breakthrough'
+    assert promotion_decision.outcome_only_reranker_status == 'fail'
+    assert promotion_decision.outcome_only_frontier_comparison_status == 'matched'
+    assert promotion_decision.outcome_only_probe_pass_count == 3
+    assert promotion_decision.outcome_only_blocking_reason == 'outcome_only_reranker_not_better_than_frontier'
+    assert monotonic_report.promotion_reason == 'breakthrough'
+
+
+def test_outcome_only_reranker_collects_probe_witnesses(monkeypatch):
+    candidate = SkillRealizationCandidate(
+        candidate_id='decision-loop-stress-test:collapse_first_v2:1',
+        skill_name='decision-loop-stress-test',
+        program_id='decision-loop-stress-test:execution_spine',
+        realization_strategy='collapse_first_v2',
+        strategy_profile={},
+        rendered_markdown=(
+            "# Decision Loop\n\n"
+            "- First hour novelty can hide a weak decision if the collapse signal never arrives.\n"
+            "- Name the stop condition and collapse witness before phase explanation.\n"
+            "- Reject any fix that only adds more content or softer compensation.\n"
+            "- A structural fix must change the decision problem and wrong habit.\n"
+        ),
+    )
+    frontier_candidate = SkillRealizationCandidate(
+        candidate_id='decision-loop-stress-test:frontier',
+        skill_name='decision-loop-stress-test',
+        program_id='decision-loop-stress-test:execution_spine',
+        realization_strategy='frontier',
+        strategy_profile={},
+        rendered_markdown="# Frontier\n- Stop condition.\n",
+    )
+
+    monkeypatch.setattr(studio, '_current_best_markdown', lambda skill_name: frontier_candidate.rendered_markdown)
+
+    def _metrics(**kwargs):
+        markdown = kwargs['markdown']
+        redundancy_ratio = 0.03 if 'collapse witness' in markdown else 0.05
+        return {
+            'editorial': type('Editorial', (), {'redundancy_ratio': redundancy_ratio})(),
+            'editorial_force': type('Force', (), {})(),
+        }
+
+    monkeypatch.setattr(studio, '_candidate_editorial_metrics', _metrics)
+
+    report = studio._build_outcome_only_reranker_report(
+        skill_name='decision-loop-stress-test',
+        scored_candidates=[(candidate, {'editorial': type('Editorial', (), {'redundancy_ratio': 0.03})()})],
+        probe_mode='probe_expanded_v4',
+    )
+
+    assert report is not None
+    assert report.probe_mode == 'probe_expanded_v4'
+    assert report.probe_count == 8
+    assert report.probe_witness_summary
+    assert report.repair_evidence_lines
+    assert report.collapse_evidence_lines
+    assert report.repair_specificity_score > 0.0
+    assert report.collapse_witness_coverage > 0.0
+    assert set(report.improved_probe_ids) | set(report.matched_probe_ids) | set(report.blocked_probe_ids)
 
 
 def test_promotion_stays_stable_when_residual_targets_do_not_improve(monkeypatch):

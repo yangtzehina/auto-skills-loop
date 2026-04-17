@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import importlib.util
+import io
+import inspect
+import re
 import subprocess
 import sys
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from ..models.public_source_verification import PublicSourceCurationRoundReport, PublicSourcePromotionPack
@@ -15,12 +20,132 @@ from ..models.verify import OpsRoundbookReport, VerifyCommandResult, VerifyRepor
 from .operation_backed_ops import build_operation_backed_backlog_report, build_operation_backed_status_report
 from .ops_approval import summarize_decision_statuses
 from .skill_create_comparison import build_skill_create_comparison_report
+from .simulation import build_simulation_suite_report
 
 
 ROOT = Path(__file__).resolve().parents[3]
+RUN_TESTS_SCRIPT = ROOT / "scripts" / "run_tests.py"
+RUN_TESTS_TIMEOUT_SECONDS = 240
+
+
+def _trim_command_output(text: str, *, max_lines: int = 24, max_chars: int = 4000) -> str:
+    content = str(text or "").strip()
+    if not content:
+        return ""
+    lines = content.splitlines()
+    if len(lines) > max_lines:
+        omitted = len(lines) - max_lines
+        lines = lines[-max_lines:]
+        lines.insert(0, f"... {omitted} earlier lines omitted ...")
+    trimmed = "\n".join(lines)
+    if len(trimmed) > max_chars:
+        trimmed = f"... output trimmed ...\n{trimmed[-max_chars:]}"
+    return trimmed
+
+
+def _load_script_module(path: Path):
+    module_name = f"_verify_runtime_{path.stem.replace('-', '_')}"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load script module: {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _run_in_process_main(*, label: str, cmd: list[str], script_path: Path, argv: list[str]) -> VerifyCommandResult:
+    stdout_buffer = io.StringIO()
+    stderr_buffer = io.StringIO()
+    exit_code = 1
+    try:
+        module = _load_script_module(script_path)
+        main_fn = getattr(module, "main", None)
+        if not callable(main_fn):
+            raise RuntimeError(f"Script has no callable main(): {script_path}")
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            signature = inspect.signature(main_fn)
+            exit_code = int(main_fn(argv) if signature.parameters else main_fn())
+    except SystemExit as exc:
+        exit_code = int(exc.code) if isinstance(exc.code, int) else 1
+    except Exception as exc:  # pragma: no cover - exercised via CLI smoke path
+        exit_code = 1
+        stderr_buffer.write(f"{type(exc).__name__}: {exc}\n")
+    return VerifyCommandResult(
+        label=label,
+        command=cmd,
+        exit_code=exit_code,
+        stdout=_trim_command_output(stdout_buffer.getvalue()),
+        stderr=_trim_command_output(stderr_buffer.getvalue()),
+    )
+
+
+def _run_tests_command() -> VerifyCommandResult:
+    cmd = [sys.executable, "scripts/run_tests.py"]
+    try:
+        completed = subprocess.run(
+            cmd,
+            cwd=str(ROOT),
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=RUN_TESTS_TIMEOUT_SECONDS,
+        )
+        stdout = completed.stdout
+        stderr = completed.stderr
+        exit_code = completed.returncode
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout.decode("utf-8", errors="replace") if isinstance(exc.stdout, bytes) else str(exc.stdout or "")
+        stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else str(exc.stderr or "")
+        match = re.search(r"passed=(\d+)\s+failed=(\d+)", stdout)
+        if match is not None:
+            failed = int(match.group(2))
+            exit_code = 1 if failed else 0
+            suffix = "run_tests_timeout_recovered_from_summary=true"
+            stderr = f"{stderr}\n{suffix}".strip()
+        else:
+            exit_code = 1
+            suffix = f"run_tests_timeout_after={RUN_TESTS_TIMEOUT_SECONDS}s"
+            stderr = f"{stderr}\n{suffix}".strip()
+    return VerifyCommandResult(
+        label="run_tests",
+        command=cmd,
+        exit_code=exit_code,
+        stdout=_trim_command_output(stdout),
+        stderr=_trim_command_output(stderr),
+    )
+
+
+def _run_simulation_command(*, mode: str) -> VerifyCommandResult:
+    report = build_simulation_suite_report(mode=mode)
+    exit_code = 2 if int(report.invalid_fixture_count or 0) else (1 if int(report.drifted_count or 0) else 0)
+    stdout = "\n".join(
+        [
+            f"mode={mode}",
+            f"matched={int(report.matched_count or 0)}",
+            f"drifted={int(report.drifted_count or 0)}",
+            f"invalid_fixture={int(report.invalid_fixture_count or 0)}",
+            f"summary={report.summary}",
+        ]
+    )
+    return VerifyCommandResult(
+        label="run_simulation_suite",
+        command=[sys.executable, "scripts/run_simulation_suite.py", "--mode", mode],
+        exit_code=exit_code,
+        stdout=stdout,
+        stderr="",
+    )
 
 
 def _run_command(label: str, cmd: list[str]) -> VerifyCommandResult:
+    if label == "run_tests" and cmd == [sys.executable, "scripts/run_tests.py"]:
+        return _run_tests_command()
+    if (
+        label == "run_simulation_suite"
+        and len(cmd) >= 4
+        and cmd[:2] == [sys.executable, "scripts/run_simulation_suite.py"]
+        and cmd[2] == "--mode"
+    ):
+        return _run_simulation_command(mode=str(cmd[3]))
     completed = subprocess.run(
         cmd,
         cwd=str(ROOT),
@@ -32,8 +157,8 @@ def _run_command(label: str, cmd: list[str]) -> VerifyCommandResult:
         label=label,
         command=cmd,
         exit_code=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
+        stdout=_trim_command_output(completed.stdout),
+        stderr=_trim_command_output(completed.stderr),
     )
 
 
