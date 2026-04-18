@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0.0",
   "skill_name": "decision-loop-stress-test",
-  "active_frontier_version": "frontier_v8",
+  "active_frontier_version": "frontier_v9",
   "best_balance_snapshot": {
-    "label": "frontier_v8",
+    "label": "frontier_v9",
     "primary_force_metrics": {
       "decision_pressure_score": 1.0,
       "failure_repair_force": 1.0,
@@ -12,25 +12,25 @@
     "coverage_metrics": {
       "domain_move_coverage": 0.9285,
       "section_depth_score": 0.9722,
-      "task_outcome_with_skill_average": 0.9815
+      "task_outcome_with_skill_average": 0.963
     },
     "compactness_metrics": {
       "redundancy_ratio": 0.0355,
-      "shared_opening_phrase_ratio": 0.05,
-      "cross_case_similarity": 0.2283,
-      "compression_without_loss": 0.8207
+      "shared_opening_phrase_ratio": 0.0,
+      "cross_case_similarity": 0.2307,
+      "compression_without_loss": 0.8001
     },
     "target_metrics": {
       "decision_pressure_score": 1.0,
-      "compression_without_loss": 0.8207
+      "compression_without_loss": 0.8001
     },
     "summary": [
-      "active_frontier=frontier_v8",
+      "active_frontier=frontier_v9",
       "current HEAD establishes the new active frontier"
     ]
   },
   "best_coverage_snapshot": {
-    "label": "frontier_v8",
+    "label": "frontier_v9",
     "primary_force_metrics": {
       "decision_pressure_score": 1.0,
       "failure_repair_force": 1.0,
@@ -39,20 +39,20 @@
     "coverage_metrics": {
       "domain_move_coverage": 0.9285,
       "section_depth_score": 0.9722,
-      "task_outcome_with_skill_average": 0.9815
+      "task_outcome_with_skill_average": 0.963
     },
     "compactness_metrics": {
       "redundancy_ratio": 0.0355,
-      "shared_opening_phrase_ratio": 0.05,
-      "cross_case_similarity": 0.2283,
-      "compression_without_loss": 0.8207
+      "shared_opening_phrase_ratio": 0.0,
+      "cross_case_similarity": 0.2307,
+      "compression_without_loss": 0.8001
     },
     "target_metrics": {
       "decision_pressure_score": 1.0,
-      "compression_without_loss": 0.8207
+      "compression_without_loss": 0.8001
     },
     "summary": [
-      "active_frontier=frontier_v8",
+      "active_frontier=frontier_v9",
       "current HEAD establishes the new active frontier"
     ]
   },
@@ -120,20 +120,20 @@
   "coverage_floor": {
     "domain_move_coverage": 0.9085,
     "section_depth_score": 0.9522,
-    "task_outcome_with_skill_average": 0.9615
+    "task_outcome_with_skill_average": 0.943
   },
   "compactness_ceiling": {
     "redundancy_ratio": 0.0555,
-    "shared_opening_phrase_ratio": 0.11,
-    "cross_case_similarity": 0.2583,
-    "compression_without_loss": 0.8207
+    "shared_opening_phrase_ratio": 0.06,
+    "cross_case_similarity": 0.2607,
+    "compression_without_loss": 0.8001
   },
   "tolerance": {
     "score_metric": 0.02,
     "compactness_metric": 0.06
   },
   "summary": [
-    "freeze active_frontier=frontier_v8",
+    "freeze active_frontier=frontier_v9",
     "retain rerun6 as legacy reference point"
   ]
 }
