@@ -1,5 +1,5 @@
 {
-  "suite_version": "frontier_v7",
+  "suite_version": "frontier_v8",
   "format": "criteria-first",
   "criteria": [
     {
@@ -305,7 +305,7 @@
   "profiles": [
     {
       "skill_name": "concept-to-mvp-pack",
-      "active_frontier_version": "frontier_v7",
+      "active_frontier_version": "frontier_v8",
       "current_frontier_metrics": {
         "decision_pressure_score": 0.9467,
         "failure_repair_force": 0.89,
@@ -336,7 +336,7 @@
     },
     {
       "skill_name": "decision-loop-stress-test",
-      "active_frontier_version": "frontier_v7",
+      "active_frontier_version": "frontier_v8",
       "current_frontier_metrics": {
         "decision_pressure_score": 1.0,
         "failure_repair_force": 1.0,
@@ -349,7 +349,7 @@
         "expert_pitfall_cluster_recall": 1.0,
         "output_field_guidance_coverage": 1.0,
         "generic_skeleton_ratio": 0.3158,
-        "compression_without_loss": 0.8184
+        "compression_without_loss": 0.8207
       },
       "residual_targets": {
         "decision_pressure_score": 0.98,
@@ -382,7 +382,7 @@
     },
     {
       "skill_name": "simulation-resource-loop-design",
-      "active_frontier_version": "frontier_v7",
+      "active_frontier_version": "frontier_v8",
       "current_frontier_metrics": {
         "decision_pressure_score": 0.9385,
         "failure_repair_force": 1.0,

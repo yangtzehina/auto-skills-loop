@@ -1,20 +1,20 @@
 {
   "skill_name": "decision-loop-stress-test",
-  "active_frontier_version": "frontier_v7",
+  "active_frontier_version": "frontier_v8",
   "pressure_best_sections": {
     "Overview": [
-      "Find the collapse witness and the break point before you discuss more content, and reject any repair recommendation that is not just numeric tuning, not just more content, still keeps the same dominant line, and still lets the old answer survive with the same read, tradeoff, or same consequence."
+      "Audit what mastery teaches, which reward loop currently trains the wrong habit, what player behavior must disappear, what right habit should replace it, what replacement reward logic makes that right habit profitable, and whether the repair recommendation is a structural fix that changes what old answer stops working."
     ],
     "Default Workflow": [
-      "Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, names what old answer stops working, what new answer becomes correct, which reward loop currently trains the wrong habit, what right habit should replace it, and what reward, information, or cost shift causes that behavior shift before you call the loop fixed."
+      "Demand a repair recommendation with a structural fix that changes read, tradeoff, or consequence, names what old answer stops working because of the reward, information, or cost shift, what new answer becomes correct because of that shift, which reward loop currently trains the wrong habit, what player behavior must disappear, what right habit should replace it, what replacement behavior must become optimal, and what replacement reward logic makes the right habit profitable before you call the loop fixed."
     ],
     "Quality Checks": [
       "Hard fail any solved-state repair that keeps the same dominant line, the same read, the same consequence structure, or the old answer alive inside the same decision landscape before balance values are tuned.",
       "Hard fail any variation pass that names variation but keeps the same dominant line, the same read, the same consequence, or never says what old answer stops working and what new answer is required.",
-      "Hard fail any reinforcement pass that names wrong habit to right habit but never states which reward loop trains the wrong behavior, what player behavior must disappear, what replacement behavior must become optimal, or what reward, information, or cost shift causes the behavior shift."
+      "Check whether the audit maps the wrong habit to the intended right habit, names the current reward loop, and states what player behavior must disappear instead of only praising faster throughput or keeping the same read."
     ],
     "Failure Patterns and Fixes": [
-      "Reject numeric-only or content-only fixes, write a structural repair recommendation, call out when numeric-only tuning keeps the same dominant line, the same read, and the same consequence structure, and rewrite the fix so the decision landscape changes before balance values are tuned."
+      "Treat reinforcement that leaves the wrong habit alive, keeps the same read or dominant line, never says which reward loop currently trains it, never says what wrong habit stops paying, or never names the replacement reward logic and behavior shift as a failed repair."
     ]
   },
   "compactness_best_sections": {
@@ -29,13 +29,13 @@
     "Quality Checks": [
       "Hard fail any solved-state repair that keeps the same dominant line, the same read, the same consequence structure, or the old answer alive inside the same decision landscape before balance values are tuned.",
       "Hard fail any variation pass that names variation but keeps the same dominant line, the same read, the same consequence, or never says what old answer stops working and what new answer is required.",
-      "Hard fail any reinforcement pass that names wrong habit to right habit but never states which reward loop trains the wrong behavior, what player behavior must disappear, what replacement behavior must become optimal, or what reward, information, or cost shift causes the behavior shift.",
+      "Check whether the audit maps the wrong habit to the intended right habit, names the current reward loop, and states what player behavior must disappear instead of only praising faster throughput or keeping the same read.",
       "Hard fail any stop condition that names a break point without naming the collapse witness the player can actually observe."
     ]
   },
   "failure_repairs_best_sections": {
     "Failure Patterns and Fixes": [
-      "Treat any loop without a collapse witness or break point, or any repair recommendation that still keeps the same read, tradeoff, same consequence, dominant line, or old answer alive, as unshippable until the structural fix is explicit."
+      "Treat reinforcement that leaves the wrong habit alive, keeps the same read or dominant line, never says which reward loop currently trains it, never says what wrong habit stops paying, or never names the replacement reward logic and behavior shift as a failed repair."
     ]
   },
   "output_format_best_sections": {
