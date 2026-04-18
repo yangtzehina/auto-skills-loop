@@ -31,6 +31,41 @@ from openclaw_skill_create.services.runtime_governance import (
 from openclaw_skill_create.services.verify import build_ops_roundbook_report, build_verify_report
 
 
+def _truncate_text(value: str, *, limit: int = 4000) -> str:
+    text = str(value or '')
+    if len(text) <= limit:
+        return text
+    return f"{text[:limit]}\n...[truncated {len(text) - limit} chars]"
+
+
+def _compact_verify_report_payload(payload: dict[str, object]) -> dict[str, object]:
+    compact = dict(payload)
+    commands = []
+    for item in list(compact.get('commands') or []):
+        if not isinstance(item, dict):
+            commands.append(item)
+            continue
+        command = dict(item)
+        command['stdout'] = _truncate_text(str(command.get('stdout') or ''))
+        command['stderr'] = _truncate_text(str(command.get('stderr') or ''))
+        commands.append(command)
+    compact['commands'] = commands
+    compact['skill_create_comparison_report'] = None
+    compact['summary'] = _truncate_text(str(compact.get('summary') or ''), limit=2000)
+    compact['markdown_summary'] = _truncate_text(str(compact.get('markdown_summary') or ''), limit=4000)
+    return compact
+
+
+def _compact_roundbook_payload(report) -> dict[str, object]:
+    payload = report.model_dump(mode='json')
+    verify_report = payload.get('verify_report')
+    if isinstance(verify_report, dict):
+        payload['verify_report'] = _compact_verify_report_payload(verify_report)
+    payload['summary'] = _truncate_text(str(payload.get('summary') or ''), limit=2000)
+    payload['markdown_summary'] = _truncate_text(str(payload.get('markdown_summary') or ''), limit=4000)
+    return payload
+
+
 def _usage() -> str:
     return (
         'Usage: python scripts/run_ops_roundbook.py '
@@ -225,7 +260,7 @@ def main(argv: list[str]) -> int:
     if output_format == 'markdown':
         print(report.markdown_summary)
     else:
-        print(json.dumps(report.model_dump(mode='json'), indent=2, ensure_ascii=False))
+        print(json.dumps(_compact_roundbook_payload(report), indent=2, ensure_ascii=False))
     return 1 if report.overall_readiness == 'blocked' else 0
 
 

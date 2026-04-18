@@ -81,7 +81,11 @@ def _run_in_process_main(*, label: str, cmd: list[str], script_path: Path, argv:
 
 
 def _prefer_in_process_verify_commands() -> bool:
-    return True
+    # `scripts/run_tests.py` can stall when imported and executed inline from
+    # longer-lived verifier / roundbook processes. Keep the roundbook CLI on the
+    # in-process service path, but run the test entrypoint through the existing
+    # subprocess + timeout recovery path so the command stays terminating.
+    return False
 
 
 def _run_tests_command() -> VerifyCommandResult:
