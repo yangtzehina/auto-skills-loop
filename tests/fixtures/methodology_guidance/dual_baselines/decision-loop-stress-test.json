@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0.0",
   "skill_name": "decision-loop-stress-test",
-  "active_frontier_version": "frontier_v9",
+  "active_frontier_version": "frontier_v10",
   "best_balance_snapshot": {
-    "label": "frontier_v9",
+    "label": "frontier_v10",
     "primary_force_metrics": {
       "decision_pressure_score": 1.0,
       "failure_repair_force": 1.0,
@@ -15,22 +15,22 @@
       "task_outcome_with_skill_average": 0.963
     },
     "compactness_metrics": {
-      "redundancy_ratio": 0.0355,
-      "shared_opening_phrase_ratio": 0.0,
-      "cross_case_similarity": 0.2307,
-      "compression_without_loss": 0.8001
+      "redundancy_ratio": 0.0353,
+      "shared_opening_phrase_ratio": 0.05,
+      "cross_case_similarity": 0.2287,
+      "compression_without_loss": 0.8009
     },
     "target_metrics": {
       "decision_pressure_score": 1.0,
-      "compression_without_loss": 0.8001
+      "compression_without_loss": 0.8009
     },
     "summary": [
-      "active_frontier=frontier_v9",
+      "active_frontier=frontier_v10",
       "current HEAD establishes the new active frontier"
     ]
   },
   "best_coverage_snapshot": {
-    "label": "frontier_v9",
+    "label": "frontier_v10",
     "primary_force_metrics": {
       "decision_pressure_score": 1.0,
       "failure_repair_force": 1.0,
@@ -42,17 +42,17 @@
       "task_outcome_with_skill_average": 0.963
     },
     "compactness_metrics": {
-      "redundancy_ratio": 0.0355,
-      "shared_opening_phrase_ratio": 0.0,
-      "cross_case_similarity": 0.2307,
-      "compression_without_loss": 0.8001
+      "redundancy_ratio": 0.0353,
+      "shared_opening_phrase_ratio": 0.05,
+      "cross_case_similarity": 0.2287,
+      "compression_without_loss": 0.8009
     },
     "target_metrics": {
       "decision_pressure_score": 1.0,
-      "compression_without_loss": 0.8001
+      "compression_without_loss": 0.8009
     },
     "summary": [
-      "active_frontier=frontier_v9",
+      "active_frontier=frontier_v10",
       "current HEAD establishes the new active frontier"
     ]
   },
@@ -123,17 +123,17 @@
     "task_outcome_with_skill_average": 0.943
   },
   "compactness_ceiling": {
-    "redundancy_ratio": 0.0555,
-    "shared_opening_phrase_ratio": 0.06,
-    "cross_case_similarity": 0.2607,
-    "compression_without_loss": 0.8001
+    "redundancy_ratio": 0.0553,
+    "shared_opening_phrase_ratio": 0.11,
+    "cross_case_similarity": 0.2587,
+    "compression_without_loss": 0.8009
   },
   "tolerance": {
     "score_metric": 0.02,
     "compactness_metric": 0.06
   },
   "summary": [
-    "freeze active_frontier=frontier_v9",
+    "freeze active_frontier=frontier_v10",
     "retain rerun6 as legacy reference point"
   ]
 }
